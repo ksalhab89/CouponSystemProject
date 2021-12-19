@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-class ConnectionPool {
+public class ConnectionPool {
 	private static final String URL = "jdbc:mysql://localhost:3306/jhf/couponSystem";
 	private static final String USER = "projectUser";
 	private static final String PASSWORD = "projectUser";
