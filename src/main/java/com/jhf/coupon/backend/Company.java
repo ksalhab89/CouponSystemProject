@@ -1,12 +1,12 @@
 package com.jhf.coupon.backend;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 
-@Getter
-@Setter
-@ToString
+@Data //All together now: A shortcut for @ToString, @EqualsAndHashCode, @Getter on all fields, @Setter on all non-final fields, and @RequiredArgsConstructor!
 @NoArgsConstructor
 @AllArgsConstructor
 public class Company {
@@ -15,5 +15,4 @@ public class Company {
 	private String email;
 	private String password;
 	private ArrayList<Coupon> coupon;
-
 }
