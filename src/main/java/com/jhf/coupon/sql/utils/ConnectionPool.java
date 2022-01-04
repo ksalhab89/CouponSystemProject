@@ -50,8 +50,9 @@ public class ConnectionPool {
 
 	}
 
-	public static void restoreConnection(Connection connection) {
+	public void restoreConnection(Connection connection) {
 		connections.add(connection);
+		notifyAll();
 	}
 
 	public static void closeAll() {

@@ -6,7 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 
-@Data //A shortcut for @ToString, @EqualsAndHashCode, @Getter on all fields, @Setter on all non-final fields, and @RequiredArgsConstructor!
+@Data
+//A shortcut for @ToString, @EqualsAndHashCode, @Getter on all fields, @Setter on all non-final fields, and @RequiredArgsConstructor!
 @NoArgsConstructor
 @AllArgsConstructor
 public class Customer {
