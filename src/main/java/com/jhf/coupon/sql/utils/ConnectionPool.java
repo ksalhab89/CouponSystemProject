@@ -16,7 +16,6 @@ public class ConnectionPool {
 	private static final Set<Connection> connections = new HashSet<Connection>();
 	private static ConnectionPool instance = null;
 
-
 	private ConnectionPool() {
 		try {
 			Class.forName(JDBC_DRIVER);
