@@ -30,7 +30,6 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 
 	public void addCompany(@NotNull Company company) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		//todo check if should insert id!
 		String sqlQuery = "INSERT INTO companies VALUES (?, ?, ?, ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setString(2, company.getName());

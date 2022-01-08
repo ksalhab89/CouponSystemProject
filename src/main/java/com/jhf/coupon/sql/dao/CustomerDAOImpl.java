@@ -30,7 +30,6 @@ public class CustomerDAOImpl implements CustomerDAO {
 
 	public void addCustomer(@NotNull Customer customer) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		//todo check if should insert id!
 		String sqlQuery = "INSERT INTO customers VALUES (?, ?, ?, ?, ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setString(2, customer.getFirstName());

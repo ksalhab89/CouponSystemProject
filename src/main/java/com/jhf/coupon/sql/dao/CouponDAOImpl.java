@@ -20,7 +20,6 @@ public class CouponDAOImpl implements CouponsDAO {
 
 	public void addCoupon(@NotNull Coupon coupon) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		//todo check if should insert id!
 		String sqlQuery = "INSERT INTO coupons VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(2, coupon.getCompanyID());
