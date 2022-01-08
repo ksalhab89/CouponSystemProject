@@ -16,12 +16,12 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 		pool = ConnectionPool.getInstance();
 	}
 
-	public boolean isCompanyExists(String email, String password) throws InterruptedException, SQLException {
+	public boolean isCompanyExists(String companyEmail, String companyPassword) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT EXISTS(SELECT * FROM companies WHERE EMAIL = ? AND PASSWORD = ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-		preparedStatement.setString(1, email);
-		preparedStatement.setString(2, password);
+		preparedStatement.setString(1, companyEmail);
+		preparedStatement.setString(2, companyPassword);
 		boolean exists = preparedStatement.execute(sqlQuery);
 		preparedStatement.close();
 		connection.close();
@@ -33,9 +33,9 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 		//todo check if should insert id!
 		String sqlQuery = "INSERT INTO companies VALUES (?, ?, ?, ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-		preparedStatement.setString(1, company.getName());
-		preparedStatement.setString(2, company.getEmail());
-		preparedStatement.setString(3, company.getPassword());
+		preparedStatement.setString(2, company.getName());
+		preparedStatement.setString(3, company.getEmail());
+		preparedStatement.setString(4, company.getPassword());
 		preparedStatement.execute();
 		preparedStatement.close();
 		connection.close();

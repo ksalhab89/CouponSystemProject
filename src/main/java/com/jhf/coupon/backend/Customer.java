@@ -17,4 +17,12 @@ public class Customer {
 	private String email;
 	private String password;
 	private ArrayList<Coupon> coupons;
+
+	public Customer(int id, String firstName, String lastName, String email, String password) {
+		this.id = id;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.email = email;
+		this.password = password;
+	}
 }

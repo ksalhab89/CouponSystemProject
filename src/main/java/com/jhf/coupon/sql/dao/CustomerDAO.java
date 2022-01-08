@@ -2,19 +2,20 @@ package com.jhf.coupon.sql.dao;
 
 import com.jhf.coupon.backend.Customer;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public interface CustomerDAO {
 
-	public boolean isCustomerExists(String email, String password);
+	boolean isCustomerExists(String customerEmail, String customerPassword) throws InterruptedException, SQLException;
 
-	public void addCustomer(Customer customer);
+	void addCustomer(Customer customer) throws InterruptedException, SQLException;
 
-	public void updateCustomer(Customer customer);
+	void updateCustomer(Customer customer) throws InterruptedException, SQLException;
 
-	public void deleteCustomer(int customerID);
+	void deleteCustomer(int customerID) throws InterruptedException, SQLException;
 
-	public ArrayList<Customer> getAllCustomers();
+	ArrayList<Customer> getAllCustomers() throws InterruptedException, SQLException;
 
-	public Customer getCustomer(int companyID);
+	Customer getCustomer(int customerID) throws InterruptedException, SQLException;
 }
