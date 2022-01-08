@@ -1,22 +1,24 @@
 package com.jhf.coupon.sql.dao;
 
 import com.jhf.coupon.backend.Coupon;
+import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 
 public interface CouponsDAO {
 
-	public void addCoupon(Coupon coupon);
+	void addCoupon(Coupon coupon) throws InterruptedException, SQLException;
 
-	public void updateCoupon(Coupon coupon);
+	void updateCoupon(Coupon coupon) throws InterruptedException, SQLException;
 
-	public void deleteCoupon(int couponID);
+	void deleteCoupon(int couponID) throws InterruptedException, SQLException;
 
-	public ArrayList<Coupon> getAllCoupons();
+	ArrayList<Coupon> getAllCoupons() throws InterruptedException, SQLException, CategoryNotFoundException;
 
-	public Coupon getCoupon(int couponID);
+	Coupon getCoupon(int couponID) throws InterruptedException, SQLException, CategoryNotFoundException;
 
-	public void addCouponPurchase(int customerId, int couponId);
+	void addCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException;
 
-	public void deleteCouponPurchase(int customerId, int couponId);
+	void deleteCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException;
 }
