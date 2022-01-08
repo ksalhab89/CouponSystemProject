@@ -1,8 +1,8 @@
 package com.jhf.coupon.sql.dao;
 
-import com.jhf.coupon.backend.Category;
+import com.jhf.coupon.backend.couponCategory.Category;
 import com.jhf.coupon.backend.Coupon;
-import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
+import com.jhf.coupon.backend.couponCategory.exceptions.CategoryNotFoundException;
 import com.jhf.coupon.sql.dao.exceptions.CouponNotFoundException;
 import com.jhf.coupon.sql.utils.ConnectionPool;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +14,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	private final ConnectionPool pool;
 	private Connection connection;
 
-	CouponDAOImpl() {
+	public CouponDAOImpl() {
 		pool = ConnectionPool.getInstance();
 	}
 
@@ -68,7 +68,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	public ArrayList<Coupon> getAllCoupons() throws InterruptedException, SQLException, CategoryNotFoundException {
-		ArrayList<Coupon> list = new ArrayList<Coupon>();
+		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM coupons";
 		Statement statement = connection.createStatement();

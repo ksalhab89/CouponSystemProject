@@ -1,6 +1,6 @@
-package com.jhf.coupon.backend;
+package com.jhf.coupon.backend.couponCategory;
 
-import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
+import com.jhf.coupon.backend.couponCategory.exceptions.CategoryNotFoundException;
 import lombok.Getter;
 
 public enum Category {

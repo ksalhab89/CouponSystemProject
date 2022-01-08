@@ -13,7 +13,7 @@ public class ConnectionPool {
 	private static final String PASSWORD = "projectUser";
 	private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
 
-	private static final Set<Connection> connections = new HashSet<Connection>();
+	private static final Set<Connection> connections = new HashSet<>();
 	private static ConnectionPool instance = null;
 
 	private ConnectionPool() {
@@ -22,9 +22,7 @@ public class ConnectionPool {
 			for (int i = 10; i > 0; i--) {
 				connections.add(DriverManager.getConnection(URL, USER, PASSWORD));
 			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
+		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 	}

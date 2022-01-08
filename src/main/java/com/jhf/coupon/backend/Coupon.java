@@ -1,5 +1,6 @@
 package com.jhf.coupon.backend;
 
+import com.jhf.coupon.backend.couponCategory.Category;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,13 +1,12 @@
 package com.jhf.coupon.backend.facade;
 
-import com.jhf.coupon.sql.dao.CompaniesDAO;
-import com.jhf.coupon.sql.dao.CouponsDAO;
-import com.jhf.coupon.sql.dao.CustomerDAO;
+import com.jhf.coupon.sql.dao.*;
 
 public abstract class ClientFacade {
-	protected CompaniesDAO companiesDAO;
-	protected CustomerDAO customerDAO;
-	protected CouponsDAO couponsDAO;
+
+	protected final CompaniesDAO companiesDAO = new CompaniesDAOImpl();
+	protected final CustomerDAO customerDAO = new CustomerDAOImpl();
+	protected final CouponsDAO couponsDAO = new CouponDAOImpl();
 
 	public abstract boolean login(String email, String password);
 }

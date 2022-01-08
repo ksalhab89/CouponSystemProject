@@ -1,4 +1,4 @@
-package com.jhf.coupon.backend.exceptions;
+package com.jhf.coupon.backend.couponCategory.exceptions;
 
 public class CategoryNotFoundException extends Exception {
 	public CategoryNotFoundException(String message) {

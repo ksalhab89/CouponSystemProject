@@ -12,7 +12,7 @@ public class CustomerDAOImpl implements CustomerDAO {
 	private final ConnectionPool pool;
 	private Connection connection;
 
-	CustomerDAOImpl() {
+	public CustomerDAOImpl() {
 		pool = ConnectionPool.getInstance();
 	}
 
@@ -66,7 +66,7 @@ public class CustomerDAOImpl implements CustomerDAO {
 	}
 
 	public ArrayList<Customer> getAllCustomers() throws InterruptedException, SQLException {
-		ArrayList<Customer> list = new ArrayList<Customer>();
+		ArrayList<Customer> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM customers";
 		Statement statement = connection.createStatement();
