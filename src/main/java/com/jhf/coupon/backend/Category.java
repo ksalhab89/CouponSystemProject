@@ -1,6 +1,7 @@
 package com.jhf.coupon.backend;
 
 import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
+import lombok.Getter;
 
 public enum Category {
 	SKYING(10),
@@ -8,14 +9,11 @@ public enum Category {
 	FANCY_RESTAURANT(30),
 	ALL_INCLUSIVE_VACATION(40);
 
+	@Getter
 	private final int id;
 
 	Category(int id) {
 		this.id = id;
-	}
-
-	public int getCategoryId() {
-		return id;
 	}
 
 	public static Category getCategory(int id) throws CategoryNotFoundException {

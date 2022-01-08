@@ -23,7 +23,7 @@ public class CouponDAOImpl implements CouponsDAO {
 		String sqlQuery = "INSERT INTO coupons VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(2, coupon.getCompanyID());
-		preparedStatement.setInt(3, coupon.getCATEGORY().getCategoryId());
+		preparedStatement.setInt(3, coupon.getCATEGORY().getId());
 		preparedStatement.setString(4, coupon.getTitle());
 		preparedStatement.setString(5, coupon.getDescription());
 		preparedStatement.setString(6, coupon.getDescription());
@@ -43,7 +43,7 @@ public class CouponDAOImpl implements CouponsDAO {
 				                  "WHERE ID = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(1, coupon.getCompanyID());
-		preparedStatement.setInt(2, coupon.getCATEGORY().getCategoryId());
+		preparedStatement.setInt(2, coupon.getCATEGORY().getId());
 		preparedStatement.setString(3, coupon.getTitle());
 		preparedStatement.setString(4, coupon.getDescription());
 		preparedStatement.setString(5, coupon.getDescription());
