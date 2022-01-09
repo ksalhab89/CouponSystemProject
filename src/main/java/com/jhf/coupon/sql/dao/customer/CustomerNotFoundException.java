@@ -1,4 +1,4 @@
-package com.jhf.coupon.sql.dao.exceptions;
+package com.jhf.coupon.sql.dao.customer;
 
 import java.sql.SQLException;
 

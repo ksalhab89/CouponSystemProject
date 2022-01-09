@@ -1,8 +1,10 @@
 package com.jhf.coupon.backend.couponCategory;
 
-import com.jhf.coupon.backend.couponCategory.exceptions.CategoryNotFoundException;
+import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
 public enum Category {
 	SKYING(10),
 	SKY_DIVING(20),
@@ -11,10 +13,6 @@ public enum Category {
 
 	@Getter
 	private final int id;
-
-	Category(int id) {
-		this.id = id;
-	}
 
 	public static Category getCategory(int id) throws CategoryNotFoundException {
 		for (Category category : values()) {

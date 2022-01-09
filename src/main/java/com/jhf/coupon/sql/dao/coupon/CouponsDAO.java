@@ -1,7 +1,7 @@
-package com.jhf.coupon.sql.dao;
+package com.jhf.coupon.sql.dao.coupon;
 
-import com.jhf.coupon.backend.Coupon;
-import com.jhf.coupon.backend.couponCategory.exceptions.CategoryNotFoundException;
+import com.jhf.coupon.backend.beans.Coupon;
+import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

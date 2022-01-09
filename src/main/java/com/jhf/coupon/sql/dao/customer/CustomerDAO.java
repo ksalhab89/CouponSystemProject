@@ -1,6 +1,6 @@
-package com.jhf.coupon.sql.dao;
+package com.jhf.coupon.sql.dao.customer;
 
-import com.jhf.coupon.backend.Customer;
+import com.jhf.coupon.backend.beans.Customer;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

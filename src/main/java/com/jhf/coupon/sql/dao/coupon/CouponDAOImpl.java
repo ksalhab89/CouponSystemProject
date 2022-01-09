@@ -1,9 +1,8 @@
-package com.jhf.coupon.sql.dao;
+package com.jhf.coupon.sql.dao.coupon;
 
+import com.jhf.coupon.backend.beans.Coupon;
 import com.jhf.coupon.backend.couponCategory.Category;
-import com.jhf.coupon.backend.Coupon;
-import com.jhf.coupon.backend.couponCategory.exceptions.CategoryNotFoundException;
-import com.jhf.coupon.sql.dao.exceptions.CouponNotFoundException;
+import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 import com.jhf.coupon.sql.utils.ConnectionPool;
 import org.jetbrains.annotations.NotNull;
 

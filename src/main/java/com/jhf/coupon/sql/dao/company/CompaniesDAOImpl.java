@@ -1,7 +1,6 @@
-package com.jhf.coupon.sql.dao;
+package com.jhf.coupon.sql.dao.company;
 
-import com.jhf.coupon.backend.Company;
-import com.jhf.coupon.sql.dao.exceptions.CompanyNotFoundException;
+import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.sql.utils.ConnectionPool;
 import org.jetbrains.annotations.NotNull;
 

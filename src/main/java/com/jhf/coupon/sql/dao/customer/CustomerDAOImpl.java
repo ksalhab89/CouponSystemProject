@@ -1,7 +1,6 @@
-package com.jhf.coupon.sql.dao;
+package com.jhf.coupon.sql.dao.customer;
 
-import com.jhf.coupon.backend.Customer;
-import com.jhf.coupon.sql.dao.exceptions.CustomerNotFoundException;
+import com.jhf.coupon.backend.beans.Customer;
 import com.jhf.coupon.sql.utils.ConnectionPool;
 import org.jetbrains.annotations.NotNull;
 

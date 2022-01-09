@@ -1,4 +1,4 @@
-package com.jhf.coupon.backend;
+package com.jhf.coupon.backend.beans;
 
 import com.jhf.coupon.backend.couponCategory.Category;
 import lombok.AllArgsConstructor;

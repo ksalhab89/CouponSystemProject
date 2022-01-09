@@ -1,12 +1,11 @@
 package com.jhf.coupon.backend.facade;
 
-import com.jhf.coupon.backend.Company;
-import com.jhf.coupon.backend.Coupon;
-import com.jhf.coupon.backend.Customer;
-import com.jhf.coupon.backend.couponCategory.exceptions.CategoryNotFoundException;
-import com.jhf.coupon.backend.facade.exceptions.*;
-import com.jhf.coupon.sql.dao.exceptions.CompanyNotFoundException;
-import com.jhf.coupon.sql.dao.exceptions.CustomerNotFoundException;
+import com.jhf.coupon.backend.beans.Company;
+import com.jhf.coupon.backend.beans.Coupon;
+import com.jhf.coupon.backend.beans.Customer;
+import com.jhf.coupon.backend.exceptions.*;
+import com.jhf.coupon.sql.dao.company.CompanyNotFoundException;
+import com.jhf.coupon.sql.dao.customer.CustomerNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
