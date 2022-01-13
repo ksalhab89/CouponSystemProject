@@ -7,11 +7,13 @@ import com.jhf.coupon.sql.dao.coupon.CouponsDAO;
 import com.jhf.coupon.sql.dao.customer.CustomerDAO;
 import com.jhf.coupon.sql.dao.customer.CustomerDAOImpl;
 
+import java.sql.SQLException;
+
 public abstract class ClientFacade {
 
 	protected final CompaniesDAO companiesDAO = new CompaniesDAOImpl();
 	protected final CustomerDAO customerDAO = new CustomerDAOImpl();
 	protected final CouponsDAO couponsDAO = new CouponDAOImpl();
 
-	public abstract boolean login(String email, String password);
+	public abstract boolean login(String email, String password) throws SQLException, InterruptedException;
 }

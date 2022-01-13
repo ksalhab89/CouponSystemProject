@@ -6,7 +6,6 @@ import com.jhf.coupon.backend.beans.Customer;
 import com.jhf.coupon.backend.exceptions.*;
 import com.jhf.coupon.sql.dao.company.CompanyNotFoundException;
 import com.jhf.coupon.sql.dao.customer.CustomerNotFoundException;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,7 +13,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 @NoArgsConstructor
-@AllArgsConstructor
 public class AdminFacade extends ClientFacade {
 
 	public boolean login(@NotNull String email, String password) {
@@ -39,7 +37,7 @@ public class AdminFacade extends ClientFacade {
 		if (!companiesDAO.isCompanyExists(company.getEmail(), company.getPassword())) {
 			throw new CompanyNotFoundException("Unable to update Company " + company.getName() + ", Company doesn't exist");
 		}
-		if (!(companiesDAO.getCompany(company.getId()).getId() == company.getId())) {
+		if (companiesDAO.getCompany(company.getId()).getId() != company.getId()) {
 			throw new CantUpdateCompanyException("Unable to update company " + company.getId() + ", Company ID can't be updated");
 		}
 		if (!(companiesDAO.getCompany(company.getId()).getName().equals(company.getName()))) {
@@ -54,7 +52,6 @@ public class AdminFacade extends ClientFacade {
 				throw new CantDeleteCompanyHasCoupons("Unable to delete Company " + companyId + ", Company still has Coupons");
 			}
 		}
-		//todo The coupons created by the company must also be deleted, & the history of the purchase of the company's coupons by customers must also be deleted.
 		companiesDAO.deleteCompany(companyId);
 	}
 
@@ -84,10 +81,6 @@ public class AdminFacade extends ClientFacade {
 	}
 
 	public void deleteCustomer(int customerId) throws SQLException, InterruptedException, CantDeleteCustomerHasCoupons {
-		//todo customer's purchase coupon history must also be deleted
-		if (true) {
-			throw new CantDeleteCustomerHasCoupons("Unable to delete Customer " + customerId + ", Customer still has Coupons");
-		}
 		customerDAO.deleteCustomer(customerId);
 	}
 
