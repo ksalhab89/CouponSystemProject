@@ -16,6 +16,7 @@ public class Customer {
 	private String lastName;
 	private String email;
 	private String password;
+	//todo should be used.
 	private ArrayList<Coupon> coupons;
 
 	public Customer(int id, String firstName, String lastName, String email, String password) {

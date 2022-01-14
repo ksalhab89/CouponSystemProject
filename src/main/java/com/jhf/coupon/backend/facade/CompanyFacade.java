@@ -15,6 +15,8 @@ import java.util.ArrayList;
 
 @NoArgsConstructor
 public class CompanyFacade extends ClientFacade {
+	//todo should be used
+	private int companyId;
 
 	public boolean login(String email, String password) throws SQLException, InterruptedException {
 		return companiesDAO.isCompanyExists(email, password);
@@ -45,7 +47,7 @@ public class CompanyFacade extends ClientFacade {
 	}
 
 	//todo get Company Something need to return details of logged in company.
-	public ArrayList<Coupon> getCompanyCoupons(Company company) throws SQLException, CategoryNotFoundException, InterruptedException {
+	public ArrayList<Coupon> getCompanyCoupons(@NotNull Company company) throws SQLException, CategoryNotFoundException, InterruptedException {
 		return couponsDAO.getCompanyCoupons(company.getId());
 	}
 

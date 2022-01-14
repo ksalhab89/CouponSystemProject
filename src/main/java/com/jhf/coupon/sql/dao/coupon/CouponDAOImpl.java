@@ -2,6 +2,7 @@ package com.jhf.coupon.sql.dao.coupon;
 
 import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.backend.beans.Coupon;
+import com.jhf.coupon.backend.beans.Customer;
 import com.jhf.coupon.backend.couponCategory.Category;
 import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 import com.jhf.coupon.sql.utils.ConnectionPool;
@@ -213,6 +214,18 @@ public class CouponDAOImpl implements CouponsDAO {
 		return list;
 	}
 
+	public boolean customerCouponPurchaseExists(int customerId, int couponId) throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT EXISTS(SELECT * FROM customers_vs_coupons WHERE CUSTOMER_ID = ? AND COUPON_ID = ?);";
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		preparedStatement.setInt(1, customerId);
+		preparedStatement.setInt(2, couponId);
+		boolean exists = preparedStatement.execute(sqlQuery);
+		preparedStatement.close();
+		connection.close();
+		return exists;
+	}
+
 	public void addCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
 		String sqlQuery = "INSERT INTO customers_vs_coupons VALUES (?, ?);";
@@ -222,6 +235,23 @@ public class CouponDAOImpl implements CouponsDAO {
 		preparedStatement.execute();
 		preparedStatement.close();
 		connection.close();
+	}
+
+	@Override
+	public ArrayList<Coupon> getCustomerCoupons(Customer customer) throws InterruptedException, SQLException, CategoryNotFoundException {
+		ArrayList<Coupon> list = new ArrayList<>();
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT COUPON_ID FROM customers_vs_coupons WHERE CUSTOMER_ID = '" + customer.getId() + "';";
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+		while (resultSet.next()) {
+			list.add(getCoupon(resultSet.getInt("COUPON_ID")));
+		}
+		resultSet.close();
+		statement.close();
+		connection.close();
+		return list;
 	}
 
 	public void deleteCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException {

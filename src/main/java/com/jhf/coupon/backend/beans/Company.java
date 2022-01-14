@@ -15,7 +15,8 @@ public class Company {
 	private String name;
 	private String email;
 	private String password;
-	private ArrayList<Coupon> coupon;
+	//todo should be used.
+	private ArrayList<Coupon> coupons;
 
 	public Company(int id, String name, String email, String password) {
 		this.id = id;

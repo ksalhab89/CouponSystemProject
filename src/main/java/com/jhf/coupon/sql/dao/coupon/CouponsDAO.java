@@ -2,6 +2,7 @@ package com.jhf.coupon.sql.dao.coupon;
 
 import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.backend.beans.Coupon;
+import com.jhf.coupon.backend.beans.Customer;
 import com.jhf.coupon.backend.couponCategory.Category;
 import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 
@@ -28,7 +29,11 @@ public interface CouponsDAO {
 
 	ArrayList<Coupon> getCompanyCoupons(Company company, double maxPrice) throws InterruptedException, SQLException, CategoryNotFoundException;
 
+	public boolean customerCouponPurchaseExists(int customerId, int couponId) throws InterruptedException, SQLException;
+
 	void addCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException;
+
+	public ArrayList<Coupon> getCustomerCoupons(Customer customer) throws InterruptedException, SQLException, CategoryNotFoundException;
 
 	void deleteCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException;
 }
