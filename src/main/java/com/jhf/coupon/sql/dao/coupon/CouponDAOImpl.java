@@ -20,7 +20,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	@Override
-	public boolean couponExists(Coupon coupon) throws InterruptedException, SQLException {
+	public boolean couponExists(@NotNull Coupon coupon) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM coupons" +
 				                  " WHERE TITLE = " + coupon.getTitle() +
@@ -76,7 +76,6 @@ public class CouponDAOImpl implements CouponsDAO {
 		preparedStatement.setDate(7, coupon.getEndDate());
 		preparedStatement.setDouble(8, coupon.getPrice());
 		preparedStatement.setString(9, coupon.getImage());
-		preparedStatement.setInt(10, coupon.getId());
 		preparedStatement.executeUpdate();
 		preparedStatement.close();
 		connection.close();
@@ -175,7 +174,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	@Override
-	public ArrayList<Coupon> getCompanyCoupons(Company company, Category CATEGORY) throws InterruptedException, SQLException, CategoryNotFoundException {
+	public ArrayList<Coupon> getCompanyCoupons(@NotNull Company company, @NotNull Category CATEGORY) throws InterruptedException, SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM coupons " +
@@ -204,7 +203,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	@Override
-	public ArrayList<Coupon> getCompanyCoupons(Company company, double maxPrice) throws InterruptedException, SQLException, CategoryNotFoundException {
+	public ArrayList<Coupon> getCompanyCoupons(@NotNull Company company, double maxPrice) throws InterruptedException, SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM coupons " +
@@ -259,7 +258,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	@Override
-	public ArrayList<Coupon> getCustomerCoupons(Customer customer) throws InterruptedException, SQLException, CategoryNotFoundException {
+	public ArrayList<Coupon> getCustomerCoupons(@NotNull Customer customer) throws InterruptedException, SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT COUPON_ID FROM customers_vs_coupons " +
