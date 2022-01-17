@@ -1,5 +1,11 @@
 package main.java.com.jhf.CouponSystem.sql.dao.Exceptions;
 
-public class CompanyNotFoundException {
+import java.sql.SQLException;
 
+public class CompanyNotFoundException extends SQLException  {
+
+	
+	public CompanyNotFoundException(String message) {
+		super(message);
+		}
 }

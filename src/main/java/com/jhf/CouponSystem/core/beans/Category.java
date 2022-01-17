@@ -9,6 +9,10 @@ public enum Category {
 	VACATION(40);
 
 	
+	public int getId() {
+		return id;
+	}
+
 	private final int id;
 
 	Category(int i) {

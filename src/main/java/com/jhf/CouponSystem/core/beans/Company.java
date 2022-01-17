@@ -17,14 +17,13 @@ public class Company {
 		return "Company [id=" + id + ", name=" + name + ", email=" + email + ", password=" + password + ", coupon="
 				+ coupon + "]";
 	}
-	public Company(int id, String name, String email, String password, ArrayList<Coupon> coupon) {
-		super();
+	public Company(int id, String name, String email, String password) {
 		this.id = id;
 		this.name = name;
 		this.email = email;
 		this.password = password;
-		this.coupon = coupon;
 	}
+	
 	public int getId() {
 		return id;
 	}
