@@ -22,12 +22,13 @@ public class CouponDAOImpl implements CouponsDAO {
 	@Override
 	public boolean couponExists(@NotNull Coupon coupon) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "SELECT * FROM coupons" +
-				                  " WHERE TITLE = " + coupon.getTitle() +
-				                  " AND COMPANY_ID = " + coupon.getCompanyID();
+		String sqlQuery = "SELECT * FROM `coupons`" +
+				                  " WHERE `TITLE` = '" + coupon.getTitle() +
+				                  "' AND `COMPANY_ID` = '" + coupon.getCompanyID() + "'";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
 		boolean exists = resultSet.next();
+
 		preparedStatement.close();
 		connection.close();
 		return exists;
@@ -43,11 +44,12 @@ public class CouponDAOImpl implements CouponsDAO {
 		preparedStatement.setInt(2, coupon.getCATEGORY().getId());
 		preparedStatement.setString(3, coupon.getTitle());
 		preparedStatement.setString(4, coupon.getDescription());
-		preparedStatement.setString(5, coupon.getDescription());
-		preparedStatement.setDate(6, coupon.getStartDate());
-		preparedStatement.setDate(7, coupon.getEndDate());
+		preparedStatement.setDate(5, coupon.getStartDate());
+		preparedStatement.setDate(6, coupon.getEndDate());
+		preparedStatement.setInt(7, coupon.getAmount());
 		preparedStatement.setDouble(8, coupon.getPrice());
 		preparedStatement.setString(9, coupon.getImage());
+
 		preparedStatement.execute();
 		preparedStatement.close();
 		connection.close();
@@ -56,26 +58,27 @@ public class CouponDAOImpl implements CouponsDAO {
 	public void updateCoupon(@NotNull Coupon coupon) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
 		String sqlQuery = "UPDATE coupons SET " +
-				                  "COMPANY_ID = ?, " +
-				                  "CATEGORY_ID = ?, " +
-				                  "TITLE = ?, " +
-				                  "DESCRIPTION = ?, " +
-				                  "START_DATE = ?, " +
-				                  "END_DATE = ?, " +
-				                  "AMOUNT = ?, " +
-				                  "PRICE = ?, " +
-				                  "IMAGE = ? " +
+				                  "`COMPANY_ID` = ?, " +
+				                  "`CATEGORY_ID` = ?, " +
+				                  "`TITLE` = ?, " +
+				                  "`DESCRIPTION` = ?, " +
+				                  "`START_DATE` = ?, " +
+				                  "`END_DATE` = ?, " +
+				                  "`AMOUNT` = ?, " +
+				                  "`PRICE` = ?, " +
+				                  "`IMAGE` = ? " +
 				                  "WHERE `ID` = " + coupon.getId();
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(1, coupon.getCompanyID());
 		preparedStatement.setInt(2, coupon.getCATEGORY().getId());
 		preparedStatement.setString(3, coupon.getTitle());
 		preparedStatement.setString(4, coupon.getDescription());
-		preparedStatement.setString(5, coupon.getDescription());
-		preparedStatement.setDate(6, coupon.getStartDate());
-		preparedStatement.setDate(7, coupon.getEndDate());
+		preparedStatement.setDate(5, coupon.getStartDate());
+		preparedStatement.setDate(6, coupon.getEndDate());
+		preparedStatement.setInt(7, coupon.getAmount());
 		preparedStatement.setDouble(8, coupon.getPrice());
 		preparedStatement.setString(9, coupon.getImage());
+
 		preparedStatement.executeUpdate();
 		preparedStatement.close();
 		connection.close();
@@ -86,6 +89,7 @@ public class CouponDAOImpl implements CouponsDAO {
 		String sqlQuery = "DELETE FROM coupons " +
 				                  "WHERE `ID` = " + couponID;
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+
 		preparedStatement.executeUpdate();
 		preparedStatement.close();
 		connection.close();
@@ -111,6 +115,7 @@ public class CouponDAOImpl implements CouponsDAO {
 					resultSet.getDouble("PRICE"),
 					resultSet.getString("IMAGE")));
 		}
+
 		resultSet.close();
 		statement.close();
 		connection.close();
@@ -139,9 +144,11 @@ public class CouponDAOImpl implements CouponsDAO {
 					resultSet.getString("IMAGE"));
 		} else throw new CouponNotFoundException(
 				"Could not find Coupon with id: " + couponID);
+
 		resultSet.close();
 		preparedStatement.close();
 		connection.close();
+
 		return coupon;
 	}
 
@@ -150,7 +157,7 @@ public class CouponDAOImpl implements CouponsDAO {
 		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM coupons " +
-				                  "WHERE COMPANY_ID = " + companyId;
+				                  "WHERE `COMPANY_ID` = " + companyId;
 		Statement statement = connection.createStatement();
 		ResultSet resultSet = statement.executeQuery(sqlQuery);
 
@@ -167,9 +174,11 @@ public class CouponDAOImpl implements CouponsDAO {
 					resultSet.getDouble("PRICE"),
 					resultSet.getString("IMAGE")));
 		}
+
 		resultSet.close();
 		statement.close();
 		connection.close();
+
 		return list;
 	}
 
@@ -178,8 +187,8 @@ public class CouponDAOImpl implements CouponsDAO {
 		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM coupons " +
-				                  "WHERE COMPANY_ID = " + company.getId() +
-				                  " AND CATEGORY_ID = " + CATEGORY.getId();
+				                  "WHERE `COMPANY_ID` = " + company.getId() +
+				                  " AND `CATEGORY_ID` = " + CATEGORY.getId();
 		Statement statement = connection.createStatement();
 		ResultSet resultSet = statement.executeQuery(sqlQuery);
 
@@ -196,9 +205,11 @@ public class CouponDAOImpl implements CouponsDAO {
 					resultSet.getDouble("PRICE"),
 					resultSet.getString("IMAGE")));
 		}
+
 		resultSet.close();
 		statement.close();
 		connection.close();
+
 		return list;
 	}
 
@@ -207,8 +218,8 @@ public class CouponDAOImpl implements CouponsDAO {
 		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM coupons " +
-				                  "WHERE COMPANY_ID = " + company.getId() +
-				                  " AND PRICE IS BETWEEN 0 AND " + maxPrice;
+				                  "WHERE `COMPANY_ID`= " + company.getId() +
+				                  " AND `PRICE` IS BETWEEN 0 AND " + (int) maxPrice;
 		Statement statement = connection.createStatement();
 		ResultSet resultSet = statement.executeQuery(sqlQuery);
 
@@ -225,23 +236,29 @@ public class CouponDAOImpl implements CouponsDAO {
 					resultSet.getDouble("PRICE"),
 					resultSet.getString("IMAGE")));
 		}
+
 		resultSet.close();
 		statement.close();
 		connection.close();
+
 		return list;
 	}
 
 	public boolean customerCouponPurchaseExists(int customerId, int couponId) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "SELECT EXISTS(SELECT * FROM customers_vs_coupons " +
-				                  "WHERE CUSTOMER_ID = ? " +
-				                  "AND COUPON_ID = ?);";
+		String sqlQuery = "SELECT * FROM customers_vs_coupons " +
+				                  "WHERE `CUSTOMER_ID` = ? " +
+				                  "AND `COUPON_ID` = ?";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(1, customerId);
 		preparedStatement.setInt(2, couponId);
-		boolean exists = preparedStatement.execute(sqlQuery);
+		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
+		boolean exists = resultSet.next();
+
 		preparedStatement.close();
+		resultSet.close();
 		connection.close();
+
 		return exists;
 	}
 
@@ -252,8 +269,10 @@ public class CouponDAOImpl implements CouponsDAO {
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(1, customerId);
 		preparedStatement.setInt(2, couponId);
+
 		preparedStatement.execute();
 		preparedStatement.close();
+
 		connection.close();
 	}
 
@@ -261,17 +280,19 @@ public class CouponDAOImpl implements CouponsDAO {
 	public ArrayList<Coupon> getCustomerCoupons(@NotNull Customer customer) throws InterruptedException, SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
 		connection = pool.getConnection();
-		String sqlQuery = "SELECT COUPON_ID FROM customers_vs_coupons " +
-				                  "WHERE CUSTOMER_ID = " + customer.getId();
+		String sqlQuery = "SELECT `COUPON_ID` FROM customers_vs_coupons " +
+				                  "WHERE `CUSTOMER_ID` = " + customer.getId();
 		Statement statement = connection.createStatement();
 		ResultSet resultSet = statement.executeQuery(sqlQuery);
 
 		while (resultSet.next()) {
 			list.add(getCoupon(resultSet.getInt("COUPON_ID")));
 		}
+
 		resultSet.close();
 		statement.close();
 		connection.close();
+
 		return list;
 	}
 
@@ -283,8 +304,10 @@ public class CouponDAOImpl implements CouponsDAO {
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(1, customerId);
 		preparedStatement.setInt(2, couponId);
+
 		preparedStatement.execute();
 		preparedStatement.close();
+
 		connection.close();
 	}
 }
