@@ -1,0 +1,46 @@
+CREATE TABLE `companies` (
+    `ID` INT NOT NULL AUTO_INCREMENT COMMENT 'Identification Number',
+    `NAME` VARCHAR(48) NULL COMMENT 'Company Name',
+    `EMAIL` VARCHAR(48) NULL COMMENT 'Company Email',
+    `PASSWORD` VARCHAR(48) NULL COMMENT 'Login Password',
+    PRIMARY KEY (`ID`)
+);
+
+CREATE TABLE `customers` (
+	`ID` INT NOT NULL AUTO_INCREMENT COMMENT 'Identification Number',
+	`FIRST_NAME` VARCHAR(48) NULL COMMENT 'First Name',
+	`LAST_NAME` VARCHAR(48) NULL COMMENT 'Last Name',
+	`EMAIL` VARCHAR(48) NULL COMMENT 'Customer Email',
+	`PASSWORD` VARCHAR(48) NULL COMMENT 'Login Password',
+	PRIMARY KEY (`ID`)
+);
+
+CREATE TABLE `categories` (
+	`ID` INT NOT NULL AUTO_INCREMENT COMMENT 'Identification Number',
+	`NAME` VARCHAR(48) NULL COMMENT 'Coupon Category Name',
+	PRIMARY KEY (`ID`)
+);
+
+CREATE TABLE `coupons` (
+	`ID` INT NOT NULL AUTO_INCREMENT COMMENT 'Identification Number',
+	`COMPANY_ID` INT COMMENT 'Company Identification Number',
+	`CATEGORY_ID` INT COMMENT 'Category Identification Number',
+	`TITLE` VARCHAR(48) DEFAULT NULL COMMENT 'Coupon Title',
+	`DESCRIPTION` VARCHAR(48) DEFAULT NULL COMMENT 'Description of the coupon',
+	`START_DATE` DATE DEFAULT NULL COMMENT 'Coupon creation date',
+	`END_DATE` DATE DEFAULT NULL COMMENT 'Coupon expiration date',
+	`AMOUNT` INT DEFAULT NULL COMMENT 'Quantity of coupons in stock',
+	`PRICE` DOUBLE DEFAULT NULL COMMENT 'Price of the coupon',
+	`IMAGE` VARCHAR(48) DEFAULT NULL COMMENT 'Name of the image file',
+	PRIMARY KEY (`ID`),
+    FOREIGN KEY (COMPANY_ID) REFERENCES companies(id) ON DELETE CASCADE,
+    FOREIGN KEY (CATEGORY_ID) REFERENCES categories(id) ON DELETE CASCADE
+);
+
+CREATE TABLE `customers_vs_coupons` (
+	`CUSTOMER_ID` INT NOT NULL,
+	`COUPON_ID` INT NOT NULL,
+	PRIMARY KEY (`CUSTOMER_ID`,`COUPON_ID`),
+    FOREIGN KEY (CUSTOMER_ID) REFERENCES customers(id) ON DELETE CASCADE,
+	FOREIGN KEY (COUPON_ID) REFERENCES coupons(id) ON DELETE CASCADE
+);
