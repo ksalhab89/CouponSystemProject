@@ -17,23 +17,27 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 
 	public boolean isCompanyExists(String companyEmail, String companyPassword) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "SELECT EXISTS(SELECT * FROM companies WHERE EMAIL = ? AND PASSWORD = ?);";
+		String sqlQuery = "SELECT * FROM `companies` "
+				                  + "WHERE `EMAIL` = '" + companyEmail
+				                  + "' AND `PASSWORD` = '" + companyPassword + "'";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-		preparedStatement.setString(1, companyEmail);
-		preparedStatement.setString(2, companyPassword);
-		boolean exists = preparedStatement.execute(sqlQuery);
+		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
+		boolean exists = resultSet.next();
 		preparedStatement.close();
 		connection.close();
+		resultSet.close();
 		return exists;
 	}
 
 	public void addCompany(@NotNull Company company) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "INSERT INTO companies VALUES (?, ?, ?, ?);";
+		String sqlQuery = "INSERT INTO companies " +
+				                  "(NAME, EMAIL, PASSWORD) " +
+				                  "VALUES (?, ?, ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-		preparedStatement.setString(2, company.getName());
-		preparedStatement.setString(3, company.getEmail());
-		preparedStatement.setString(4, company.getPassword());
+		preparedStatement.setString(1, company.getName());
+		preparedStatement.setString(2, company.getEmail());
+		preparedStatement.setString(3, company.getPassword());
 		preparedStatement.execute();
 		preparedStatement.close();
 		connection.close();
@@ -41,7 +45,11 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 
 	public void updateCompany(@NotNull Company company) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "UPDATE companies SET NAME = ? AND EMAIL = ? AND PASSWORD = ? WHERE ID = ?;";
+		String sqlQuery = "UPDATE companies " +
+				                  "SET `NAME` = ? " +
+				                  "AND `EMAIL` = ? " +
+				                  "AND `PASSWORD` = ? " +
+				                  "WHERE `ID` = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setString(1, company.getName());
 		preparedStatement.setString(2, company.getEmail());
@@ -54,7 +62,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 
 	public void deleteCompany(int companyID) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "DELETE FROM companies WHERE ID = ?";
+		String sqlQuery = "DELETE FROM companies WHERE `ID` = ?";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(1, companyID);
 		preparedStatement.executeUpdate();
@@ -83,22 +91,23 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	}
 
 	public Company getCompany(int companyID) throws InterruptedException, SQLException {
+		Company company;
 		connection = pool.getConnection();
-		String sqlQuery = "SELECT EXISTS(SELECT * FROM companies WHERE ID = ?);";
+		String sqlQuery = "SELECT * FROM `companies` WHERE `ID` = " + companyID;
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-		preparedStatement.setInt(1, companyID);
-
-		boolean exists = preparedStatement.execute(sqlQuery);
+		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
+		boolean exists = resultSet.next();
 		if (exists) {
-			sqlQuery = "SELECT * FROM companies WHERE ID = '" + companyID + "';";
-			Statement statement = connection.createStatement();
-			ResultSet resultSet = statement.executeQuery(sqlQuery);
-			return new Company(
+			company = new Company(
 					resultSet.getInt("ID"),
 					resultSet.getString("NAME"),
 					resultSet.getString("EMAIL"),
 					resultSet.getString("PASSWORD"));
 		} else throw new CompanyNotFoundException(
 				"Could not find Company with id: " + companyID);
+		resultSet.close();
+		preparedStatement.close();
+		connection.close();
+		return company;
 	}
 }

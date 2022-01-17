@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class ConnectionPool {
-	private static final String URL = "jdbc:mysql://localhost:3306/couponSystem";
+	private static final String URL = "jdbc:mysql://localhost:3306/couponSystem?useSSL=false&serverTimezone=UTC";
 	private static final String USER = "projectUser";
 	private static final String PASSWORD = "projectUser";
 	private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
