@@ -19,7 +19,7 @@ public class ConnectionPool {
 	private ConnectionPool() {
 		try {
 			Class.forName(JDBC_DRIVER);
-			for (int i = 10; i > 0; i--) {
+			for (int i = 50; i > 0; i--) {
 				connections.add(DriverManager.getConnection(URL, USER, PASSWORD));
 			}
 		} catch (SQLException | ClassNotFoundException e) {
@@ -34,7 +34,7 @@ public class ConnectionPool {
 		return instance;
 	}
 
-	public Connection getConnection() throws InterruptedException {
+	public synchronized Connection getConnection() throws InterruptedException {
 		Connection connection = null;
 		if (connections.isEmpty()) {
 			wait();
@@ -44,7 +44,6 @@ public class ConnectionPool {
 			connections.remove(connection);
 		}
 		return connection;
-
 	}
 
 	public void restoreConnection(Connection connection) {

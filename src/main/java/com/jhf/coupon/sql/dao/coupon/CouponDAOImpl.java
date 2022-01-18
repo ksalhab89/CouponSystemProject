@@ -119,6 +119,7 @@ public class CouponDAOImpl implements CouponsDAO {
 		resultSet.close();
 		statement.close();
 		connection.close();
+
 		return list;
 	}
 
@@ -247,11 +248,9 @@ public class CouponDAOImpl implements CouponsDAO {
 	public boolean customerCouponPurchaseExists(int customerId, int couponId) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
 		String sqlQuery = "SELECT * FROM customers_vs_coupons " +
-				                  "WHERE `CUSTOMER_ID` = ? " +
-				                  "AND `COUPON_ID` = ?";
+				                  "WHERE `CUSTOMER_ID` = " + customerId +
+				                  " AND `COUPON_ID` = " + couponId;
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-		preparedStatement.setInt(1, customerId);
-		preparedStatement.setInt(2, couponId);
 		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
 		boolean exists = resultSet.next();
 
@@ -269,10 +268,9 @@ public class CouponDAOImpl implements CouponsDAO {
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setInt(1, customerId);
 		preparedStatement.setInt(2, couponId);
-
 		preparedStatement.execute();
-		preparedStatement.close();
 
+		preparedStatement.close();
 		connection.close();
 	}
 
@@ -299,15 +297,12 @@ public class CouponDAOImpl implements CouponsDAO {
 	public void deleteCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
 		String sqlQuery = "DELETE FROM customers_vs_coupons " +
-				                  "WHERE CUSTOMER_ID = ? " +
-				                  "AND COUPON_ID = ?";
+				                  "WHERE CUSTOMER_ID = " + customerId +
+				                  " AND COUPON_ID = " + couponId;
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-		preparedStatement.setInt(1, customerId);
-		preparedStatement.setInt(2, couponId);
-
 		preparedStatement.execute();
-		preparedStatement.close();
 
+		preparedStatement.close();
 		connection.close();
 	}
 }
