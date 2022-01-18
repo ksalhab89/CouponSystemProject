@@ -16,7 +16,7 @@ CREATE TABLE `customers` (
 );
 
 CREATE TABLE `categories` (
-	`ID` INT NOT NULL AUTO_INCREMENT COMMENT 'Identification Number',
+	`ID` INT NOT NULL COMMENT 'Identification Number',
 	`NAME` VARCHAR(48) NULL COMMENT 'Coupon Category Name',
 	PRIMARY KEY (`ID`)
 );

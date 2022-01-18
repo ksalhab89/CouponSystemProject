@@ -3,8 +3,8 @@ package com.jhf.coupon.backend.facade;
 import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.backend.beans.Coupon;
 import com.jhf.coupon.backend.couponCategory.Category;
-import com.jhf.coupon.backend.exceptions.coupon.CantUpdateCouponException;
 import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
+import com.jhf.coupon.backend.exceptions.coupon.CantUpdateCouponException;
 import com.jhf.coupon.backend.exceptions.coupon.CouponAlreadyExistsForCompanyException;
 import com.jhf.coupon.sql.dao.coupon.CouponNotFoundException;
 import lombok.NoArgsConstructor;
@@ -26,7 +26,8 @@ public class CompanyFacade extends ClientFacade {
 		if (!couponsDAO.couponExists(coupon)) {
 			couponsDAO.addCoupon(coupon);
 		} else
-			throw new CouponAlreadyExistsForCompanyException("Unable to add coupon " + coupon.getTitle() + ", Company " + coupon.getCompanyID() + " Coupon exists.");
+			throw new CouponAlreadyExistsForCompanyException("Unable to add coupon " + coupon.getTitle() +
+					                                                 ", Company Coupon ID " + coupon.getCompanyID() + " exists.");
 	}
 
 	public void updateCoupon(Coupon coupon) throws SQLException, InterruptedException, CategoryNotFoundException, CantUpdateCouponException {
