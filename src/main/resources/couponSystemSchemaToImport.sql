@@ -90,7 +90,7 @@ CREATE TABLE `coupons` (
   KEY `CATEGORY_ID` (`CATEGORY_ID`),
   CONSTRAINT `coupons_ibfk_1` FOREIGN KEY (`COMPANY_ID`) REFERENCES `companies` (`ID`) ON DELETE CASCADE,
   CONSTRAINT `coupons_ibfk_2` FOREIGN KEY (`CATEGORY_ID`) REFERENCES `categories` (`ID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -99,7 +99,7 @@ CREATE TABLE `coupons` (
 
 LOCK TABLES `coupons` WRITE;
 /*!40000 ALTER TABLE `coupons` DISABLE KEYS */;
-INSERT INTO `coupons` VALUES (15,21,40,'Maldives Trip','All Inclusive trip to Maldives','2022-01-18','2022-12-01',2,2500,'Image');
+INSERT INTO `coupons` VALUES (18,21,40,'Maldives Trip','All Inclusive trip to Maldives','2022-01-18','2022-12-01',2,2500,'Image');
 /*!40000 ALTER TABLE `coupons` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -153,7 +153,7 @@ CREATE TABLE `customers_vs_coupons` (
 
 LOCK TABLES `customers_vs_coupons` WRITE;
 /*!40000 ALTER TABLE `customers_vs_coupons` DISABLE KEYS */;
-INSERT INTO `customers_vs_coupons` VALUES (1,15);
+INSERT INTO `customers_vs_coupons` VALUES (1,18);
 /*!40000 ALTER TABLE `customers_vs_coupons` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -166,4 +166,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-01-18  7:15:16
+-- Dump completed on 2022-01-18  7:59:06

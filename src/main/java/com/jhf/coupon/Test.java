@@ -9,6 +9,7 @@ import com.jhf.coupon.backend.facade.CompanyFacade;
 import com.jhf.coupon.backend.facade.CustomerFacade;
 import com.jhf.coupon.backend.login.ClientType;
 import com.jhf.coupon.backend.login.LoginManager;
+import com.jhf.coupon.backend.periodicJob.CouponExpirationDailyJob;
 
 import java.sql.Date;
 import java.time.LocalDate;
@@ -41,7 +42,7 @@ public class Test {
 		Company loginCompany = new Company(21, "Khaled", "Salhab@mail.com", "pass");
 		CompanyFacade companyFacade = (CompanyFacade) loginManager.login(loginCompany.getEmail(),
 				loginCompany.getPassword(), ClientType.COMPANY);
-		Coupon coupon = new Coupon(15, loginCompany.getId(), Category.ALL_INCLUSIVE_VACATION,
+		Coupon coupon = new Coupon(18, loginCompany.getId(), Category.ALL_INCLUSIVE_VACATION,
 				"Maldives Trip", "All Inclusive trip to Maldives", Date.valueOf(LocalDate.now()),
 				Date.valueOf(LocalDate.of(2022, 12, 1)), 1, 2500, "Image");
 		coupon.setAmount(2);
@@ -58,5 +59,11 @@ public class Test {
 		coupons = customerFacade.getCustomerCoupons(loginCustomer);
 		System.out.println(coupons);
 		System.out.println(customerFacade.getCustomerDetails(loginCustomer));
+
+		//Test Expiration Daily Job
+		CouponExpirationDailyJob couponExpirationDailyJob = new CouponExpirationDailyJob();
+		Thread jobThread = new Thread(couponExpirationDailyJob);
+		jobThread.start();
+		jobThread.join();
 	}
 }
