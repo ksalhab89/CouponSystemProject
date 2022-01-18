@@ -24,49 +24,37 @@ public class Test {
 		AdminFacade facade = (AdminFacade) loginManager.login(EMAIL, PASSWORD, ClientType.ADMIN);
 
 //		AdminFacade-Company
-//		facade.addCompany(new Company(10, "JHF26", "jhf25@mail.com", "jhf"));
-//		Company company = facade.getCompany(10);
-//		company.setPassword("jhf7");
-//		ArrayList<Company> companies = facade.getCompanies();
-//		System.out.println(companies);
-//		facade.deleteCompany(company.getId());
-//		facade.addCompany(company);
+		Company company = facade.getCompany(11);
+		company.setPassword("jhf7");
+		ArrayList<Company> companies = facade.getCompanies();
+		System.out.println(companies);
 
 //		//AdminFacade-Customer
-//		facade.addCustomer(new Customer(1, "dddddawohod", "kdddkabhhha", "kdddawhdooud@mail.com", "kabha"));
-//		Customer customer = facade.getCustomer(1);
-//		customer.setLastName("kabhad");
-//		facade.updateCustomer(customer);
-//		ArrayList<Customer> customers = facade.getAllCustomers();
-//		System.out.println(customers);
-//		facade.deleteCustomer(customer.getId());
-//		facade.addCustomer(customer);
-
+		Customer customer = facade.getCustomer(1);
+		customer.setLastName("kabhad");
+		facade.updateCustomer(customer);
+		ArrayList<Customer> customers = facade.getAllCustomers();
+		System.out.println(customers);
+		facade.deleteCustomer(customer.getId());
 
 		//CompanyFacade
-		Company loginCompany = new Company(1, "Khaled", "Salhab@mail.com", "pass");
-		facade.addCompany(loginCompany);
-		CompanyFacade companyFacade = (CompanyFacade) loginManager.login(loginCompany.getEmail(), loginCompany.getPassword(), ClientType.COMPANY);
-		Coupon coupon = new Coupon(1, loginCompany.getId(), Category.ALL_INCLUSIVE_VACATION,
-				"Maldives Trip", "All Inclusive trip to Maldices", Date.valueOf(LocalDate.now()),
+		Company loginCompany = new Company(21, "Khaled", "Salhab@mail.com", "pass");
+		CompanyFacade companyFacade = (CompanyFacade) loginManager.login(loginCompany.getEmail(),
+				loginCompany.getPassword(), ClientType.COMPANY);
+		Coupon coupon = new Coupon(15, loginCompany.getId(), Category.ALL_INCLUSIVE_VACATION,
+				"Maldives Trip", "All Inclusive trip to Maldives", Date.valueOf(LocalDate.now()),
 				Date.valueOf(LocalDate.of(2022, 12, 1)), 1, 2500, "Image");
-		companyFacade.addCoupon(coupon);
 		coupon.setAmount(2);
 		companyFacade.updateCoupon(coupon);
-		ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(loginCompany, Category.ALL_INCLUSIVE_VACATION);
-		coupons = companyFacade.getCompanyCoupons(loginCompany, 10000);
-		coupons = companyFacade.getCompanyCoupons(loginCompany);
+		ArrayList<Coupon> coupons1 = companyFacade.getCompanyCoupons(loginCompany, Category.ALL_INCLUSIVE_VACATION);
+		ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(loginCompany);
 		System.out.println(coupons);
-		companyFacade.deleteCoupon(coupon.getId());
 		System.out.println(companyFacade.getCompanyDetails(loginCompany));
 
 		//CustomerFacade
 		Customer loginCustomer = new Customer(1, "Mohammad", "Yassin", "tester@mail.com", "tester");
-		facade.addCustomer(loginCustomer);
 		CustomerFacade customerFacade = (CustomerFacade) loginManager.login(loginCustomer.getEmail(), loginCustomer.getPassword(), ClientType.CUSTOMER);
-		customerFacade.purchaseCoupon(coupon, loginCustomer);
 		coupons = customerFacade.getCustomerCoupons(loginCustomer, Category.ALL_INCLUSIVE_VACATION);
-		coupons = customerFacade.getCustomerCoupons(loginCustomer, 10000);
 		coupons = customerFacade.getCustomerCoupons(loginCustomer);
 		System.out.println(coupons);
 		System.out.println(customerFacade.getCustomerDetails(loginCustomer));
