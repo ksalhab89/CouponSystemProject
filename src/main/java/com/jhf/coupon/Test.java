@@ -28,14 +28,14 @@ public class Test {
 		Company company = facade.getCompany(11);
 		company.setPassword("jhf7");
 		ArrayList<Company> companies = facade.getCompanies();
-		System.out.println(companies);
+		System.out.println("Companies list\n" + companies + "\n");
 
 //		//AdminFacade-Customer
 		Customer customer = facade.getCustomer(1);
 		customer.setLastName("kabhad");
 		facade.updateCustomer(customer);
 		ArrayList<Customer> customers = facade.getAllCustomers();
-		System.out.println(customers);
+		System.out.println("Customers list\n" + customers + "\n");
 		facade.deleteCustomer(customer.getId());
 
 		//CompanyFacade
@@ -49,21 +49,21 @@ public class Test {
 		companyFacade.updateCoupon(coupon);
 		ArrayList<Coupon> coupons1 = companyFacade.getCompanyCoupons(loginCompany, Category.ALL_INCLUSIVE_VACATION);
 		ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(loginCompany);
-		System.out.println(coupons);
-		System.out.println(companyFacade.getCompanyDetails(loginCompany));
+		System.out.println("Coupons list\n" + coupons + "\n");
+		System.out.println("Company Details\n" + companyFacade.getCompanyDetails(loginCompany) + "\n");
 
 		//CustomerFacade
 		Customer loginCustomer = new Customer(1, "Mohammad", "Yassin", "tester@mail.com", "tester");
 		CustomerFacade customerFacade = (CustomerFacade) loginManager.login(loginCustomer.getEmail(), loginCustomer.getPassword(), ClientType.CUSTOMER);
 		coupons = customerFacade.getCustomerCoupons(loginCustomer, Category.ALL_INCLUSIVE_VACATION);
 		coupons = customerFacade.getCustomerCoupons(loginCustomer);
-		System.out.println(coupons);
-		System.out.println(customerFacade.getCustomerDetails(loginCustomer));
+		System.out.println("Coupons list\n" + coupons + "\n");
+		System.out.println("Customer Details\n" + customerFacade.getCustomerDetails(loginCustomer));
 
-		//Test Expiration Daily Job
+		//Test Coupon Expiration Daily Job
 		CouponExpirationDailyJob couponExpirationDailyJob = new CouponExpirationDailyJob();
 		Thread jobThread = new Thread(couponExpirationDailyJob);
 		jobThread.start();
-		jobThread.join();
+		couponExpirationDailyJob.stop();
 	}
 }
