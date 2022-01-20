@@ -1,6 +1,5 @@
 package main.java.com.jhf.CouponSystem.sql.dao.Company;
 
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,19 +14,17 @@ import main.java.com.jhf.CouponSystem.sql.utils.ConnectionPool;
 public class CompaniesDBDAO implements CompaniesDAO {
 	private final ConnectionPool pool;
 	private Connection connection;
-	
+
 	public CompaniesDBDAO() {
 		pool = ConnectionPool.getInstance();
 	}
-	
-	
+
 	@Override
 	public boolean isCompanyExists(String companyEmail, String companyPassword)
 			throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "SELECT * FROM `companies` "
-                + "WHERE `EMAIL` = '" + companyEmail
-                + "' AND `PASSWORD` = '" + companyPassword + "'";
+		String sqlQuery = "SELECT * FROM `companies` " + "WHERE `EMAIL` = '" + companyEmail + "' AND `PASSWORD` = '"
+				+ companyPassword + "'";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
 		boolean exists = resultSet.next();
@@ -40,9 +37,7 @@ public class CompaniesDBDAO implements CompaniesDAO {
 	@Override
 	public void addCompany(Company company) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "INSERT INTO companies " +
-				                  "(NAME, EMAIL, PASSWORD) " +
-				                  "VALUES (?, ?, ?);";
+		String sqlQuery = "INSERT INTO companies " + "(NAME, EMAIL, PASSWORD) " + "VALUES (?, ?, ?);";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setString(1, company.getName());
 		preparedStatement.setString(2, company.getEmail());
@@ -56,11 +51,8 @@ public class CompaniesDBDAO implements CompaniesDAO {
 	@Override
 	public void updateCompany(Company company) throws InterruptedException, SQLException {
 		connection = pool.getConnection();
-		String sqlQuery = "UPDATE companies " +
-				                  "SET `NAME` = ? " +
-				                  "AND `EMAIL` = ? " +
-				                  "AND `PASSWORD` = ? " +
-				                  "WHERE `ID` = ?;";
+		String sqlQuery = "UPDATE companies " + "SET `NAME` = ? " + "AND `EMAIL` = ? " + "AND `PASSWORD` = ? "
+				+ "WHERE `ID` = ?;";
 		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
 		preparedStatement.setString(1, company.getName());
 		preparedStatement.setString(2, company.getEmail());
@@ -92,10 +84,7 @@ public class CompaniesDBDAO implements CompaniesDAO {
 		ResultSet resultSet = statement.executeQuery(sqlQuery);
 
 		while (resultSet.next()) {
-			list.add(new Company(
-					resultSet.getInt("ID"),
-					resultSet.getString("NAME"),
-					resultSet.getString("EMAIL"),
+			list.add(new Company(resultSet.getInt("ID"), resultSet.getString("NAME"), resultSet.getString("EMAIL"),
 					resultSet.getString("PASSWORD")));
 		}
 		resultSet.close();
@@ -103,8 +92,6 @@ public class CompaniesDBDAO implements CompaniesDAO {
 		connection.close();
 		return list;
 	}
-
-	
 
 	@Override
 	public Company getOneCompany(int companyID) throws InterruptedException, SQLException {
@@ -115,19 +102,14 @@ public class CompaniesDBDAO implements CompaniesDAO {
 		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
 		boolean exists = resultSet.next();
 		if (exists) {
-			company = new Company(
-					resultSet.getInt("ID"),
-					resultSet.getString("NAME"),
-					resultSet.getString("EMAIL"),
+			company = new Company(resultSet.getInt("ID"), resultSet.getString("NAME"), resultSet.getString("EMAIL"),
 					resultSet.getString("PASSWORD"));
-		} else throw new CompanyNotFoundException(
-				"Could not find Company with id: " + companyID);
+		} else
+			throw new CompanyNotFoundException("Could not find Company with id: " + companyID);
 		resultSet.close();
 		preparedStatement.close();
 		connection.close();
 		return company;
 	}
-		
-	
 
 }

@@ -2,11 +2,13 @@ package main.java.com.jhf.CouponSystem.core.beans;
 
 import main.java.com.jhf.CouponSystem.core.exceptions.CategoryNotFoundException;
 
+
+//ENUMS representing categories in DB
 public enum Category {
-	FOOD(10),
-	Electricity(20),
-	RESTAURANT(30),
-	VACATION(40);
+	FUN(1),
+	MOVIE(2),
+	RESTAURANT(3),
+	VACATION(4);
 
 	
 	public int getId() {
@@ -16,8 +18,8 @@ public enum Category {
 	private final int id;
 
 	Category(int i) {
-		this.id = 0;
-		// TODO Auto-generated constructor stub
+		this.id = i;
+	
 	}
 
 	public static Category getCategory(int id) throws CategoryNotFoundException {

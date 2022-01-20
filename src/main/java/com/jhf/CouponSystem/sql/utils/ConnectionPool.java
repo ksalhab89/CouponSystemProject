@@ -8,10 +8,10 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class ConnectionPool {
-	private static final String URL = "jdbc:mysql://localhost:3306/jhf/Coupon_System";
+	private static final String URL = "jdbc:mysql://localhost:3306/Coupon_System?useSSL=false&serverTimezone=UTC";
 	private static final String USER = "root";
-	private static final String PASSWORD = "XL6la3iBB";
-	private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
+	private static final String PASSWORD = "";
+	private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
 
 	private static final Set<Connection> connections = new HashSet<>();
 	private static ConnectionPool instance = null;
@@ -19,7 +19,7 @@ public class ConnectionPool {
 	private ConnectionPool() {
 		try {
 			Class.forName(JDBC_DRIVER);
-			for (int i = 10; i  > 0; i--) {
+			for (int i = 50; i > 0; i--) {  //50 connections as the connection pool gets filled quickly . 
 				connections.add(DriverManager.getConnection(URL, USER, PASSWORD));
 			}
 		} catch (SQLException | ClassNotFoundException e) {

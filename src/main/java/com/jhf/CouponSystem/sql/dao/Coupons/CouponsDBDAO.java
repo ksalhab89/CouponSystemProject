@@ -1,0 +1,255 @@
+package main.java.com.jhf.CouponSystem.sql.dao.Coupons;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+
+import main.java.com.jhf.CouponSystem.core.beans.Category;
+import main.java.com.jhf.CouponSystem.core.beans.Company;
+import main.java.com.jhf.CouponSystem.core.beans.Coupon;
+import main.java.com.jhf.CouponSystem.core.beans.Customer;
+import main.java.com.jhf.CouponSystem.core.exceptions.CategoryNotFoundException;
+import main.java.com.jhf.CouponSystem.sql.dao.Exceptions.CouponNotFoundException;
+import main.java.com.jhf.CouponSystem.sql.utils.ConnectionPool;
+
+public class CouponsDBDAO implements CouponsDAO {
+
+	private final ConnectionPool pool;
+	private Connection connection;
+
+	public CouponsDBDAO() {
+		pool = ConnectionPool.getInstance();
+	}
+
+	public boolean couponExists(Coupon coupon) throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT * FROM `coupons`" + " WHERE `TITLE` = " + "\'" + coupon.getTitle() + "\'"
+				+ " AND `COMPANY_ID` = " + coupon.getCompanyID();
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
+		boolean exists = resultSet.next();
+		preparedStatement.close();
+		connection.close();
+		return exists;
+
+	}
+
+	@Override
+	public void addCoupon(Coupon coupon) throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "INSERT INTO coupons (COMPANY_ID, CATEGORY_ID, TITLE, DESCRIPTION, "
+				+ "START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		preparedStatement.setInt(1, coupon.getCompanyID());
+		preparedStatement.setInt(2, coupon.getCATEGORY().getId());
+		preparedStatement.setString(3, coupon.getTitle());
+		preparedStatement.setString(4, coupon.getDescription());
+		preparedStatement.setString(5, coupon.getDescription());
+		preparedStatement.setDate(6, coupon.getStartDate());
+		preparedStatement.setDate(7, coupon.getEndDate());
+		preparedStatement.setDouble(8, coupon.getPrice());
+		preparedStatement.setString(9, coupon.getImage());
+		preparedStatement.execute();
+		preparedStatement.close();
+		connection.close();
+
+	}
+
+	@Override
+	public void updateCoupon(Coupon coupon) throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "UPDATE coupons SET " + "COMPANY_ID = ?, " + "CATEGORY_ID = ?, " + "TITLE = ?, "
+				+ "DESCRIPTION = ?, " + "START_DATE = ?, " + "END_DATE = ?, " + "AMOUNT = ?, " + "PRICE = ?, "
+				+ "IMAGE = ? " + "WHERE `ID` = " + coupon.getId();
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		preparedStatement.setInt(1, coupon.getCompanyID());
+		preparedStatement.setInt(2, coupon.getCATEGORY().getId());
+		preparedStatement.setString(3, coupon.getTitle());
+		preparedStatement.setString(4, coupon.getDescription());
+
+		preparedStatement.setDate(5, coupon.getStartDate());
+		preparedStatement.setDate(6, coupon.getEndDate());
+		preparedStatement.setDouble(7, coupon.getAmount());
+		preparedStatement.setDouble(8, coupon.getPrice());
+		preparedStatement.setString(9, coupon.getImage());
+
+		preparedStatement.executeUpdate();
+		preparedStatement.close();
+		connection.close();
+
+	}
+
+	@Override
+	public void deleteCoupon(int couponID) throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "DELETE FROM coupons " + "WHERE `ID` = " + couponID;
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		preparedStatement.executeUpdate();
+		preparedStatement.close();
+		connection.close();
+	}
+
+	@Override
+	public ArrayList<Coupon> getAllCoupons() throws InterruptedException, SQLException, CategoryNotFoundException {
+		ArrayList<Coupon> list = new ArrayList<>();
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT * FROM coupons";
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+		while (resultSet.next()) {
+			list.add(new Coupon(resultSet.getInt("ID"), resultSet.getInt("COMPANY_ID"),
+					Category.getCategory(resultSet.getInt("CATEGORY_ID")), resultSet.getString("TITLE"),
+					resultSet.getString("DESCRIPTION"), resultSet.getDate("START_DATE"), resultSet.getDate("END_DATE"),
+					resultSet.getInt("AMOUNT"), resultSet.getDouble("PRICE"), resultSet.getString("IMAGE")));
+		}
+		resultSet.close();
+		statement.close();
+		connection.close();
+		return list;
+	}
+
+	@Override
+	public Coupon getOneCoupon(int couponID) throws InterruptedException, SQLException, CategoryNotFoundException {
+		Coupon coupon;
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT * FROM coupons " + "WHERE `ID` = " + couponID;
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		ResultSet resultSet = preparedStatement.executeQuery(sqlQuery);
+		boolean exists = resultSet.next();
+		if (exists) {
+			coupon = new Coupon(resultSet.getInt("ID"), resultSet.getInt("COMPANY_ID"),
+					Category.getCategory(resultSet.getInt("CATEGORY_ID")), resultSet.getString("TITLE"),
+					resultSet.getString("DESCRIPTION"), resultSet.getDate("START_DATE"), resultSet.getDate("END_DATE"),
+					resultSet.getInt("AMOUNT"), resultSet.getDouble("PRICE"), resultSet.getString("IMAGE"));
+		} else
+			throw new CouponNotFoundException("Could not find Coupon with id: " + couponID);
+		resultSet.close();
+		preparedStatement.close();
+		connection.close();
+		return coupon;
+	}
+
+	@Override
+	public ArrayList<Coupon> getCompanyCoupons(int companyId)
+			throws InterruptedException, SQLException, CategoryNotFoundException {
+		ArrayList<Coupon> list = new ArrayList<>();
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT * FROM coupons " + "WHERE COMPANY_ID = " + companyId;
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+		while (resultSet.next()) {
+			list.add(new Coupon(resultSet.getInt("ID"), resultSet.getInt("COMPANY_ID"),
+					Category.getCategory(resultSet.getInt("CATEGORY_ID")), resultSet.getString("TITLE"),
+					resultSet.getString("DESCRIPTION"), resultSet.getDate("START_DATE"), resultSet.getDate("END_DATE"),
+					resultSet.getInt("AMOUNT"), resultSet.getDouble("PRICE"), resultSet.getString("IMAGE")));
+		}
+		resultSet.close();
+		statement.close();
+		connection.close();
+		return list;
+	}
+
+	@Override
+	public ArrayList<Coupon> getCompanyCoupons(Company company, Category CATEGORY)
+			throws InterruptedException, SQLException, CategoryNotFoundException {
+		ArrayList<Coupon> list = new ArrayList<>();
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT * FROM coupons " + "WHERE COMPANY_ID = " + company.getId() + " AND CATEGORY_ID = "
+				+ CATEGORY.getId();
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+		while (resultSet.next()) {
+			list.add(new Coupon(resultSet.getInt("ID"), resultSet.getInt("COMPANY_ID"),
+					Category.getCategory(resultSet.getInt("CATEGORY_ID")), resultSet.getString("TITLE"),
+					resultSet.getString("DESCRIPTION"), resultSet.getDate("START_DATE"), resultSet.getDate("END_DATE"),
+					resultSet.getInt("AMOUNT"), resultSet.getDouble("PRICE"), resultSet.getString("IMAGE")));
+		}
+		resultSet.close();
+		statement.close();
+		connection.close();
+		return list;
+	}
+
+	@Override
+	public ArrayList<Coupon> getCompanyCoupons(Company company, double maxPrice)
+			throws InterruptedException, SQLException, CategoryNotFoundException {
+		ArrayList<Coupon> list = new ArrayList<>();
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT * FROM coupons " + "WHERE COMPANY_ID = " + company.getId()
+				+ " AND PRICE IS BETWEEN 0 AND " + maxPrice;
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+		while (resultSet.next()) {
+			list.add(new Coupon(resultSet.getInt("ID"), resultSet.getInt("COMPANY_ID"),
+					Category.getCategory(resultSet.getInt("CATEGORY_ID")), resultSet.getString("TITLE"),
+					resultSet.getString("DESCRIPTION"), resultSet.getDate("START_DATE"), resultSet.getDate("END_DATE"),
+					resultSet.getInt("AMOUNT"), resultSet.getDouble("PRICE"), resultSet.getString("IMAGE")));
+		}
+		resultSet.close();
+		statement.close();
+		connection.close();
+		return list;
+	}
+
+	public boolean customerCouponPurchaseExists(int customerId, int couponId)
+			throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT EXISTS(SELECT * FROM customers_vs_coupons " + "WHERE CUSTOMER_ID = ? "
+				+ "AND COUPON_ID = ?);";
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		preparedStatement.setInt(1, customerId);
+		preparedStatement.setInt(2, couponId);
+		boolean exists = preparedStatement.execute(sqlQuery);
+		preparedStatement.close();
+		connection.close();
+		return exists;
+	}
+
+	public void addCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "INSERT INTO customers_vs_coupons " + "VALUES (?, ?);";
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		preparedStatement.setInt(1, customerId);
+		preparedStatement.setInt(2, couponId);
+		preparedStatement.execute();
+		preparedStatement.close();
+		connection.close();
+	}
+
+	@Override
+	public ArrayList<Coupon> getCustomerCoupons(Customer customer)
+			throws InterruptedException, SQLException, CategoryNotFoundException {
+		ArrayList<Coupon> list = new ArrayList<>();
+		connection = pool.getConnection();
+		String sqlQuery = "SELECT COUPON_ID FROM customers_vs_coupons " + "WHERE CUSTOMER_ID = " + customer.getId();
+		Statement statement = connection.createStatement();
+		ResultSet resultSet = statement.executeQuery(sqlQuery);
+
+		while (resultSet.next()) {
+			list.add(getOneCoupon(resultSet.getInt("COUPON_ID")));
+		}
+		resultSet.close();
+		statement.close();
+		connection.close();
+		return list;
+	}
+
+	public void deleteCouponPurchase(int customerId, int couponId) throws InterruptedException, SQLException {
+		connection = pool.getConnection();
+		String sqlQuery = "DELETE FROM customers_vs_coupons " + "WHERE CUSTOMER_ID = ? " + "AND COUPON_ID = ?";
+		PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
+		preparedStatement.setInt(1, customerId);
+		preparedStatement.setInt(2, couponId);
+		preparedStatement.execute();
+		preparedStatement.close();
+		connection.close();
+	}
+
+}

@@ -7,7 +7,6 @@ import main.java.com.jhf.CouponSystem.core.beans.Company;
 
 public interface CompaniesDAO {
 
-	
 	boolean isCompanyExists(String companyEmail, String companyPassword) throws InterruptedException, SQLException;
 
 	void addCompany(Company company) throws InterruptedException, SQLException;
