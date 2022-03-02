@@ -1,11 +1,10 @@
 package com.jhf.coupon;
 
+import lombok.SneakyThrows;
+
 public class Program {
+	@SneakyThrows
 	public static void main(String[] args) {
-		try {
-			Test.testAll();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		Test.testAll();
 	}
 }

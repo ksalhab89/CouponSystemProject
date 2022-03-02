@@ -1,8 +1,9 @@
 package com.jhf.coupon.sql.utils;
 
+import lombok.SneakyThrows;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -16,14 +17,11 @@ public class ConnectionPool {
 	private static final Set<Connection> connections = new HashSet<>();
 	private static ConnectionPool instance = null;
 
+	@SneakyThrows
 	private ConnectionPool() {
-		try {
-			Class.forName(JDBC_DRIVER);
-			for (int i = 50; i > 0; i--) {
-				connections.add(DriverManager.getConnection(URL, USER, PASSWORD));
-			}
-		} catch (SQLException | ClassNotFoundException e) {
-			e.printStackTrace();
+		Class.forName(JDBC_DRIVER);
+		for (int i = 50; i > 0; i--) {
+			connections.add(DriverManager.getConnection(URL, USER, PASSWORD));
 		}
 	}
 
@@ -51,14 +49,11 @@ public class ConnectionPool {
 		notifyAll();
 	}
 
+	@SneakyThrows
 	public static void closeAll() {
 		Iterator<Connection> iterator = connections.iterator();
 		while (iterator.hasNext() & iterator.next() != null) {
-			try {
-				iterator.next().close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+			iterator.next().close();
 		}
 	}
 

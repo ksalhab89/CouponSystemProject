@@ -10,13 +10,15 @@ import com.jhf.coupon.backend.facade.CustomerFacade;
 import com.jhf.coupon.backend.login.ClientType;
 import com.jhf.coupon.backend.login.LoginManager;
 import com.jhf.coupon.backend.periodicJob.CouponExpirationDailyJob;
+import lombok.SneakyThrows;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class Test {
-	public static void testAll() throws Exception {
+	@SneakyThrows
+	public static void testAll() {
 		String EMAIL = "admin@admin.com";
 		String PASSWORD = "admin";
 
