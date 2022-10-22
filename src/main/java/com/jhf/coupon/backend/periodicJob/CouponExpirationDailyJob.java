@@ -21,7 +21,7 @@ public class CouponExpirationDailyJob implements Runnable {
 	@SneakyThrows
 	public void run() {
 		while (!quit) {
-			ArrayList<Coupon> coupons = new ArrayList<>();
+			ArrayList<Coupon> coupons;
 			coupons = couponsDAO.getAllCoupons();
 			for (Coupon coupon : coupons) {
 				if (coupon.getEndDate().before(Date.valueOf(LocalDate.now()))) {
