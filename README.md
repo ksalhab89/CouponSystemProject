@@ -1,14 +1,38 @@
 # CouponSystemProject
+
 JHF FullStack Bootcamp Project
 
-to Test the Project;
-- Import couponSystemSchema in resources
-- MySQL Workbench, Server: Data Import, Import from self-contained File
-- set couponSystem as Default Schema by double-clicking it.
+## Prerequisites
 
-- Add MySQL user "projectUser" with root all permissions  (OR) change MySQL username, & password (found in ConnectionPool):
-- line:11     private static final String USER = "projectUser";
-- line:12     private static final String PASSWORD = "projectUser";
+- Java 21
+- Maven
+- Docker
+- Docker Compose
 
-- run Program.
+## How to Build
 
+To build the project, run the following command:
+
+```bash
+mvn clean package
+```
+
+This will create an executable JAR file in the `target/` directory.
+
+## How to Test
+
+To run the tests, run the following command:
+
+```bash
+mvn test
+```
+
+## How to Run
+
+To run the application, you can use Docker Compose. First, make sure you have Docker and Docker Compose installed. Then, run the following command:
+
+```bash
+docker-compose up
+```
+
+This will start the application and a MySQL database in separate containers. The application will be available at `http://localhost:8080`.
