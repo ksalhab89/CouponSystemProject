@@ -2,12 +2,13 @@ package com.jhf.coupon.backend.beans;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 
 @Data
-//A shortcut for @ToString, @EqualsAndHashCode, @Getter on all fields, @Setter on all non-final fields, and @RequiredArgsConstructor!
 @AllArgsConstructor
+@NoArgsConstructor
 public class Customer {
 	private int id;
 	private String firstName;

@@ -1,18 +1,22 @@
 package com.jhf.coupon.backend.login;
 
 import com.jhf.coupon.backend.exceptions.ClientTypeNotFoundException;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
-@AllArgsConstructor
 public enum ClientType {
 	ADMIN("admin"),
 	COMPANY("company"),
 	CUSTOMER("customer");
 
-	@Getter
 	private final String type;
+
+	ClientType(String type) {
+		this.type = type;
+	}
+
+	public String getType() {
+		return type;
+	}
 
 	@NotNull
 	private static ClientType getClientType(String type) throws ClientTypeNotFoundException {
