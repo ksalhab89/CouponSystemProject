@@ -1,20 +1,23 @@
 package com.jhf.coupon.sql.utils;
 
-import java.sql.Connection;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
 
 public class ConnectionPool {
 	private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
+	private static final int POOL_SIZE = 50;
 
-	private static final Set<Connection> connections = new HashSet<>();
+	private static final Set<Connection> availableConnections = new HashSet<>();
+	private static final Set<Connection> usedConnections = new HashSet<>();
 	private static ConnectionPool instance = null;
 
 	private ConnectionPool() {
@@ -36,8 +39,9 @@ public class ConnectionPool {
 				dbPassword = properties.getProperty("db.password");
 			}
 
-			for (int i = 50; i > 0; i--) {
-				connections.add(DriverManager.getConnection(dbUrl, dbUser, dbPassword));
+			for (int i = 0; i < POOL_SIZE; i++) {
+				Connection realConnection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+				availableConnections.add(realConnection);
 			}
 		} catch (SQLException | ClassNotFoundException e) {
 			e.printStackTrace();
@@ -46,37 +50,67 @@ public class ConnectionPool {
 
 	public static ConnectionPool getInstance() {
 		if (instance == null) {
-			instance = new ConnectionPool();
+			synchronized (ConnectionPool.class) {
+				if (instance == null) {
+					instance = new ConnectionPool();
+				}
+			}
 		}
 		return instance;
 	}
 
 	public synchronized Connection getConnection() throws InterruptedException {
-		Connection connection = null;
-		if (connections.isEmpty()) {
-			wait();
-		} else {
-			Iterator<Connection> it = connections.iterator();
-			connection = it.next();
-			connections.remove(connection);
+		while (availableConnections.isEmpty()) {
+			wait(5000);
 		}
-		return connection;
+
+		Connection realConnection = availableConnections.iterator().next();
+		availableConnections.remove(realConnection);
+		usedConnections.add(realConnection);
+
+		return createProxyConnection(realConnection);
 	}
 
-	public void restoreConnection(Connection connection) {
-		connections.add(connection);
-		notifyAll();
+	private Connection createProxyConnection(Connection realConnection) {
+		return (Connection) Proxy.newProxyInstance(
+				Connection.class.getClassLoader(),
+				new Class[]{Connection.class},
+				new InvocationHandler() {
+					@Override
+					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+						if ("close".equals(method.getName())) {
+							restoreConnection(realConnection);
+							return null;
+						}
+						return method.invoke(realConnection, args);
+					}
+				});
 	}
 
-	public static void closeAll() {
-		Iterator<Connection> iterator = connections.iterator();
-		while (iterator.hasNext() & iterator.next() != null) {
+	private synchronized void restoreConnection(Connection connection) {
+		if (usedConnections.remove(connection)) {
+			availableConnections.add(connection);
+			notifyAll();
+		}
+	}
+
+	public synchronized void closeAll() {
+		for (Connection connection : usedConnections) {
 			try {
-				iterator.next().close();
+				connection.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
+		for (Connection connection : availableConnections) {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		availableConnections.clear();
+		usedConnections.clear();
 	}
 
 }

@@ -1,2 +1,11 @@
 target/
 .idea/
+
+# Environment variables with secrets
+.env
+*.env
+!.env.example
+
+# IDE files
+*.iml
+.vscode/

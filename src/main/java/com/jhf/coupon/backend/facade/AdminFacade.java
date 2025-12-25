@@ -15,16 +15,39 @@ import com.jhf.coupon.sql.dao.customer.CustomerNotFoundException;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Properties;
 
 @NoArgsConstructor
 public class AdminFacade extends ClientFacade {
 
+	private static final String ADMIN_EMAIL;
+	private static final String ADMIN_PASSWORD;
+
+	static {
+		String email = System.getenv("ADMIN_EMAIL");
+		String password = System.getenv("ADMIN_PASSWORD");
+
+		if (email == null || password == null) {
+			Properties properties = new Properties();
+			try (InputStream input = AdminFacade.class.getClassLoader().getResourceAsStream("config.properties")) {
+				properties.load(input);
+				email = properties.getProperty("admin.email");
+				password = properties.getProperty("admin.password");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		ADMIN_EMAIL = email;
+		ADMIN_PASSWORD = password;
+	}
+
 	public boolean login(@NotNull String email, String password) {
-		String EMAIL = "admin@admin.com";
-		String PASSWORD = "admin";
-		return email.equals(EMAIL) && password.equals(PASSWORD);
+		return email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASSWORD);
 	}
 
 	public void addCompany(@NotNull Company company) throws SQLException, InterruptedException, CompanyAlreadyExistsException {
