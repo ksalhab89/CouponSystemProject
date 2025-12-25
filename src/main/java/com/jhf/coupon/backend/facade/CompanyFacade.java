@@ -6,6 +6,8 @@ import com.jhf.coupon.backend.couponCategory.Category;
 import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 import com.jhf.coupon.backend.exceptions.coupon.CantUpdateCouponException;
 import com.jhf.coupon.backend.exceptions.coupon.CouponAlreadyExistsForCompanyException;
+import com.jhf.coupon.backend.validation.InputValidator;
+import com.jhf.coupon.backend.validation.ValidationException;
 import com.jhf.coupon.sql.dao.coupon.CouponNotFoundException;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +24,30 @@ public class CompanyFacade extends ClientFacade {
 		return companiesDAO.isCompanyExists(email, password);
 	}
 
-	public void addCoupon(Coupon coupon) throws SQLException, InterruptedException, CouponAlreadyExistsForCompanyException {
+	public void addCoupon(Coupon coupon) throws SQLException, InterruptedException, CouponAlreadyExistsForCompanyException, ValidationException {
+		// Validate coupon input
+		if (!InputValidator.isValidString(coupon.getTitle())) {
+			throw new ValidationException("Invalid coupon title: must not be empty");
+		}
+		if (!InputValidator.isValidString(coupon.getDescription())) {
+			throw new ValidationException("Invalid coupon description: must not be empty");
+		}
+		if (!InputValidator.isValidDateRange(coupon.getStartDate(), coupon.getEndDate())) {
+			throw new ValidationException("Invalid date range: start date must be before end date");
+		}
+		if (!InputValidator.isNotPastDate(coupon.getStartDate())) {
+			throw new ValidationException("Invalid start date: cannot be in the past");
+		}
+		if (!InputValidator.isFutureDate(coupon.getEndDate())) {
+			throw new ValidationException("Invalid end date: must be in the future");
+		}
+		if (!InputValidator.isPositiveAmount(coupon.getAmount())) {
+			throw new ValidationException("Invalid amount: must be positive");
+		}
+		if (!InputValidator.isPositivePrice(coupon.getPrice())) {
+			throw new ValidationException("Invalid price: must be positive");
+		}
+
 		if (!couponsDAO.couponExists(coupon)) {
 			couponsDAO.addCoupon(coupon);
 		} else
@@ -30,7 +55,27 @@ public class CompanyFacade extends ClientFacade {
 					                                                 ", Company Coupon ID " + coupon.getCompanyID() + " exists.");
 	}
 
-	public void updateCoupon(Coupon coupon) throws SQLException, InterruptedException, CategoryNotFoundException, CantUpdateCouponException {
+	public void updateCoupon(Coupon coupon) throws SQLException, InterruptedException, CategoryNotFoundException, CantUpdateCouponException, ValidationException {
+		// Validate coupon input
+		if (!InputValidator.isValidId(coupon.getId())) {
+			throw new ValidationException("Invalid coupon ID");
+		}
+		if (!InputValidator.isValidString(coupon.getTitle())) {
+			throw new ValidationException("Invalid coupon title: must not be empty");
+		}
+		if (!InputValidator.isValidString(coupon.getDescription())) {
+			throw new ValidationException("Invalid coupon description: must not be empty");
+		}
+		if (!InputValidator.isValidDateRange(coupon.getStartDate(), coupon.getEndDate())) {
+			throw new ValidationException("Invalid date range: start date must be before end date");
+		}
+		if (!InputValidator.isPositiveAmount(coupon.getAmount())) {
+			throw new ValidationException("Invalid amount: must be positive");
+		}
+		if (!InputValidator.isPositivePrice(coupon.getPrice())) {
+			throw new ValidationException("Invalid price: must be positive");
+		}
+
 		if (!couponsDAO.couponExists(coupon)) {
 			throw new CouponNotFoundException("Could not find Coupon with id: " + coupon.getId());
 		}

@@ -10,6 +10,8 @@ import com.jhf.coupon.backend.exceptions.company.CompanyAlreadyExistsException;
 import com.jhf.coupon.backend.exceptions.customer.CantDeleteCustomerHasCoupons;
 import com.jhf.coupon.backend.exceptions.customer.CantUpdateCustomerException;
 import com.jhf.coupon.backend.exceptions.customer.CustomerAlreadyExistsException;
+import com.jhf.coupon.backend.validation.InputValidator;
+import com.jhf.coupon.backend.validation.ValidationException;
 import com.jhf.coupon.sql.dao.company.CompanyNotFoundException;
 import com.jhf.coupon.sql.dao.customer.CustomerNotFoundException;
 import lombok.NoArgsConstructor;
@@ -62,7 +64,18 @@ public class AdminFacade extends ClientFacade {
 		return email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASSWORD);
 	}
 
-	public void addCompany(@NotNull Company company) throws SQLException, InterruptedException, CompanyAlreadyExistsException {
+	public void addCompany(@NotNull Company company) throws SQLException, InterruptedException, CompanyAlreadyExistsException, ValidationException {
+		// Validate company input
+		if (!InputValidator.isValidName(company.getName())) {
+			throw new ValidationException("Invalid company name: must be between 2-100 characters");
+		}
+		if (!InputValidator.isValidEmail(company.getEmail())) {
+			throw new ValidationException("Invalid email format: " + company.getEmail());
+		}
+		if (!InputValidator.isValidPassword(company.getPassword())) {
+			throw new ValidationException("Invalid password: must be between 6-100 characters");
+		}
+
 		if (companiesDAO.isCompanyExists(company.getEmail(), company.getPassword())) {
 			throw new CompanyAlreadyExistsException("Unable to add company " + company.getEmail() + ", Company Email already exists");
 		}
@@ -74,7 +87,18 @@ public class AdminFacade extends ClientFacade {
 		companiesDAO.addCompany(company);
 	}
 
-	public void UpdateCompany(@NotNull Company company) throws SQLException, InterruptedException, CantUpdateCompanyException {
+	public void UpdateCompany(@NotNull Company company) throws SQLException, InterruptedException, CantUpdateCompanyException, ValidationException {
+		// Validate company input
+		if (!InputValidator.isValidEmail(company.getEmail())) {
+			throw new ValidationException("Invalid email format: " + company.getEmail());
+		}
+		if (!InputValidator.isValidPassword(company.getPassword())) {
+			throw new ValidationException("Invalid password: must be between 6-100 characters");
+		}
+		if (!InputValidator.isValidId(company.getId())) {
+			throw new ValidationException("Invalid company ID");
+		}
+
 		if (!companiesDAO.isCompanyExists(company.getEmail(), company.getPassword())) {
 			throw new CompanyNotFoundException("Unable to update Company " + company.getName() + ", Company doesn't exist");
 		}
@@ -104,14 +128,45 @@ public class AdminFacade extends ClientFacade {
 		return companiesDAO.getCompany(companyId);
 	}
 
-	public void addCustomer(@NotNull Customer customer) throws SQLException, InterruptedException, CustomerAlreadyExistsException {
+	public void addCustomer(@NotNull Customer customer) throws SQLException, InterruptedException, CustomerAlreadyExistsException, ValidationException {
+		// Validate customer input
+		if (!InputValidator.isValidName(customer.getFirstName())) {
+			throw new ValidationException("Invalid first name: must be between 2-100 characters");
+		}
+		if (!InputValidator.isValidName(customer.getLastName())) {
+			throw new ValidationException("Invalid last name: must be between 2-100 characters");
+		}
+		if (!InputValidator.isValidEmail(customer.getEmail())) {
+			throw new ValidationException("Invalid email format: " + customer.getEmail());
+		}
+		if (!InputValidator.isValidPassword(customer.getPassword())) {
+			throw new ValidationException("Invalid password: must be between 6-100 characters");
+		}
+
 		if (customerDAO.isCustomerExists(customer.getEmail(), customer.getPassword())) {
 			throw new CustomerAlreadyExistsException("Unable to add customer " + customer.getEmail() + ", Customer Email already exists");
 		}
 		customerDAO.addCustomer(customer);
 	}
 
-	public void updateCustomer(@NotNull Customer customer) throws SQLException, InterruptedException, CantUpdateCustomerException {
+	public void updateCustomer(@NotNull Customer customer) throws SQLException, InterruptedException, CantUpdateCustomerException, ValidationException {
+		// Validate customer input
+		if (!InputValidator.isValidName(customer.getFirstName())) {
+			throw new ValidationException("Invalid first name: must be between 2-100 characters");
+		}
+		if (!InputValidator.isValidName(customer.getLastName())) {
+			throw new ValidationException("Invalid last name: must be between 2-100 characters");
+		}
+		if (!InputValidator.isValidEmail(customer.getEmail())) {
+			throw new ValidationException("Invalid email format: " + customer.getEmail());
+		}
+		if (!InputValidator.isValidPassword(customer.getPassword())) {
+			throw new ValidationException("Invalid password: must be between 6-100 characters");
+		}
+		if (!InputValidator.isValidId(customer.getId())) {
+			throw new ValidationException("Invalid customer ID");
+		}
+
 		if (!customerDAO.isCustomerExists(customer.getEmail(), customer.getPassword())) {
 			throw new CustomerNotFoundException("Unable to update customer " + customer.getFirstName() + ", Customer doesn't exist");
 		}
