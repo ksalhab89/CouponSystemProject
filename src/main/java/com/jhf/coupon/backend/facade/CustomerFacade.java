@@ -15,8 +15,6 @@ import java.util.ArrayList;
 
 @NoArgsConstructor
 public class CustomerFacade extends ClientFacade {
-	//todo should be used.
-	private int customerId;
 
 	public boolean login(String email, String password) throws SQLException, InterruptedException {
 		return customerDAO.isCustomerExists(email, password);

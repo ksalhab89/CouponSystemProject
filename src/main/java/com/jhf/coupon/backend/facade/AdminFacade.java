@@ -85,7 +85,7 @@ public class AdminFacade extends ClientFacade {
 		companiesDAO.addCompany(company);
 	}
 
-	public void UpdateCompany(@NotNull Company company) throws SQLException, InterruptedException, CantUpdateCompanyException, ValidationException {
+	public void updateCompany(@NotNull Company company) throws SQLException, InterruptedException, CantUpdateCompanyException, ValidationException {
 		// Validate company input
 		if (!InputValidator.isValidEmail(company.getEmail())) {
 			throw new ValidationException("Invalid email format: " + company.getEmail());
