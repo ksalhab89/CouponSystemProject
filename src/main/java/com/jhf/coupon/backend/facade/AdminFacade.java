@@ -21,6 +21,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Properties;
 
+/**
+ * AdminFacade provides administrative operations for managing companies and customers.
+ *
+ * TODO: Transaction Management
+ * Current limitation: Multi-step operations (e.g., addCompany with validation checks)
+ * are not atomic. To implement proper transaction management, DAO methods would need
+ * to accept Connection parameters to share a single transaction across multiple calls.
+ * For now, operations rely on database constraints for data integrity.
+ */
 @NoArgsConstructor
 public class AdminFacade extends ClientFacade {
 

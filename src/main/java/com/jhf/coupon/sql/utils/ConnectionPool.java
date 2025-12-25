@@ -65,10 +65,52 @@ public class ConnectionPool {
 		}
 
 		Connection realConnection = availableConnections.iterator().next();
+
+		// Validate connection before returning
+		try {
+			if (realConnection.isClosed() || !realConnection.isValid(2)) {
+				// Connection is invalid, remove it and get a new one
+				availableConnections.remove(realConnection);
+				try {
+					realConnection.close();
+				} catch (SQLException ignored) {
+					// Already closed or unusable
+				}
+
+				// Create a new connection to replace the invalid one
+				Properties properties = loadProperties();
+				String dbUrl = System.getenv("DB_URL");
+				String dbUser = System.getenv("DB_USER");
+				String dbPassword = System.getenv("DB_PASSWORD");
+
+				if (dbUrl == null || dbUser == null || dbPassword == null) {
+					dbUrl = properties.getProperty("db.url");
+					dbUser = properties.getProperty("db.user");
+					dbPassword = properties.getProperty("db.password");
+				}
+
+				realConnection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 		availableConnections.remove(realConnection);
 		usedConnections.add(realConnection);
 
 		return createProxyConnection(realConnection);
+	}
+
+	private Properties loadProperties() {
+		Properties properties = new Properties();
+		try (InputStream input = ConnectionPool.class.getClassLoader().getResourceAsStream("config.properties")) {
+			if (input != null) {
+				properties.load(input);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return properties;
 	}
 
 	private Connection createProxyConnection(Connection realConnection) {
