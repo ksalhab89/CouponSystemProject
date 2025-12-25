@@ -26,6 +26,17 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 		}
 	}
 
+	public boolean isCompanyNameExists(String companyName) throws InterruptedException, SQLException {
+		String sqlQuery = "SELECT * FROM `companies` WHERE `NAME` = ?";
+		try (Connection connection = pool.getConnection();
+		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
+			preparedStatement.setString(1, companyName);
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
+				return resultSet.next();
+			}
+		}
+	}
+
 	public void addCompany(@NotNull Company company) throws InterruptedException, SQLException {
 		String sqlQuery = "INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)";
 		try (Connection connection = pool.getConnection();

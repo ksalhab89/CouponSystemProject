@@ -79,10 +79,8 @@ public class AdminFacade extends ClientFacade {
 		if (companiesDAO.isCompanyExists(company.getEmail(), company.getPassword())) {
 			throw new CompanyAlreadyExistsException("Unable to add company " + company.getEmail() + ", Company Email already exists");
 		}
-		for (Company companies : companiesDAO.getAllCompanies()) {
-			if (companies.getName().equals(company.getName())) {
-				throw new CompanyAlreadyExistsException("Unable to add company " + company.getName() + ", Company name already exists");
-			}
+		if (companiesDAO.isCompanyNameExists(company.getName())) {
+			throw new CompanyAlreadyExistsException("Unable to add company " + company.getName() + ", Company name already exists");
 		}
 		companiesDAO.addCompany(company);
 	}
@@ -112,10 +110,9 @@ public class AdminFacade extends ClientFacade {
 	}
 
 	public void deleteCompany(int companyId) throws SQLException, CategoryNotFoundException, InterruptedException, CantDeleteCompanyHasCoupons {
-		for (Coupon coupon : couponsDAO.getAllCoupons()) {
-			if (coupon.getCompanyID() == companyId) {
-				throw new CantDeleteCompanyHasCoupons("Unable to delete Company " + companyId + ", Company still has Coupons");
-			}
+		// Check if company has any coupons (N+1 fix: use targeted query instead of loading all coupons)
+		if (!couponsDAO.getCompanyCoupons(companyId).isEmpty()) {
+			throw new CantDeleteCompanyHasCoupons("Unable to delete Company " + companyId + ", Company still has Coupons");
 		}
 		companiesDAO.deleteCompany(companyId);
 	}

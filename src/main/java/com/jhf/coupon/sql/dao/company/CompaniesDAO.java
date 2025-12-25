@@ -9,6 +9,8 @@ public interface CompaniesDAO {
 
 	boolean isCompanyExists(String companyEmail, String companyPassword) throws InterruptedException, SQLException;
 
+	boolean isCompanyNameExists(String companyName) throws InterruptedException, SQLException;
+
 	void addCompany(Company company) throws InterruptedException, SQLException;
 
 	void updateCompany(Company company) throws InterruptedException, SQLException;
