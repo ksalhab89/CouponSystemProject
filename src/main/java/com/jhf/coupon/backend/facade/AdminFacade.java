@@ -14,6 +14,8 @@ import com.jhf.coupon.sql.dao.company.CompanyNotFoundException;
 import com.jhf.coupon.sql.dao.customer.CustomerNotFoundException;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +34,7 @@ import java.util.Properties;
  */
 @NoArgsConstructor
 public class AdminFacade extends ClientFacade {
+	private static final Logger logger = LoggerFactory.getLogger(AdminFacade.class);
 
 	private static final String ADMIN_EMAIL;
 	private static final String ADMIN_PASSWORD;
@@ -47,7 +50,7 @@ public class AdminFacade extends ClientFacade {
 				email = properties.getProperty("admin.email");
 				password = properties.getProperty("admin.password");
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error("Failed to load admin credentials from config.properties", e);
 			}
 		}
 

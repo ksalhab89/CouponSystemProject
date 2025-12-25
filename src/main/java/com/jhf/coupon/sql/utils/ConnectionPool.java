@@ -1,5 +1,8 @@
 package com.jhf.coupon.sql.utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
@@ -13,6 +16,7 @@ import java.util.Properties;
 import java.util.Set;
 
 public class ConnectionPool {
+	private static final Logger logger = LoggerFactory.getLogger(ConnectionPool.class);
 	private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
 	private static final int POOL_SIZE = 50;
 
@@ -32,7 +36,7 @@ public class ConnectionPool {
 				try (InputStream input = ConnectionPool.class.getClassLoader().getResourceAsStream("config.properties")) {
 					properties.load(input);
 				} catch (IOException e) {
-					e.printStackTrace();
+					logger.error("Failed to load database configuration from config.properties", e);
 				}
 				dbUrl = properties.getProperty("db.url");
 				dbUser = properties.getProperty("db.user");
@@ -44,7 +48,7 @@ public class ConnectionPool {
 				availableConnections.add(realConnection);
 			}
 		} catch (SQLException | ClassNotFoundException e) {
-			e.printStackTrace();
+			logger.error("Failed to initialize connection pool", e);
 		}
 	}
 
@@ -92,7 +96,7 @@ public class ConnectionPool {
 				realConnection = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error("Failed to validate or replace invalid connection", e);
 		}
 
 		availableConnections.remove(realConnection);
@@ -108,7 +112,7 @@ public class ConnectionPool {
 				properties.load(input);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Failed to load properties file", e);
 		}
 		return properties;
 	}
@@ -141,14 +145,14 @@ public class ConnectionPool {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.error("Failed to close used connection", e);
 			}
 		}
 		for (Connection connection : availableConnections) {
 			try {
 				connection.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
+				logger.error("Failed to close available connection", e);
 			}
 		}
 		availableConnections.clear();

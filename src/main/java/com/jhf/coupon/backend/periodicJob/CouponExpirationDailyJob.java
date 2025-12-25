@@ -6,6 +6,8 @@ import com.jhf.coupon.sql.dao.coupon.CouponDAOImpl;
 import com.jhf.coupon.sql.dao.coupon.CouponsDAO;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Date;
 import java.sql.SQLException;
@@ -16,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CouponExpirationDailyJob implements Runnable {
+	private static final Logger logger = LoggerFactory.getLogger(CouponExpirationDailyJob.class);
+
 	private CouponsDAO couponsDAO = new CouponDAOImpl();
 	private volatile boolean quit = false;
 
@@ -39,8 +43,7 @@ public class CouponExpirationDailyJob implements Runnable {
 				break;
 			} catch (Exception e) {
 				// Log error and retry after delay
-				System.err.println("Error in CouponExpirationDailyJob: " + e.getMessage());
-				e.printStackTrace();
+				logger.error("Error in CouponExpirationDailyJob, will retry in 5 minutes", e);
 
 				try {
 					Thread.sleep(ERROR_RETRY_DELAY_MS);
@@ -65,7 +68,7 @@ public class CouponExpirationDailyJob implements Runnable {
 		}
 
 		if (deletedCount > 0) {
-			System.out.println("CouponExpirationDailyJob: Deleted " + deletedCount + " expired coupons");
+			logger.info("Deleted {} expired coupons", deletedCount);
 		}
 	}
 
