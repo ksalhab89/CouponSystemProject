@@ -9,3 +9,7 @@ target/
 # IDE files
 *.iml
 .vscode/
+
+# Log files
+logs/
+*.log
