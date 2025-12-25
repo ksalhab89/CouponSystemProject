@@ -85,17 +85,7 @@ public class CouponDAOImpl implements CouponsDAO {
 		     Statement statement = connection.createStatement();
 		     ResultSet resultSet = statement.executeQuery(sqlQuery)) {
 			while (resultSet.next()) {
-				list.add(new Coupon(
-						resultSet.getInt("ID"),
-						resultSet.getInt("COMPANY_ID"),
-						Category.getCategory(resultSet.getInt("CATEGORY_ID")),
-						resultSet.getString("TITLE"),
-						resultSet.getString("DESCRIPTION"),
-						resultSet.getDate("START_DATE"),
-						resultSet.getDate("END_DATE"),
-						resultSet.getInt("AMOUNT"),
-						resultSet.getDouble("PRICE"),
-						resultSet.getString("IMAGE")));
+				list.add(mapResultSetToCoupon(resultSet));
 			}
 		}
 		return list;
@@ -108,17 +98,7 @@ public class CouponDAOImpl implements CouponsDAO {
 			preparedStatement.setInt(1, couponID);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return new Coupon(
-							resultSet.getInt("ID"),
-							resultSet.getInt("COMPANY_ID"),
-							Category.getCategory(resultSet.getInt("CATEGORY_ID")),
-							resultSet.getString("TITLE"),
-							resultSet.getString("DESCRIPTION"),
-							resultSet.getDate("START_DATE"),
-							resultSet.getDate("END_DATE"),
-							resultSet.getInt("AMOUNT"),
-							resultSet.getDouble("PRICE"),
-							resultSet.getString("IMAGE"));
+					return mapResultSetToCoupon(resultSet);
 				} else {
 					throw new CouponNotFoundException(
 							"Could not find Coupon with id: " + couponID);
@@ -136,17 +116,7 @@ public class CouponDAOImpl implements CouponsDAO {
 			preparedStatement.setInt(1, companyId);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					list.add(new Coupon(
-							resultSet.getInt("ID"),
-							resultSet.getInt("COMPANY_ID"),
-							Category.getCategory(resultSet.getInt("CATEGORY_ID")),
-							resultSet.getString("TITLE"),
-							resultSet.getString("DESCRIPTION"),
-							resultSet.getDate("START_DATE"),
-							resultSet.getDate("END_DATE"),
-							resultSet.getInt("AMOUNT"),
-							resultSet.getDouble("PRICE"),
-							resultSet.getString("IMAGE")));
+					list.add(mapResultSetToCoupon(resultSet));
 				}
 			}
 		}
@@ -163,17 +133,7 @@ public class CouponDAOImpl implements CouponsDAO {
 			preparedStatement.setInt(2, CATEGORY.getId());
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					list.add(new Coupon(
-							resultSet.getInt("ID"),
-							resultSet.getInt("COMPANY_ID"),
-							Category.getCategory(resultSet.getInt("CATEGORY_ID")),
-							resultSet.getString("TITLE"),
-							resultSet.getString("DESCRIPTION"),
-							resultSet.getDate("START_DATE"),
-							resultSet.getDate("END_DATE"),
-							resultSet.getInt("AMOUNT"),
-							resultSet.getDouble("PRICE"),
-							resultSet.getString("IMAGE")));
+					list.add(mapResultSetToCoupon(resultSet));
 				}
 			}
 		}
@@ -190,17 +150,7 @@ public class CouponDAOImpl implements CouponsDAO {
 			preparedStatement.setDouble(2, maxPrice);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					list.add(new Coupon(
-							resultSet.getInt("ID"),
-							resultSet.getInt("COMPANY_ID"),
-							Category.getCategory(resultSet.getInt("CATEGORY_ID")),
-							resultSet.getString("TITLE"),
-							resultSet.getString("DESCRIPTION"),
-							resultSet.getDate("START_DATE"),
-							resultSet.getDate("END_DATE"),
-							resultSet.getInt("AMOUNT"),
-							resultSet.getDouble("PRICE"),
-							resultSet.getString("IMAGE")));
+					list.add(mapResultSetToCoupon(resultSet));
 				}
 			}
 		}
@@ -253,5 +203,27 @@ public class CouponDAOImpl implements CouponsDAO {
 			preparedStatement.setInt(2, couponId);
 			preparedStatement.execute();
 		}
+	}
+
+	/**
+	 * Maps a ResultSet row to a Coupon object.
+	 *
+	 * @param resultSet the ResultSet positioned at a valid row
+	 * @return a Coupon object populated from the current ResultSet row
+	 * @throws SQLException if a database access error occurs or column is not found
+	 * @throws CategoryNotFoundException if the category ID is invalid
+	 */
+	private Coupon mapResultSetToCoupon(ResultSet resultSet) throws SQLException, CategoryNotFoundException {
+		return new Coupon(
+				resultSet.getInt("ID"),
+				resultSet.getInt("COMPANY_ID"),
+				Category.getCategory(resultSet.getInt("CATEGORY_ID")),
+				resultSet.getString("TITLE"),
+				resultSet.getString("DESCRIPTION"),
+				resultSet.getDate("START_DATE"),
+				resultSet.getDate("END_DATE"),
+				resultSet.getInt("AMOUNT"),
+				resultSet.getDouble("PRICE"),
+				resultSet.getString("IMAGE"));
 	}
 }

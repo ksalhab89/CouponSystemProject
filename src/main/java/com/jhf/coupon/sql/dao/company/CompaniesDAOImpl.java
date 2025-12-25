@@ -65,11 +65,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 		     Statement statement = connection.createStatement();
 		     ResultSet resultSet = statement.executeQuery(sqlQuery)) {
 			while (resultSet.next()) {
-				list.add(new Company(
-						resultSet.getInt("ID"),
-						resultSet.getString("NAME"),
-						resultSet.getString("EMAIL"),
-						resultSet.getString("PASSWORD")));
+				list.add(mapResultSetToCompany(resultSet));
 			}
 		}
 		return list;
@@ -82,16 +78,27 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 			preparedStatement.setInt(1, companyID);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return new Company(
-							resultSet.getInt("ID"),
-							resultSet.getString("NAME"),
-							resultSet.getString("EMAIL"),
-							resultSet.getString("PASSWORD"));
+					return mapResultSetToCompany(resultSet);
 				} else {
 					throw new CompanyNotFoundException(
 							"Could not find Company with id: " + companyID);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Maps a ResultSet row to a Company object.
+	 *
+	 * @param resultSet the ResultSet positioned at a valid row
+	 * @return a Company object populated from the current ResultSet row
+	 * @throws SQLException if a database access error occurs or column is not found
+	 */
+	private Company mapResultSetToCompany(ResultSet resultSet) throws SQLException {
+		return new Company(
+				resultSet.getInt("ID"),
+				resultSet.getString("NAME"),
+				resultSet.getString("EMAIL"),
+				resultSet.getString("PASSWORD"));
 	}
 }

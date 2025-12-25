@@ -67,12 +67,7 @@ public class CustomerDAOImpl implements CustomerDAO {
 		     Statement statement = connection.createStatement();
 		     ResultSet resultSet = statement.executeQuery(sqlQuery)) {
 			while (resultSet.next()) {
-				list.add(new Customer(
-						resultSet.getInt("ID"),
-						resultSet.getString("FIRST_NAME"),
-						resultSet.getString("LAST_NAME"),
-						resultSet.getString("EMAIL"),
-						resultSet.getString("PASSWORD")));
+				list.add(mapResultSetToCustomer(resultSet));
 			}
 		}
 		return list;
@@ -85,17 +80,28 @@ public class CustomerDAOImpl implements CustomerDAO {
 			preparedStatement.setInt(1, customerID);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					return new Customer(
-							resultSet.getInt("ID"),
-							resultSet.getString("FIRST_NAME"),
-							resultSet.getString("LAST_NAME"),
-							resultSet.getString("EMAIL"),
-							resultSet.getString("PASSWORD"));
+					return mapResultSetToCustomer(resultSet);
 				} else {
 					throw new CustomerNotFoundException(
 							"Could not find Customer with id: " + customerID);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Maps a ResultSet row to a Customer object.
+	 *
+	 * @param resultSet the ResultSet positioned at a valid row
+	 * @return a Customer object populated from the current ResultSet row
+	 * @throws SQLException if a database access error occurs or column is not found
+	 */
+	private Customer mapResultSetToCustomer(ResultSet resultSet) throws SQLException {
+		return new Customer(
+				resultSet.getInt("ID"),
+				resultSet.getString("FIRST_NAME"),
+				resultSet.getString("LAST_NAME"),
+				resultSet.getString("EMAIL"),
+				resultSet.getString("PASSWORD"));
 	}
 }
