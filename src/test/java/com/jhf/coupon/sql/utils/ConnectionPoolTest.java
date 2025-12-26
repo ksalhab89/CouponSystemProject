@@ -1,16 +1,19 @@
 package com.jhf.coupon.sql.utils;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * ConnectionPoolTest - Testing the singleton connection pool
@@ -20,20 +23,49 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class ConnectionPoolTest {
 
+    private static boolean databaseAvailable = false;
+
+    @BeforeAll
+    static void checkDatabaseAvailability() {
+        // Check if database is available before running tests
+        try {
+            // Try to get database URL from config
+            java.io.InputStream is = ConnectionPoolTest.class.getClassLoader()
+                    .getResourceAsStream("config.properties");
+            if (is != null) {
+                java.util.Properties props = new java.util.Properties();
+                props.load(is);
+                String url = props.getProperty("db.url");
+                String user = props.getProperty("db.user");
+                String password = props.getProperty("db.password");
+
+                try (Connection conn = DriverManager.getConnection(url, user, password)) {
+                    databaseAvailable = true;
+                }
+            }
+        } catch (Exception e) {
+            // Database not available, tests will be skipped
+            databaseAvailable = false;
+        }
+    }
+
     @AfterEach
     void tearDown() {
         // Clean up any connections that might have been obtained during tests
-        try {
-            ConnectionPool pool = ConnectionPool.getInstance();
-            // Give back time for any threads to complete
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        if (databaseAvailable) {
+            try {
+                ConnectionPool pool = ConnectionPool.getInstance();
+                // Give back time for any threads to complete
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
     @Test
     void testGetInstance_ReturnsSameInstance() {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         ConnectionPool instance1 = ConnectionPool.getInstance();
         ConnectionPool instance2 = ConnectionPool.getInstance();
 
@@ -44,12 +76,14 @@ class ConnectionPoolTest {
 
     @Test
     void testGetInstance_ReturnsNonNull() {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         ConnectionPool instance = ConnectionPool.getInstance();
         assertNotNull(instance, "ConnectionPool instance should not be null");
     }
 
     @Test
     void testSingletonPattern_ThreadSafe() throws InterruptedException {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         // Test that getInstance is thread-safe and returns same instance
         final ConnectionPool[] instances = new ConnectionPool[2];
 
@@ -74,6 +108,7 @@ class ConnectionPoolTest {
 
     @Test
     void testConnectionPool_HasCloseAllMethod() throws NoSuchMethodException {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         // Verify the ConnectionPool has a closeAll method
         ConnectionPool instance = ConnectionPool.getInstance();
         assertNotNull(instance.getClass().getMethod("closeAll"));
@@ -81,6 +116,7 @@ class ConnectionPoolTest {
 
     @Test
     void testConnectionPool_HasGetConnectionMethod() throws NoSuchMethodException {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         // Verify the ConnectionPool has a getConnection method
         ConnectionPool instance = ConnectionPool.getInstance();
         assertNotNull(instance.getClass().getMethod("getConnection"));
@@ -88,6 +124,7 @@ class ConnectionPoolTest {
 
     @Test
     void testConnectionPool_InstanceIsNotNull() {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         // Basic sanity check that getInstance doesn't fail
         ConnectionPool pool = ConnectionPool.getInstance();
         assertNotNull(pool, "Connection pool instance should be created successfully");
@@ -101,6 +138,7 @@ class ConnectionPoolTest {
     @Test
     @Timeout(10)
     void testMultipleThreadsSingletonAccess() throws Exception {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         int threadCount = 20;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         List<Future<ConnectionPool>> futures = new ArrayList<>();
@@ -122,6 +160,7 @@ class ConnectionPoolTest {
 
     @Test
     void testSingletonPattern_DoubleCheckedLocking() {
+        assumeTrue(databaseAvailable, "Database not available - skipping test");
         // Test the double-checked locking pattern
         // by getting instance multiple times rapidly
         for (int i = 0; i < 100; i++) {
