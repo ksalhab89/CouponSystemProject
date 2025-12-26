@@ -5,13 +5,13 @@ services:
     container_name: mysql-container
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: couponSystem
+      MYSQL_DATABASE: couponsystem
       MYSQL_USER: projectUser
       MYSQL_PASSWORD: projectUser
     ports:
       - '3306:3306'
     volumes:
-      - ./couponSystemSchemaToImport.sql:/docker-entrypoint-initdb.d/couponSystemSchemaToImport.sql
+      - ./src/main/resources/couponSystemSchemaToImport.sql:/docker-entrypoint-initdb.d/couponSystemSchemaToImport.sql
 
   app:
     build: .
@@ -21,6 +21,6 @@ services:
     depends_on:
       - mysql
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/couponSystem
+      DB_URL: jdbc:mysql://mysql:3306/couponsystem
       DB_USER: projectUser
       DB_PASSWORD: projectUser

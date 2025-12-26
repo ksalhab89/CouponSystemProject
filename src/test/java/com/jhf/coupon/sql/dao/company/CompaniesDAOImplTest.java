@@ -13,10 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -33,76 +31,84 @@ class CompaniesDAOImplTest {
     private PreparedStatement mockPreparedStatement;
 
     @Mock
-    private Statement mockStatement;
+    private ResultSet mockResultSet;
 
     @Mock
-    private ResultSet mockResultSet;
+    private Statement mockStatement;
 
     private CompaniesDAOImpl dao;
 
     @BeforeEach
     void setUp() {
-        dao = new CompaniesDAOImpl();
+        // DAO will be initialized inside each test with mocked ConnectionPool
     }
 
     @Test
-    void testIsCompanyExists_WhenCompanyExists_ReturnsTrue() throws Exception {
+    void testIsCompanyExists_WhenExists_ReturnsTrue() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
             when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
             when(mockResultSet.next()).thenReturn(true);
 
-            boolean result = dao.isCompanyExists("test@mail.com", "password");
+            boolean result = dao.isCompanyExists("test@company.com", "password123");
 
             assertTrue(result);
-            verify(mockPreparedStatement).setString(1, "test@mail.com");
-            verify(mockPreparedStatement).setString(2, "password");
+            verify(mockPreparedStatement).setString(1, "test@company.com");
+            verify(mockPreparedStatement).setString(2, "password123");
         }
     }
 
     @Test
-    void testIsCompanyExists_WhenCompanyDoesNotExist_ReturnsFalse() throws Exception {
+    void testIsCompanyExists_WhenNotExists_ReturnsFalse() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
             when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
             when(mockResultSet.next()).thenReturn(false);
 
-            boolean result = dao.isCompanyExists("nonexistent@mail.com", "password");
+            boolean result = dao.isCompanyExists("nonexistent@company.com", "wrongpass");
 
             assertFalse(result);
         }
     }
 
     @Test
-    void testIsCompanyNameExists_WhenNameExists_ReturnsTrue() throws Exception {
+    void testIsCompanyNameExists_WhenExists_ReturnsTrue() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
             when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
             when(mockResultSet.next()).thenReturn(true);
 
-            boolean result = dao.isCompanyNameExists("TestCompany");
+            boolean result = dao.isCompanyNameExists("ExistingCompany");
 
             assertTrue(result);
-            verify(mockPreparedStatement).setString(1, "TestCompany");
+            verify(mockPreparedStatement).setString(1, "ExistingCompany");
         }
     }
 
     @Test
-    void testIsCompanyNameExists_WhenNameDoesNotExist_ReturnsFalse() throws Exception {
+    void testIsCompanyNameExists_WhenNotExists_ReturnsFalse() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
             when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
             when(mockResultSet.next()).thenReturn(false);
 
-            boolean result = dao.isCompanyNameExists("NonExistentCompany");
+            boolean result = dao.isCompanyNameExists("NonexistentCompany");
 
             assertFalse(result);
         }
@@ -112,15 +118,18 @@ class CompaniesDAOImplTest {
     void testAddCompany_Success() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
 
-            Company company = new Company(0, "TestCompany", "test@mail.com", "password");
+            Company company = new Company(0, "TestCompany", "test@company.com", "password123");
+
             dao.addCompany(company);
 
             verify(mockPreparedStatement).setString(1, "TestCompany");
-            verify(mockPreparedStatement).setString(2, "test@mail.com");
-            verify(mockPreparedStatement).setString(3, "password");
+            verify(mockPreparedStatement).setString(2, "test@company.com");
+            verify(mockPreparedStatement).setString(3, "password123");
             verify(mockPreparedStatement).execute();
         }
     }
@@ -129,15 +138,18 @@ class CompaniesDAOImplTest {
     void testUpdateCompany_Success() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
 
-            Company company = new Company(1, "UpdatedCompany", "updated@mail.com", "newpass");
+            Company company = new Company(1, "UpdatedCompany", "updated@company.com", "newpassword");
+
             dao.updateCompany(company);
 
             verify(mockPreparedStatement).setString(1, "UpdatedCompany");
-            verify(mockPreparedStatement).setString(2, "updated@mail.com");
-            verify(mockPreparedStatement).setString(3, "newpass");
+            verify(mockPreparedStatement).setString(2, "updated@company.com");
+            verify(mockPreparedStatement).setString(3, "newpassword");
             verify(mockPreparedStatement).setInt(4, 1);
             verify(mockPreparedStatement).executeUpdate();
         }
@@ -147,6 +159,8 @@ class CompaniesDAOImplTest {
     void testDeleteCompany_Success() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
 
@@ -158,9 +172,11 @@ class CompaniesDAOImplTest {
     }
 
     @Test
-    void testGetAllCompanies_ReturnsListOfCompanies() throws Exception {
+    void testGetAllCompanies_ReturnsCompanies() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.createStatement()).thenReturn(mockStatement);
             when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
@@ -168,10 +184,10 @@ class CompaniesDAOImplTest {
             when(mockResultSet.next()).thenReturn(true, true, false);
             when(mockResultSet.getInt("ID")).thenReturn(1, 2);
             when(mockResultSet.getString("NAME")).thenReturn("Company1", "Company2");
-            when(mockResultSet.getString("EMAIL")).thenReturn("company1@mail.com", "company2@mail.com");
+            when(mockResultSet.getString("EMAIL")).thenReturn("c1@mail.com", "c2@mail.com");
             when(mockResultSet.getString("PASSWORD")).thenReturn("pass1", "pass2");
 
-            ArrayList<Company> companies = dao.getAllCompanies();
+            var companies = dao.getAllCompanies();
 
             assertEquals(2, companies.size());
             assertEquals("Company1", companies.get(0).getName());
@@ -180,24 +196,28 @@ class CompaniesDAOImplTest {
     }
 
     @Test
-    void testGetAllCompanies_ReturnsEmptyList_WhenNoCompanies() throws Exception {
+    void testGetAllCompanies_ReturnsEmptyList() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.createStatement()).thenReturn(mockStatement);
             when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
             when(mockResultSet.next()).thenReturn(false);
 
-            ArrayList<Company> companies = dao.getAllCompanies();
+            var companies = dao.getAllCompanies();
 
             assertEquals(0, companies.size());
         }
     }
 
     @Test
-    void testGetCompany_WhenCompanyExists_ReturnsCompany() throws Exception {
+    void testGetCompany_WhenExists_ReturnsCompany() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
             when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
@@ -205,31 +225,34 @@ class CompaniesDAOImplTest {
             when(mockResultSet.next()).thenReturn(true);
             when(mockResultSet.getInt("ID")).thenReturn(1);
             when(mockResultSet.getString("NAME")).thenReturn("TestCompany");
-            when(mockResultSet.getString("EMAIL")).thenReturn("test@mail.com");
-            when(mockResultSet.getString("PASSWORD")).thenReturn("password");
+            when(mockResultSet.getString("EMAIL")).thenReturn("test@company.com");
+            when(mockResultSet.getString("PASSWORD")).thenReturn("password123");
 
-            Company company = dao.getCompany(1);
+            Company result = dao.getCompany(1);
 
-            assertNotNull(company);
-            assertEquals(1, company.getId());
-            assertEquals("TestCompany", company.getName());
-            assertEquals("test@mail.com", company.getEmail());
+            assertNotNull(result);
+            assertEquals(1, result.getId());
+            assertEquals("TestCompany", result.getName());
+            assertEquals("test@company.com", result.getEmail());
+            assertEquals("password123", result.getPassword());
             verify(mockPreparedStatement).setInt(1, 1);
         }
     }
 
     @Test
-    void testGetCompany_WhenCompanyDoesNotExist_ThrowsException() throws Exception {
+    void testGetCompany_WhenNotExists_ThrowsException() throws Exception {
         try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
+            dao = new CompaniesDAOImpl();
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
             when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
             when(mockResultSet.next()).thenReturn(false);
 
             CompanyNotFoundException exception = assertThrows(
-                CompanyNotFoundException.class,
-                () -> dao.getCompany(999)
+                    CompanyNotFoundException.class,
+                    () -> dao.getCompany(999)
             );
 
             assertTrue(exception.getMessage().contains("999"));
