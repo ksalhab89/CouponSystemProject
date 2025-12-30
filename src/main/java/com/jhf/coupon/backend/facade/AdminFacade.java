@@ -49,9 +49,13 @@ public class AdminFacade extends ClientFacade {
 		if (email == null || password == null) {
 			Properties properties = new Properties();
 			try (InputStream input = AdminFacade.class.getClassLoader().getResourceAsStream("config.properties")) {
-				properties.load(input);
-				email = properties.getProperty("admin.email");
-				password = properties.getProperty("admin.password");
+				if (input != null) {
+					properties.load(input);
+					email = properties.getProperty("admin.email");
+					password = properties.getProperty("admin.password");
+				} else {
+					logger.warn("config.properties not found, relying on environment variables only");
+				}
 			} catch (IOException e) {
 				logger.error("Failed to load admin credentials from config.properties", e);
 			}
