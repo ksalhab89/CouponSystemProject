@@ -564,10 +564,9 @@ class AdminFacadeTest {
     }
 
     @Test
-    void testLogin_WithNullPassword_ThrowsException() {
-        assertThrows(NullPointerException.class, () -> {
-            facade.login("admin@admin.com", null);
-        });
+    void testLogin_WithNullPassword_ReturnsFalse() {
+        boolean result = facade.login("admin@admin.com", null);
+        assertFalse(result, "Login with null password should return false");
     }
 
     @Test

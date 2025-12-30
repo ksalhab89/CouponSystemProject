@@ -1,17 +1,29 @@
 version: '3.8'
+
 services:
   mysql:
     image: mysql:8.0
     container_name: mysql-container
     environment:
-      MYSQL_ROOT_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: couponsystem
-      MYSQL_USER: projectUser
-      MYSQL_PASSWORD: projectUser
-    ports:
-      - '3306:3306'
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    # Internal network only - MySQL not exposed to host
+    expose:
+      - "3306"
     volumes:
-      - ./src/main/resources/couponSystemSchemaToImport.sql:/docker-entrypoint-initdb.d/couponSystemSchemaToImport.sql
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/couponSystemSchemaToImport.sql:/docker-entrypoint-initdb.d/couponSystemSchemaToImport.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - backend
 
   app:
     build: .
@@ -19,8 +31,22 @@ services:
     ports:
       - '8080:8080'
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/couponsystem
-      DB_USER: projectUser
-      DB_PASSWORD: projectUser
+      DB_URL: jdbc:mysql://mysql:3306/couponsystem?serverTimezone=UTC
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - backend
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge

@@ -1,0 +1,69 @@
+# Git files
+.git
+.github
+.gitignore
+.gitattributes
+
+# Build artifacts
+target/
+*.jar
+*.war
+*.class
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Environment variables and secrets
+.env
+*.env
+!.env.example
+
+# Documentation
+*.md
+!README.md
+
+# Test reports and coverage
+test-results/
+coverage/
+*.log
+logs/
+
+# Maven specific
+.mvn/
+mvnw
+mvnw.cmd
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Docker files (don't copy docker-compose into image)
+docker-compose*.yml
+Dockerfile*
+
+# CI/CD files
+.github/
+
+# Phase planning documents
+PHASE*.md
+*_PLAN.md
+SECURITY_FIX_*.md
+DEPENDENCY_UPDATES.md
+SETUP_GUIDE.md
+PRODUCTION_READINESS*.md

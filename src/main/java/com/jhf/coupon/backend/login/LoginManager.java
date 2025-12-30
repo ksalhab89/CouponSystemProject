@@ -41,7 +41,7 @@ public class LoginManager {
 		if (facade.login(email, password))
 			return facade;
 		else
-			throw new InvalidLoginCredentialsException("Could not Authenticate using email & password: " + email + ", " + password);
+			throw new InvalidLoginCredentialsException("Could not Authenticate user: " + email);
 	}
 
 }

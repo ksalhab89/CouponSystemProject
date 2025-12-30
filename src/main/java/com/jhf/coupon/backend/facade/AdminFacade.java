@@ -61,6 +61,9 @@ public class AdminFacade extends ClientFacade {
 	}
 
 	public boolean login(@NotNull String email, String password) {
+		if (password == null) {
+			return false;
+		}
 		return email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASSWORD);
 	}
 
