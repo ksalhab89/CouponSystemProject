@@ -1,6 +1,7 @@
 package com.jhf.coupon.sql.dao.customer;
 
 import com.jhf.coupon.backend.beans.Customer;
+import com.jhf.coupon.backend.security.PasswordHasher;
 import com.jhf.coupon.sql.utils.ConnectionPool;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,13 +16,18 @@ public class CustomerDAOImpl implements CustomerDAO {
 	}
 
 	public boolean isCustomerExists(String customerEmail, String customerPassword) throws InterruptedException, SQLException {
-		String sqlQuery = "SELECT * FROM `customers` WHERE `EMAIL` = ? AND `PASSWORD` = ?";
+		// Query by email only, then verify password with bcrypt
+		String sqlQuery = "SELECT `PASSWORD` FROM `customers` WHERE `EMAIL` = ?";
 		try (Connection connection = pool.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setString(1, customerEmail);
-			preparedStatement.setString(2, customerPassword);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
-				return resultSet.next();
+				if (resultSet.next()) {
+					String storedPasswordHash = resultSet.getString("PASSWORD");
+					// Verify password using bcrypt
+					return PasswordHasher.verifyPassword(customerPassword, storedPasswordHash);
+				}
+				return false; // No customer found with this email
 			}
 		}
 	}
@@ -33,7 +39,9 @@ public class CustomerDAOImpl implements CustomerDAO {
 			preparedStatement.setString(1, customer.getFirstName());
 			preparedStatement.setString(2, customer.getLastName());
 			preparedStatement.setString(3, customer.getEmail());
-			preparedStatement.setString(4, customer.getPassword());
+			// Hash password with bcrypt before storing
+			String hashedPassword = PasswordHasher.hashPassword(customer.getPassword());
+			preparedStatement.setString(4, hashedPassword);
 			preparedStatement.execute();
 		}
 	}
@@ -45,7 +53,9 @@ public class CustomerDAOImpl implements CustomerDAO {
 			preparedStatement.setString(1, customer.getFirstName());
 			preparedStatement.setString(2, customer.getLastName());
 			preparedStatement.setString(3, customer.getEmail());
-			preparedStatement.setString(4, customer.getPassword());
+			// Hash password with bcrypt before storing
+			String hashedPassword = PasswordHasher.hashPassword(customer.getPassword());
+			preparedStatement.setString(4, hashedPassword);
 			preparedStatement.setInt(5, customer.getId());
 			preparedStatement.executeUpdate();
 		}

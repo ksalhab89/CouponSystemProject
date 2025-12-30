@@ -7,13 +7,13 @@
 # =============================================================================
 
 db.url=jdbc:mysql://localhost:3306/couponsystem?serverTimezone=UTC
-db.user=devuser
-db.password=devpassword
+db.user=YOUR_DB_USERNAME_HERE
+db.password=YOUR_DB_PASSWORD_HERE
 
 # Admin credentials - FOR DEVELOPMENT ONLY
 # Production: Set ADMIN_EMAIL and ADMIN_PASSWORD environment variables
-admin.email=admin@local.dev
-admin.password=devadmin
+admin.email=your_admin_email@example.com
+admin.password=your_admin_password_here
 
 # WARNING: These are development defaults with weak passwords
 # NEVER use these values in production

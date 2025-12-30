@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: couponsystem
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    # ✅ NO EXTERNAL PORT EXPOSURE - Most secure approach
+    # ports:
+    #   - '3306:3306'  # ❌ Don't expose externally
+    expose:
+      - "3306"  # ✅ Only accessible within Docker network
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/couponSystemSchemaToImport.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - backend  # ✅ Internal network only
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  app:
+    build: .
+    container_name: coupon-system-app
+    ports:
+      - '8080:8080'  # ✅ Only expose app port
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # ✅ Use internal Docker network hostname
+      DB_URL: jdbc:mysql://mysql:3306/couponsystem?serverTimezone=UTC
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - backend  # ✅ Same network as MySQL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge
+    internal: false  # Set to true for MAXIMUM isolation (app can't reach internet)
+    driver_opts:
+      com.docker.network.bridge.name: coupon_backend
+      com.docker.network.bridge.enable_icc: "true"  # Inter-container communication
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+
+# ============================================================================
+# SECURITY ANALYSIS:
+# ============================================================================
+#
+# ✅ MySQL not exposed to host network (no ports section)
+# ✅ Only app <-> MySQL traffic on internal Docker network
+# ✅ Docker network encryption at rest
+# ✅ No SSL needed - traffic never leaves the host
+#
+# Traffic flow:
+# Internet → Host:8080 → App Container → Docker Network (encrypted) → MySQL Container
+#
+# Why this is secure:
+# 1. Docker networks use Linux kernel namespaces (isolated)
+# 2. Traffic between containers uses virtual ethernet (veth) pairs
+# 3. Only the host machine can access both containers
+# 4. MySQL is completely invisible from outside
+#
+# When to add SSL anyway:
+# - Compliance requirements (audit checklist)
+# - Defense in depth (if host is compromised)
+# - Production paranoia (better safe than sorry)
+#
+# ============================================================================

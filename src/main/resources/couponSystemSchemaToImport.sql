@@ -52,7 +52,7 @@ CREATE TABLE `companies` (
   `ID` int NOT NULL AUTO_INCREMENT COMMENT 'Identification Number',
   `NAME` varchar(48) DEFAULT NULL COMMENT 'Company Name',
   `EMAIL` varchar(48) DEFAULT NULL COMMENT 'Company Email',
-  `PASSWORD` varchar(48) DEFAULT NULL COMMENT 'Login Password',
+  `PASSWORD` varchar(60) DEFAULT NULL COMMENT 'Login Password (bcrypt hash)',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -115,7 +115,7 @@ CREATE TABLE `customers` (
   `FIRST_NAME` varchar(48) DEFAULT NULL COMMENT 'First Name',
   `LAST_NAME` varchar(48) DEFAULT NULL COMMENT 'Last Name',
   `EMAIL` varchar(48) DEFAULT NULL COMMENT 'Customer Email',
-  `PASSWORD` varchar(48) DEFAULT NULL COMMENT 'Login Password',
+  `PASSWORD` varchar(60) DEFAULT NULL COMMENT 'Login Password (bcrypt hash)',
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;

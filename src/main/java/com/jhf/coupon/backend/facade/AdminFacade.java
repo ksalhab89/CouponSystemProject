@@ -10,6 +10,7 @@ import com.jhf.coupon.backend.exceptions.company.CompanyAlreadyExistsException;
 import com.jhf.coupon.backend.exceptions.customer.CantDeleteCustomerHasCoupons;
 import com.jhf.coupon.backend.exceptions.customer.CantUpdateCustomerException;
 import com.jhf.coupon.backend.exceptions.customer.CustomerAlreadyExistsException;
+import com.jhf.coupon.backend.security.PasswordHasher;
 import com.jhf.coupon.backend.validation.InputValidator;
 import com.jhf.coupon.backend.validation.ValidationException;
 import com.jhf.coupon.sql.dao.company.CompanyNotFoundException;
@@ -64,7 +65,24 @@ public class AdminFacade extends ClientFacade {
 		if (password == null) {
 			return false;
 		}
-		return email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASSWORD);
+
+		// Check email first
+		if (!email.equals(ADMIN_EMAIL)) {
+			return false;
+		}
+
+		// Verify password using bcrypt
+		// ADMIN_PASSWORD should be a bcrypt hash in environment variables
+		// For backward compatibility during migration, check if it's a hash or plaintext
+		if (ADMIN_PASSWORD.startsWith("$2a$") || ADMIN_PASSWORD.startsWith("$2b$")) {
+			// It's a bcrypt hash - use secure verification
+			return PasswordHasher.verifyPassword(password, ADMIN_PASSWORD);
+		} else {
+			// Plaintext password (DEPRECATED - only for backward compatibility)
+			// TODO: Remove this branch after migrating to bcrypt hashes in .env
+			logger.warn("SECURITY WARNING: Admin password is stored in plaintext. Please update ADMIN_PASSWORD in .env to a bcrypt hash.");
+			return password.equals(ADMIN_PASSWORD);
+		}
 	}
 
 	public void addCompany(@NotNull Company company) throws SQLException, InterruptedException, CompanyAlreadyExistsException, ValidationException {

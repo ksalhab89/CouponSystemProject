@@ -6,6 +6,10 @@ target/
 *.env
 !.env.example
 
+# Configuration files with secrets (local development only)
+src/main/resources/config.properties
+!src/main/resources/config.properties.example
+
 # IDE files
 *.iml
 .vscode/

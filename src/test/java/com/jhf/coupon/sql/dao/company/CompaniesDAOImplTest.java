@@ -1,10 +1,12 @@
 package com.jhf.coupon.sql.dao.company;
 
 import com.jhf.coupon.backend.beans.Company;
+import com.jhf.coupon.backend.security.PasswordHasher;
 import com.jhf.coupon.sql.utils.ConnectionPool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -16,6 +18,7 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,16 +52,20 @@ class CompaniesDAOImplTest {
             mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
             dao = new CompaniesDAOImpl();
 
+            // Hash the test password to simulate what's stored in the database
+            String storedHash = PasswordHasher.hashPassword("password123");
+
             when(mockPool.getConnection()).thenReturn(mockConnection);
             when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
             when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
             when(mockResultSet.next()).thenReturn(true);
+            when(mockResultSet.getString("PASSWORD")).thenReturn(storedHash);
 
             boolean result = dao.isCompanyExists("test@company.com", "password123");
 
             assertTrue(result);
             verify(mockPreparedStatement).setString(1, "test@company.com");
-            verify(mockPreparedStatement).setString(2, "password123");
+            // Note: No longer verifying password in query since it's now verified via bcrypt
         }
     }
 
@@ -129,7 +136,16 @@ class CompaniesDAOImplTest {
 
             verify(mockPreparedStatement).setString(1, "TestCompany");
             verify(mockPreparedStatement).setString(2, "test@company.com");
-            verify(mockPreparedStatement).setString(3, "password123");
+
+            // Capture the password argument to verify it's a bcrypt hash
+            ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
+            verify(mockPreparedStatement).setString(eq(3), passwordCaptor.capture());
+            String capturedPassword = passwordCaptor.getValue();
+
+            // Verify it's a valid bcrypt hash format
+            assertEquals(60, capturedPassword.length(), "Bcrypt hash should be 60 characters");
+            assertTrue(capturedPassword.startsWith("$2a$"), "Bcrypt hash should start with $2a$");
+
             verify(mockPreparedStatement).execute();
         }
     }
@@ -149,7 +165,16 @@ class CompaniesDAOImplTest {
 
             verify(mockPreparedStatement).setString(1, "UpdatedCompany");
             verify(mockPreparedStatement).setString(2, "updated@company.com");
-            verify(mockPreparedStatement).setString(3, "newpassword");
+
+            // Capture the password argument to verify it's a bcrypt hash
+            ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
+            verify(mockPreparedStatement).setString(eq(3), passwordCaptor.capture());
+            String capturedPassword = passwordCaptor.getValue();
+
+            // Verify it's a valid bcrypt hash format
+            assertEquals(60, capturedPassword.length(), "Bcrypt hash should be 60 characters");
+            assertTrue(capturedPassword.startsWith("$2a$"), "Bcrypt hash should start with $2a$");
+
             verify(mockPreparedStatement).setInt(4, 1);
             verify(mockPreparedStatement).executeUpdate();
         }
