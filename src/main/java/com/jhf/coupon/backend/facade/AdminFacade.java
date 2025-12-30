@@ -1,5 +1,6 @@
 package com.jhf.coupon.backend.facade;
 
+import com.jhf.coupon.backend.beans.AccountLockoutStatus;
 import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.backend.beans.Coupon;
 import com.jhf.coupon.backend.beans.Customer;
@@ -208,6 +209,61 @@ public class AdminFacade extends ClientFacade {
 
 	public Customer getCustomer(int customerId) throws SQLException, InterruptedException {
 		return customerDAO.getCustomer(customerId);
+	}
+
+	// Account Lockout Management Methods
+
+	/**
+	 * Manually unlock a company account.
+	 * Resets failed login attempts and removes account lock.
+	 *
+	 * @param companyEmail Email of the company account to unlock
+	 * @throws SQLException if database error occurs
+	 * @throws InterruptedException if thread is interrupted
+	 */
+	public void unlockCompanyAccount(String companyEmail) throws SQLException, InterruptedException {
+		companiesDAO.unlockAccount(companyEmail);
+		logger.info("Company account {} has been manually unlocked", companyEmail);
+	}
+
+	/**
+	 * Manually unlock a customer account.
+	 * Resets failed login attempts and removes account lock.
+	 *
+	 * @param customerEmail Email of the customer account to unlock
+	 * @throws SQLException if database error occurs
+	 * @throws InterruptedException if thread is interrupted
+	 */
+	public void unlockCustomerAccount(String customerEmail) throws SQLException, InterruptedException {
+		customerDAO.unlockAccount(customerEmail);
+		logger.info("Customer account {} has been manually unlocked", customerEmail);
+	}
+
+	/**
+	 * Get lockout status for a company account.
+	 * Useful for admin to check account status before unlocking.
+	 *
+	 * @param companyEmail Email of the company account
+	 * @return AccountLockoutStatus object, or null if account not found
+	 * @throws SQLException if database error occurs
+	 * @throws InterruptedException if thread is interrupted
+	 */
+	public AccountLockoutStatus getCompanyLockoutStatus(String companyEmail)
+			throws SQLException, InterruptedException {
+		return companiesDAO.getAccountLockoutStatus(companyEmail);
+	}
+
+	/**
+	 * Get lockout status for a customer account.
+	 *
+	 * @param customerEmail Email of the customer account
+	 * @return AccountLockoutStatus object, or null if account not found
+	 * @throws SQLException if database error occurs
+	 * @throws InterruptedException if thread is interrupted
+	 */
+	public AccountLockoutStatus getCustomerLockoutStatus(String customerEmail)
+			throws SQLException, InterruptedException {
+		return customerDAO.getAccountLockoutStatus(customerEmail);
 	}
 
 }

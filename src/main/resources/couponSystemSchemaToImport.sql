@@ -166,4 +166,31 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+--
+-- Account Lockout Feature - Add lockout columns to companies table
+--
+
+ALTER TABLE `companies`
+ADD COLUMN IF NOT EXISTS `FAILED_LOGIN_ATTEMPTS` INT NOT NULL DEFAULT 0 COMMENT 'Number of consecutive failed login attempts',
+ADD COLUMN IF NOT EXISTS `ACCOUNT_LOCKED` BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Whether the account is currently locked',
+ADD COLUMN IF NOT EXISTS `LOCKED_UNTIL` TIMESTAMP NULL COMMENT 'Time when the account will be automatically unlocked',
+ADD COLUMN IF NOT EXISTS `LAST_FAILED_LOGIN` TIMESTAMP NULL COMMENT 'Timestamp of the most recent failed login attempt';
+
+--
+-- Account Lockout Feature - Add lockout columns to customers table
+--
+
+ALTER TABLE `customers`
+ADD COLUMN IF NOT EXISTS `FAILED_LOGIN_ATTEMPTS` INT NOT NULL DEFAULT 0 COMMENT 'Number of consecutive failed login attempts',
+ADD COLUMN IF NOT EXISTS `ACCOUNT_LOCKED` BOOLEAN NOT NULL DEFAULT FALSE COMMENT 'Whether the account is currently locked',
+ADD COLUMN IF NOT EXISTS `LOCKED_UNTIL` TIMESTAMP NULL COMMENT 'Time when the account will be automatically unlocked',
+ADD COLUMN IF NOT EXISTS `LAST_FAILED_LOGIN` TIMESTAMP NULL COMMENT 'Timestamp of the most recent failed login attempt';
+
+--
+-- Performance indexes for lockout queries
+--
+
+CREATE INDEX IF NOT EXISTS idx_companies_email_lockout ON `companies`(`EMAIL`, `ACCOUNT_LOCKED`);
+CREATE INDEX IF NOT EXISTS idx_customers_email_lockout ON `customers`(`EMAIL`, `ACCOUNT_LOCKED`);
+
 -- Dump completed on 2022-01-18  7:59:06
