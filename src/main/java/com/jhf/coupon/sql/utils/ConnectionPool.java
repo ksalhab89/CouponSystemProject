@@ -34,7 +34,11 @@ public class ConnectionPool {
 			if (dbUrl == null || dbUser == null || dbPassword == null) {
 				Properties properties = new Properties();
 				try (InputStream input = ConnectionPool.class.getClassLoader().getResourceAsStream("config.properties")) {
+				if (input != null) {
 					properties.load(input);
+				} else {
+					logger.warn("config.properties not found, relying on environment variables only");
+				}
 				} catch (IOException e) {
 					logger.error("Failed to load database configuration from config.properties", e);
 				}
