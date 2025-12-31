@@ -7,6 +7,13 @@
     <groupId>com.jhf.fullStack</groupId>
     <artifactId>CouponSystemProject</artifactId>
     <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <!-- Skip OWASP by default for faster local builds -->
+        <!-- Override with: mvn verify -Dowasp.skip=false -->
+        <owasp.skip>true</owasp.skip>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -120,27 +127,35 @@
                 <artifactId>dependency-check-maven</artifactId>
                 <version>10.0.4</version>
                 <configuration>
+                    <!-- Skip by default for faster local builds -->
+                    <!-- Run with: mvn verify -Dowasp.skip=false -->
+                    <skip>${owasp.skip}</skip>
+
+                    <!-- NVD API Key (optional but highly recommended) -->
+                    <!-- Get your free key at: https://nvd.nist.gov/developers/request-an-api-key -->
+                    <!-- Set via environment: export NVD_API_KEY=your-key -->
+                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+
                     <!-- Fail build on CVSS score >= 7 (High severity) -->
                     <failBuildOnCVSS>7</failBuildOnCVSS>
+
                     <!-- Suppress false positives if needed -->
                     <suppressionFiles>
                         <suppressionFile>owasp-suppressions.xml</suppressionFile>
                     </suppressionFiles>
+
                     <!-- Skip test dependencies -->
                     <skipTestScope>false</skipTestScope>
+
                     <!-- Report formats -->
                     <formats>
                         <format>HTML</format>
                         <format>JSON</format>
                     </formats>
+
+                    <!-- Cache NVD data for 4 hours -->
+                    <cveValidForHours>4</cveValidForHours>
                 </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

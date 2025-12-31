@@ -47,7 +47,9 @@ jobs:
         path: target/site/jacoco/
 
     - name: OWASP Dependency Check
-      run: mvn dependency-check:check
+      run: mvn dependency-check:check -Dowasp.skip=false
+      env:
+        NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
     - name: Upload OWASP report
       uses: actions/upload-artifact@v4

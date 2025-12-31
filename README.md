@@ -215,14 +215,28 @@ account.lockout.admin_enabled=false
 
 ### OWASP Dependency Check
 
-Run security scan:
+**Run security scan:**
 ```bash
-mvn dependency-check:check
+# Enable OWASP check (skipped by default for speed)
+mvn dependency-check:check -Dowasp.skip=false
 
-# View report: target/dependency-check-report.html
+# View report
+open target/dependency-check-report.html
 ```
 
-Automatic scanning in CI/CD pipeline on every push.
+**Get NVD API Key (highly recommended):**
+1. Request free API key: https://nvd.nist.gov/developers/request-an-api-key
+2. Set environment variable:
+   ```bash
+   export NVD_API_KEY=your-api-key-here
+   ```
+3. Without API key, initial download takes 30-60 minutes (325k+ records)
+4. With API key, downloads complete in 2-3 minutes
+
+**CI/CD:**
+- Automatic scanning on every push
+- Add `NVD_API_KEY` to GitHub repository secrets
+- Reports uploaded as workflow artifacts
 
 ## 🏗️ Architecture
 
