@@ -46,8 +46,28 @@ jobs:
         name: coverage-report
         path: target/site/jacoco/
 
+    - name: Free up disk space
+      run: |
+        sudo rm -rf /tmp/*
+        sudo apt-get clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        df -h
+
+    - name: Cache OWASP Dependency-Check data
+      uses: actions/cache@v4
+      with:
+        path: dependency-check-data
+        key: ${{ runner.os }}-owasp-data-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-owasp-data-
+
     - name: OWASP Dependency Check
-      run: mvn dependency-check:check -Dowasp.skip=false
+      run: |
+        mvn dependency-check:check \
+          -Dowasp.skip=false \
+          -Ddata.directory=${{ github.workspace }}/dependency-check-data
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
