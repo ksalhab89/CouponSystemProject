@@ -6,6 +6,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      DB_URL: jdbc:mysql://localhost:3306/couponsystem?serverTimezone=UTC
+      DB_USER: testuser
+      DB_PASSWORD: testpass
+      MYSQL_ROOT_PASSWORD: rootpass
+      ADMIN_EMAIL: admin@admin.com
+      ADMIN_PASSWORD: admin
+
     steps:
     - uses: actions/checkout@v4
 
@@ -15,6 +23,13 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: 'maven'
+
+    - name: Start MySQL with docker-compose
+      run: |
+        docker-compose up -d mysql
+        echo "Waiting for MySQL to be healthy..."
+        timeout 60 bash -c 'until docker-compose ps mysql | grep -q "healthy"; do sleep 2; done'
+        echo "MySQL is ready!"
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
@@ -30,3 +45,17 @@ jobs:
       with:
         name: coverage-report
         path: target/site/jacoco/
+
+    - name: OWASP Dependency Check
+      run: mvn dependency-check:check
+
+    - name: Upload OWASP report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: owasp-report
+        path: target/dependency-check-report.html
+
+    - name: Cleanup docker-compose
+      if: always()
+      run: docker-compose down -v

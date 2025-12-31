@@ -31,12 +31,13 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD java -cp app.jar com.jhf.coupon.health.HealthCheck || exit 1
 
-# JVM configuration for containers
+# JVM configuration for containers with JSON logging
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
     -XX:+UseG1GC \
     -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/app/heapdump.hprof"
+    -XX:HeapDumpPath=/app/heapdump.hprof \
+    -Dlogback.configurationFile=logback-json.xml"
 
 EXPOSE 8080
 

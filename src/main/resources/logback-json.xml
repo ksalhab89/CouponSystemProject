@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!--
+    JSON Structured Logging Configuration
+
+    This configuration outputs logs in JSON format for production environments,
+    making them easier to parse, search, and analyze in log aggregation systems
+    like ELK Stack, Splunk, or CloudWatch.
+
+    To use this configuration, set the system property:
+    -Dlogback.configurationFile=logback-json.xml
+    -->
+
+    <!-- Console Appender - JSON format for stdout (container-friendly) -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Customize field names -->
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <stackTrace>stackTrace</stackTrace>
+            </fieldNames>
+
+            <!-- Add custom fields -->
+            <customFields>{"application":"coupon-system","environment":"production"}</customFields>
+
+            <!-- Include caller data (file, line number) - disable in production for performance -->
+            <includeCallerData>false</includeCallerData>
+
+            <!-- Include MDC (Mapped Diagnostic Context) fields -->
+            <includeMdc>true</includeMdc>
+
+            <!-- Include context name -->
+            <includeContext>true</includeContext>
+
+            <!-- Pretty print for development (disable in production) -->
+            <jsonGeneratorDecorator class="net.logstash.logback.decorate.PrettyPrintingJsonGeneratorDecorator"/>
+        </encoder>
+    </appender>
+
+    <!-- Rolling File Appender - JSON format with rotation -->
+    <appender name="FILE_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/coupon-system-json.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <stackTrace>stackTrace</stackTrace>
+            </fieldNames>
+            <customFields>{"application":"coupon-system","environment":"production"}</customFields>
+            <includeCallerData>false</includeCallerData>
+            <includeMdc>true</includeMdc>
+            <includeContext>true</includeContext>
+            <!-- No pretty printing for file logs (more compact) -->
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Daily rollover with compression -->
+            <fileNamePattern>logs/coupon-system-json.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <!-- Keep 30 days of history -->
+            <maxHistory>30</maxHistory>
+            <!-- Total size cap of 2GB -->
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Async Appender - wraps FILE_JSON appender for better performance -->
+    <appender name="ASYNC_FILE_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE_JSON"/>
+        <queueSize>1024</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>false</includeCallerData>
+    </appender>
+
+    <!-- Separate appender for security events -->
+    <appender name="SECURITY_JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/security-json.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"application":"coupon-system","log_type":"security"}</customFields>
+            <includeMdc>true</includeMdc>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/security-json.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>90</maxHistory> <!-- Keep security logs longer -->
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Application-specific loggers -->
+    <logger name="com.jhf.coupon" level="INFO"/>
+    <logger name="com.jhf.coupon.sql.dao" level="DEBUG"/>
+    <logger name="com.jhf.coupon.backend.periodicJob" level="INFO"/>
+
+    <!-- Security logger - separate file for audit trail -->
+    <logger name="com.jhf.coupon.backend.login" level="INFO" additivity="false">
+        <appender-ref ref="SECURITY_JSON"/>
+        <appender-ref ref="ASYNC_FILE_JSON"/>
+    </logger>
+
+    <logger name="com.jhf.coupon.backend.security" level="INFO" additivity="false">
+        <appender-ref ref="SECURITY_JSON"/>
+        <appender-ref ref="ASYNC_FILE_JSON"/>
+    </logger>
+
+    <!-- Third-party library loggers (keep them quieter) -->
+    <logger name="org.hibernate" level="WARN"/>
+    <logger name="org.springframework" level="WARN"/>
+
+    <!-- Root logger - catches everything not explicitly configured -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE_JSON"/>
+        <appender-ref ref="ASYNC_FILE_JSON"/>
+    </root>
+</configuration>

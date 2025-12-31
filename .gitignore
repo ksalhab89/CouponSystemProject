@@ -17,3 +17,8 @@ src/main/resources/config.properties
 # Log files
 logs/
 *.log
+
+# OWASP Dependency Check Reports
+target/dependency-check-report.*
+.dependency-check/
+dependency-check-report.*

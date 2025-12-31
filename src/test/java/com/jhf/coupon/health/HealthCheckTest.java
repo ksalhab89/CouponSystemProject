@@ -7,26 +7,21 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for HealthCheck utility.
- * Database health checks are integration tests and require a running database.
+ * Requires MySQL database running via docker-compose.
  */
 class HealthCheckTest {
 
 	@Test
 	void testGetHealthStatus_ReturnsString() {
-		// Should always return a non-null string
 		String status = HealthCheck.getHealthStatus();
 		assertNotNull(status);
 		assertTrue(status.equals("OK") || status.startsWith("UNHEALTHY"));
 	}
 
 	@Test
-	@Tag("integration")
 	void testIsDatabaseHealthy_WithRunningDatabase() {
-		// This test requires a running database
-		// Will be skipped in CI without database
 		boolean healthy = HealthCheck.isDatabaseHealthy();
-		// Should not throw exception
-		assertTrue(healthy || !healthy); // Just verify it doesn't crash
+		assertTrue(healthy, "Database should be healthy when MySQL is running via docker-compose");
 	}
 
 	@Test
