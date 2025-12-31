@@ -24,6 +24,15 @@ services:
     restart: unless-stopped
     networks:
       - backend
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   app:
     build: .
@@ -42,6 +51,21 @@ services:
     restart: unless-stopped
     networks:
       - backend
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
 
 volumes:
   mysql_data:
