@@ -55,13 +55,14 @@ jobs:
         sudo rm -rf /usr/local/share/boost
         df -h
 
-    - name: Clean and prepare OWASP data directory
-      run: |
-        rm -rf dependency-check-data
-        mkdir -p dependency-check-data
-        chmod 777 dependency-check-data
-        rm -rf ~/.m2/repository/org/owasp/dependency-check-data || true
-        echo "OWASP data directory prepared"
+    - name: Cache OWASP Dependency-Check data
+      uses: actions/cache@v4
+      with:
+        path: dependency-check-data
+        key: ${{ runner.os }}-owasp-data-v2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-owasp-data-v2-
+          ${{ runner.os }}-owasp-data-
 
     - name: OWASP Dependency Check
       run: |

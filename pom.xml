@@ -153,8 +153,8 @@
                         <format>JSON</format>
                     </formats>
 
-                    <!-- Cache NVD data for 4 hours -->
-                    <cveValidForHours>4</cveValidForHours>
+                    <!-- Cache NVD data for 24 hours -->
+                    <cveValidForHours>24</cveValidForHours>
 
                     <!-- Disable Sonatype OSS Index Analyzer (requires authentication) -->
                     <!-- NVD is sufficient and more comprehensive -->
