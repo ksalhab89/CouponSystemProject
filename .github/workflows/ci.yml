@@ -31,14 +31,11 @@ jobs:
         timeout 60 bash -c 'until docker compose ps mysql | grep -q "healthy"; do sleep 2; done'
         echo "MySQL is ready!"
 
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
+    - name: Build with Maven (skip tests)
+      run: mvn -B package -DskipTests --file pom.xml
 
-    - name: Run tests
-      run: mvn test
-
-    - name: Generate JaCoCo coverage report
-      run: mvn jacoco:report
+    - name: Run tests with coverage report
+      run: mvn test jacoco:report
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v4
@@ -46,7 +43,9 @@ jobs:
         name: coverage-report
         path: target/site/jacoco/
 
+    # Only run OWASP security scan on main branch to save CI time on PRs
     - name: Free up disk space
+      if: github.ref == 'refs/heads/main'
       run: |
         sudo rm -rf /tmp/*
         sudo apt-get clean
@@ -56,6 +55,7 @@ jobs:
         df -h
 
     - name: Cache OWASP Dependency-Check data
+      if: github.ref == 'refs/heads/main'
       uses: actions/cache@v4
       with:
         path: dependency-check-data
@@ -65,6 +65,7 @@ jobs:
           ${{ runner.os }}-owasp-data-
 
     - name: OWASP Dependency Check
+      if: github.ref == 'refs/heads/main'
       run: |
         mvn dependency-check:check \
           -Dowasp.skip=false \
@@ -74,7 +75,7 @@ jobs:
 
     - name: Upload OWASP report
       uses: actions/upload-artifact@v4
-      if: always()
+      if: always() && github.ref == 'refs/heads/main'
       with:
         name: owasp-report
         path: target/dependency-check-report.html
