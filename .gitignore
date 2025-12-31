@@ -22,3 +22,4 @@ logs/
 target/dependency-check-report.*
 .dependency-check/
 dependency-check-report.*
+dependency-check-data/
