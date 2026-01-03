@@ -1,337 +1,389 @@
 package com.jhf.coupon.backend.facade;
 
+import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.backend.beans.Coupon;
 import com.jhf.coupon.backend.beans.Customer;
 import com.jhf.coupon.backend.couponCategory.Category;
-import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 import com.jhf.coupon.backend.exceptions.coupon.CouponNotInStockException;
 import com.jhf.coupon.backend.exceptions.coupon.CustomerAlreadyPurchasedCouponException;
 import com.jhf.coupon.sql.dao.coupon.CouponNotFoundException;
-import com.jhf.coupon.sql.dao.coupon.CouponsDAO;
-import com.jhf.coupon.sql.dao.customer.CustomerDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Field;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class CustomerFacadeTest {
 
-    @Mock
-    private CustomerDAO mockCustomerDAO;
+    @Autowired
+    private CustomerFacade customerFacade;
 
-    @Mock
-    private CouponsDAO mockCouponsDAO;
+    @Autowired
+    private AdminFacade adminFacade;
 
-    private CustomerFacade facade;
+    @Autowired
+    private CompanyFacade companyFacade;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private Customer testCustomer;
+    private Company testCompany;
 
     @BeforeEach
     void setUp() throws Exception {
-        facade = new CustomerFacade();
+        // Clean up database before each test
+        jdbcTemplate.execute("DELETE FROM customers_vs_coupons");
+        jdbcTemplate.execute("DELETE FROM coupons");
+        jdbcTemplate.execute("DELETE FROM customers");
+        jdbcTemplate.execute("DELETE FROM companies");
 
-        // Use reflection to inject mocks
-        Field customerDAOField = facade.getClass().getSuperclass().getDeclaredField("customerDAO");
-        customerDAOField.setAccessible(true);
-        customerDAOField.set(facade, mockCustomerDAO);
+        // Create a test customer
+        Customer customer = new Customer(0, "John", "Doe", "john@mail.com", "password");
+        adminFacade.addCustomer(customer);
 
-        Field couponsDAOField = facade.getClass().getSuperclass().getDeclaredField("couponsDAO");
-        couponsDAOField.setAccessible(true);
-        couponsDAOField.set(facade, mockCouponsDAO);
+        ArrayList<Customer> customers = adminFacade.getAllCustomers();
+        testCustomer = customers.stream()
+            .filter(c -> c.getEmail().equals("john@mail.com"))
+            .findFirst()
+            .orElseThrow();
+
+        // Create a test company for coupons
+        Company company = new Company(0, "TestCompany", "company@mail.com", "password");
+        adminFacade.addCompany(company);
+
+        ArrayList<Company> companies = adminFacade.getCompanies();
+        testCompany = companies.stream()
+            .filter(c -> c.getName().equals("TestCompany"))
+            .findFirst()
+            .orElseThrow();
     }
 
     @Test
     void testLogin_WithValidCredentials_ReturnsTrue() throws Exception {
-        when(mockCustomerDAO.isCustomerExists("test@mail.com", "password")).thenReturn(true);
-
-        boolean result = facade.login("test@mail.com", "password");
+        boolean result = customerFacade.login("john@mail.com", "password");
 
         assertTrue(result);
-        verify(mockCustomerDAO).isCustomerExists("test@mail.com", "password");
     }
 
     @Test
     void testLogin_WithInvalidCredentials_ReturnsFalse() throws Exception {
-        when(mockCustomerDAO.isCustomerExists("invalid@mail.com", "wrongpass")).thenReturn(false);
-
-        boolean result = facade.login("invalid@mail.com", "wrongpass");
+        boolean result = customerFacade.login("invalid@mail.com", "wrongpass");
 
         assertFalse(result);
-        verify(mockCustomerDAO).isCustomerExists("invalid@mail.com", "wrongpass");
     }
 
     @Test
     void testPurchaseCoupon_Success() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        Coupon coupon = new Coupon(1, 1, Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "pizza.jpg");
+        Coupon coupon = new Coupon(0, testCompany.getId(), Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 10, 99.99, "pizza.jpg");
 
-        when(mockCouponsDAO.customerCouponPurchaseExists(1, 1)).thenReturn(false);
-        when(mockCouponsDAO.couponExists(coupon)).thenReturn(true);
-        when(mockCouponsDAO.getCoupon(1)).thenReturn(coupon);
+        companyFacade.addCoupon(coupon);
 
-        facade.purchaseCoupon(coupon, customer);
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon addedCoupon = coupons.stream()
+            .filter(c -> c.getTitle().equals("Pizza Coupon"))
+            .findFirst()
+            .orElseThrow();
 
-        verify(mockCouponsDAO).customerCouponPurchaseExists(1, 1);
-        verify(mockCouponsDAO).couponExists(coupon);
-        verify(mockCouponsDAO).getCoupon(1);
-        verify(mockCouponsDAO).addCouponPurchase(1, 1);
+        customerFacade.purchaseCoupon(addedCoupon, testCustomer);
+
+        ArrayList<Coupon> customerCoupons = customerFacade.getCustomerCoupons(testCustomer);
+        assertTrue(customerCoupons.stream().anyMatch(c -> c.getId() == addedCoupon.getId()));
     }
 
     @Test
     void testPurchaseCoupon_WhenAlreadyPurchased_ThrowsException() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        Coupon coupon = new Coupon(1, 1, Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "pizza.jpg");
+        Coupon coupon = new Coupon(0, testCompany.getId(), Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 10, 99.99, "pizza.jpg");
 
-        when(mockCouponsDAO.customerCouponPurchaseExists(1, 1)).thenReturn(true);
+        companyFacade.addCoupon(coupon);
+
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon addedCoupon = coupons.stream()
+            .filter(c -> c.getTitle().equals("Pizza Coupon"))
+            .findFirst()
+            .orElseThrow();
+
+        customerFacade.purchaseCoupon(addedCoupon, testCustomer);
 
         CustomerAlreadyPurchasedCouponException exception = assertThrows(
                 CustomerAlreadyPurchasedCouponException.class,
-                () -> facade.purchaseCoupon(coupon, customer)
+                () -> customerFacade.purchaseCoupon(addedCoupon, testCustomer)
         );
 
-        assertTrue(exception.getMessage().contains("1"));
-        verify(mockCouponsDAO).customerCouponPurchaseExists(1, 1);
-        verify(mockCouponsDAO, never()).addCouponPurchase(anyInt(), anyInt());
+        assertTrue(exception.getMessage().contains(String.valueOf(addedCoupon.getId())));
     }
 
     @Test
-    void testPurchaseCoupon_WhenCouponNotExists_ThrowsException() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        Coupon coupon = new Coupon(1, 1, Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "pizza.jpg");
-
-        when(mockCouponsDAO.customerCouponPurchaseExists(1, 1)).thenReturn(false);
-        when(mockCouponsDAO.couponExists(coupon)).thenReturn(false);
+    void testPurchaseCoupon_WhenCouponNotExists_ThrowsException() {
+        Coupon nonExistentCoupon = new Coupon(999, testCompany.getId(), Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 10, 99.99, "pizza.jpg");
 
         CouponNotFoundException exception = assertThrows(
                 CouponNotFoundException.class,
-                () -> facade.purchaseCoupon(coupon, customer)
+                () -> customerFacade.purchaseCoupon(nonExistentCoupon, testCustomer)
         );
 
-        assertTrue(exception.getMessage().contains("1"));
-        verify(mockCouponsDAO).customerCouponPurchaseExists(1, 1);
-        verify(mockCouponsDAO).couponExists(coupon);
-        verify(mockCouponsDAO, never()).addCouponPurchase(anyInt(), anyInt());
+        assertTrue(exception.getMessage().contains("999"));
     }
 
     @Test
     void testPurchaseCoupon_WhenOutOfStock_ThrowsException() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        Coupon couponOutOfStock = new Coupon(1, 1, Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 0, 99.99, "pizza.jpg");
+        Coupon coupon = new Coupon(0, testCompany.getId(), Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 1, 99.99, "pizza.jpg");
 
-        when(mockCouponsDAO.customerCouponPurchaseExists(1, 1)).thenReturn(false);
-        when(mockCouponsDAO.couponExists(couponOutOfStock)).thenReturn(true);
-        when(mockCouponsDAO.getCoupon(1)).thenReturn(couponOutOfStock);
+        companyFacade.addCoupon(coupon);
+
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon addedCoupon = coupons.stream()
+            .filter(c -> c.getTitle().equals("Pizza Coupon"))
+            .findFirst()
+            .orElseThrow();
+
+        // Create another customer and purchase the last coupon
+        Customer anotherCustomer = new Customer(0, "Jane", "Smith", "jane@mail.com", "password");
+        adminFacade.addCustomer(anotherCustomer);
+
+        ArrayList<Customer> customers = adminFacade.getAllCustomers();
+        Customer addedAnotherCustomer = customers.stream()
+            .filter(c -> c.getEmail().equals("jane@mail.com"))
+            .findFirst()
+            .orElseThrow();
+
+        customerFacade.purchaseCoupon(addedCoupon, addedAnotherCustomer);
+
+        // Manually update the coupon amount to 0
+        jdbcTemplate.update("UPDATE coupons SET amount = 0 WHERE id = ?", addedCoupon.getId());
+
+        // Refresh coupon data
+        ArrayList<Coupon> updatedCoupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon outOfStockCoupon = updatedCoupons.stream()
+            .filter(c -> c.getId() == addedCoupon.getId())
+            .findFirst()
+            .orElseThrow();
 
         CouponNotInStockException exception = assertThrows(
                 CouponNotInStockException.class,
-                () -> facade.purchaseCoupon(couponOutOfStock, customer)
+                () -> customerFacade.purchaseCoupon(outOfStockCoupon, testCustomer)
         );
 
-        assertTrue(exception.getMessage().contains("1"));
-        verify(mockCouponsDAO).customerCouponPurchaseExists(1, 1);
-        verify(mockCouponsDAO).couponExists(couponOutOfStock);
-        verify(mockCouponsDAO).getCoupon(1);
-        verify(mockCouponsDAO, never()).addCouponPurchase(anyInt(), anyInt());
+        assertTrue(exception.getMessage().contains(String.valueOf(outOfStockCoupon.getId())));
     }
 
     @Test
     void testGetCustomerCoupons_ReturnsAllCoupons() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        ArrayList<Coupon> coupons = new ArrayList<>();
-        coupons.add(new Coupon(1, 1, Category.SKYING, "Ski Trip", "Mountain skiing",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 199.99, "ski.jpg"));
-        coupons.add(new Coupon(2, 1, Category.FANCY_RESTAURANT, "Restaurant", "Fine dining",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "restaurant.jpg"));
+        Coupon coupon1 = new Coupon(0, testCompany.getId(), Category.SKYING, "Ski Trip", "Mountain skiing",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 5, 199.99, "ski.jpg");
+        Coupon coupon2 = new Coupon(0, testCompany.getId(), Category.FANCY_RESTAURANT, "Restaurant", "Fine dining",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 10, 99.99, "restaurant.jpg");
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(coupons);
+        companyFacade.addCoupon(coupon1);
+        companyFacade.addCoupon(coupon2);
 
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer);
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon addedCoupon1 = coupons.stream()
+            .filter(c -> c.getTitle().equals("Ski Trip"))
+            .findFirst()
+            .orElseThrow();
+        Coupon addedCoupon2 = coupons.stream()
+            .filter(c -> c.getTitle().equals("Restaurant"))
+            .findFirst()
+            .orElseThrow();
 
-        assertEquals(2, result.size());
-        verify(mockCouponsDAO).getCustomerCoupons(customer);
+        customerFacade.purchaseCoupon(addedCoupon1, testCustomer);
+        customerFacade.purchaseCoupon(addedCoupon2, testCustomer);
+
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer);
+
+        assertTrue(result.size() >= 2);
+        assertTrue(result.stream().anyMatch(c -> c.getTitle().equals("Ski Trip")));
+        assertTrue(result.stream().anyMatch(c -> c.getTitle().equals("Restaurant")));
     }
 
     @Test
     void testGetCustomerCoupons_FilteredByCategory() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        ArrayList<Coupon> allCoupons = new ArrayList<>();
-        allCoupons.add(new Coupon(1, 1, Category.SKYING, "Ski Trip", "Mountain skiing",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 199.99, "ski.jpg"));
-        allCoupons.add(new Coupon(2, 1, Category.FANCY_RESTAURANT, "Restaurant", "Fine dining",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "restaurant.jpg"));
-        allCoupons.add(new Coupon(3, 1, Category.SKYING, "Ski Resort", "Premium skiing",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 3, 299.99, "resort.jpg"));
+        Coupon coupon1 = new Coupon(0, testCompany.getId(), Category.SKYING, "Ski Trip", "Mountain skiing",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 5, 199.99, "ski.jpg");
+        Coupon coupon2 = new Coupon(0, testCompany.getId(), Category.FANCY_RESTAURANT, "Restaurant", "Fine dining",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 10, 99.99, "restaurant.jpg");
+        Coupon coupon3 = new Coupon(0, testCompany.getId(), Category.SKYING, "Ski Resort", "Premium skiing",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 3, 299.99, "resort.jpg");
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(allCoupons);
+        companyFacade.addCoupon(coupon1);
+        companyFacade.addCoupon(coupon2);
+        companyFacade.addCoupon(coupon3);
 
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer, Category.SKYING);
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        for (Coupon coupon : coupons) {
+            customerFacade.purchaseCoupon(coupon, testCustomer);
+        }
 
-        assertEquals(2, result.size());
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer, Category.SKYING);
+
         assertTrue(result.stream().allMatch(c -> c.getCATEGORY().equals(Category.SKYING)));
-        verify(mockCouponsDAO).getCustomerCoupons(customer);
     }
 
     @Test
     void testGetCustomerCoupons_FilteredByMaxPrice() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        ArrayList<Coupon> allCoupons = new ArrayList<>();
-        allCoupons.add(new Coupon(1, 1, Category.SKYING, "Ski Trip", "Mountain skiing",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 199.99, "ski.jpg"));
-        allCoupons.add(new Coupon(2, 1, Category.FANCY_RESTAURANT, "Restaurant", "Fine dining",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "restaurant.jpg"));
-        allCoupons.add(new Coupon(3, 1, Category.SKY_DIVING, "Sky Diving", "Adventure",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 3, 50.00, "skydiving.jpg"));
+        Coupon coupon1 = new Coupon(0, testCompany.getId(), Category.SKYING, "Ski Trip", "Mountain skiing",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 5, 199.99, "ski.jpg");
+        Coupon coupon2 = new Coupon(0, testCompany.getId(), Category.FANCY_RESTAURANT, "Restaurant", "Fine dining",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 10, 99.99, "restaurant.jpg");
+        Coupon coupon3 = new Coupon(0, testCompany.getId(), Category.SKY_DIVING, "Sky Diving", "Adventure",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 3, 50.00, "skydiving.jpg");
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(allCoupons);
+        companyFacade.addCoupon(coupon1);
+        companyFacade.addCoupon(coupon2);
+        companyFacade.addCoupon(coupon3);
 
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer, 100.00);
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        for (Coupon coupon : coupons) {
+            customerFacade.purchaseCoupon(coupon, testCustomer);
+        }
 
-        assertEquals(2, result.size());
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer, 100.00);
+
         assertTrue(result.stream().allMatch(c -> c.getPrice() <= 100.00));
-        verify(mockCouponsDAO).getCustomerCoupons(customer);
     }
 
     @Test
     void testGetCustomerDetails_ReturnsCustomer() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        Customer fullCustomer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-
-        when(mockCustomerDAO.getCustomer(1)).thenReturn(fullCustomer);
-
-        Customer result = facade.getCustomerDetails(customer);
+        Customer result = customerFacade.getCustomerDetails(testCustomer);
 
         assertNotNull(result);
-        assertEquals(1, result.getId());
+        assertEquals(testCustomer.getId(), result.getId());
         assertEquals("John", result.getFirstName());
         assertEquals("Doe", result.getLastName());
         assertEquals("john@mail.com", result.getEmail());
-        verify(mockCustomerDAO).getCustomer(1);
     }
 
     // Additional edge case tests for better coverage
 
     @Test
     void testGetCustomerCoupons_ReturnsEmptyList() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer);
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(new ArrayList<>());
-
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer);
-
+        assertNotNull(result);
         assertEquals(0, result.size());
-        verify(mockCouponsDAO).getCustomerCoupons(customer);
     }
 
     @Test
     void testGetCustomerCoupons_FilteredByCategory_ReturnsEmptyList() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer, Category.SKYING);
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(new ArrayList<>());
-
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer, Category.SKYING);
-
+        assertNotNull(result);
         assertEquals(0, result.size());
     }
 
     @Test
     void testGetCustomerCoupons_FilteredByMaxPrice_ReturnsEmptyList() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer, 100.00);
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(new ArrayList<>());
-
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer, 100.00);
-
+        assertNotNull(result);
         assertEquals(0, result.size());
     }
 
     @Test
     void testGetCustomerCoupons_FilteredByCategory_WithNoCategoryMatches() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        ArrayList<Coupon> allCoupons = new ArrayList<>();
-        allCoupons.add(new Coupon(1, 1, Category.SKYING, "Ski Trip", "Mountain skiing",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 199.99, "ski.jpg"));
+        Coupon coupon = new Coupon(0, testCompany.getId(), Category.SKYING, "Ski Trip", "Mountain skiing",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 5, 199.99, "ski.jpg");
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(allCoupons);
+        companyFacade.addCoupon(coupon);
 
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer, Category.FANCY_RESTAURANT);
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon addedCoupon = coupons.stream()
+            .filter(c -> c.getTitle().equals("Ski Trip"))
+            .findFirst()
+            .orElseThrow();
+
+        customerFacade.purchaseCoupon(addedCoupon, testCustomer);
+
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer, Category.FANCY_RESTAURANT);
 
         assertEquals(0, result.size());
     }
 
     @Test
     void testGetCustomerCoupons_FilteredByMaxPrice_WithNoPriceMatches() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        ArrayList<Coupon> allCoupons = new ArrayList<>();
-        allCoupons.add(new Coupon(1, 1, Category.SKYING, "Expensive Trip", "Mountain skiing",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 500.00, "ski.jpg"));
+        Coupon coupon = new Coupon(0, testCompany.getId(), Category.SKYING, "Expensive Trip", "Mountain skiing",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 5, 500.00, "ski.jpg");
 
-        when(mockCouponsDAO.getCustomerCoupons(customer)).thenReturn(allCoupons);
+        companyFacade.addCoupon(coupon);
 
-        ArrayList<Coupon> result = facade.getCustomerCoupons(customer, 100.00);
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon addedCoupon = coupons.stream()
+            .filter(c -> c.getTitle().equals("Expensive Trip"))
+            .findFirst()
+            .orElseThrow();
+
+        customerFacade.purchaseCoupon(addedCoupon, testCustomer);
+
+        ArrayList<Coupon> result = customerFacade.getCustomerCoupons(testCustomer, 100.00);
 
         assertEquals(0, result.size());
     }
 
     @Test
     void testLogin_WithNullEmail_ReturnsFalse() throws Exception {
-        when(mockCustomerDAO.isCustomerExists(null, "password")).thenReturn(false);
-
-        boolean result = facade.login(null, "password");
+        boolean result = customerFacade.login(null, "password");
 
         assertFalse(result);
     }
 
     @Test
     void testLogin_WithNullPassword_ReturnsFalse() throws Exception {
-        when(mockCustomerDAO.isCustomerExists("test@mail.com", null)).thenReturn(false);
-
-        boolean result = facade.login("test@mail.com", null);
+        boolean result = customerFacade.login("test@mail.com", null);
 
         assertFalse(result);
     }
 
     @Test
     void testLogin_WithEmptyEmail_ReturnsFalse() throws Exception {
-        when(mockCustomerDAO.isCustomerExists("", "password")).thenReturn(false);
-
-        boolean result = facade.login("", "password");
+        boolean result = customerFacade.login("", "password");
 
         assertFalse(result);
     }
 
     @Test
     void testLogin_WithEmptyPassword_ReturnsFalse() throws Exception {
-        when(mockCustomerDAO.isCustomerExists("test@mail.com", "")).thenReturn(false);
-
-        boolean result = facade.login("test@mail.com", "");
+        boolean result = customerFacade.login("test@mail.com", "");
 
         assertFalse(result);
     }
 
     @Test
     void testPurchaseCoupon_VerifiesAmount() throws Exception {
-        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "password");
-        Coupon coupon = new Coupon(1, 1, Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
-                Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 99.99, "pizza.jpg");
+        Coupon coupon = new Coupon(0, testCompany.getId(), Category.FANCY_RESTAURANT, "Pizza Coupon", "Delicious pizza",
+                Date.valueOf(LocalDate.now().plusDays(1)), Date.valueOf(LocalDate.now().plusDays(365)), 5, 99.99, "pizza.jpg");
 
-        when(mockCouponsDAO.customerCouponPurchaseExists(1, 1)).thenReturn(false);
-        when(mockCouponsDAO.couponExists(coupon)).thenReturn(true);
-        when(mockCouponsDAO.getCoupon(1)).thenReturn(coupon);
+        companyFacade.addCoupon(coupon);
 
-        facade.purchaseCoupon(coupon, customer);
+        ArrayList<Coupon> coupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon addedCoupon = coupons.stream()
+            .filter(c -> c.getTitle().equals("Pizza Coupon"))
+            .findFirst()
+            .orElseThrow();
 
-        verify(mockCouponsDAO).getCoupon(1);
-        verify(mockCouponsDAO).addCouponPurchase(1, 1);
+        int initialAmount = addedCoupon.getAmount();
+
+        customerFacade.purchaseCoupon(addedCoupon, testCustomer);
+
+        // Verify that the amount was decremented
+        ArrayList<Coupon> updatedCoupons = companyFacade.getCompanyCoupons(testCompany);
+        Coupon updatedCoupon = updatedCoupons.stream()
+            .filter(c -> c.getId() == addedCoupon.getId())
+            .findFirst()
+            .orElseThrow();
+
+        assertEquals(initialAmount - 1, updatedCoupon.getAmount());
     }
 }

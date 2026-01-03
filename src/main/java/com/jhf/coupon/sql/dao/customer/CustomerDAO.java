@@ -8,17 +8,21 @@ import java.util.ArrayList;
 
 public interface CustomerDAO {
 
-	boolean isCustomerExists(String customerEmail, String customerPassword) throws InterruptedException, SQLException;
+	boolean isCustomerExists(String customerEmail, String customerPassword) throws SQLException;
 
-	void addCustomer(Customer customer) throws InterruptedException, SQLException;
+	boolean isCustomerEmailExists(String customerEmail) throws SQLException;
 
-	void updateCustomer(Customer customer) throws InterruptedException, SQLException;
+	void addCustomer(Customer customer) throws SQLException;
 
-	void deleteCustomer(int customerID) throws InterruptedException, SQLException;
+	void updateCustomer(Customer customer) throws SQLException;
 
-	ArrayList<Customer> getAllCustomers() throws InterruptedException, SQLException;
+	void deleteCustomer(int customerID) throws SQLException;
 
-	Customer getCustomer(int customerID) throws InterruptedException, SQLException;
+	ArrayList<Customer> getAllCustomers() throws SQLException;
+
+	Customer getCustomer(int customerID) throws SQLException;
+
+	Customer getCustomerByEmail(String email) throws SQLException;
 
 	// Account Lockout Methods
 
@@ -30,7 +34,7 @@ public interface CustomerDAO {
 	 * @throws InterruptedException if thread is interrupted while getting connection
 	 * @throws SQLException if database error occurs
 	 */
-	AccountLockoutStatus getAccountLockoutStatus(String email) throws InterruptedException, SQLException;
+	AccountLockoutStatus getAccountLockoutStatus(String email) throws SQLException;
 
 	/**
 	 * Increments the failed login attempts counter for a customer account.
@@ -43,7 +47,7 @@ public interface CustomerDAO {
 	 * @throws SQLException if database error occurs
 	 */
 	void incrementFailedLoginAttempts(String email, int maxAttempts, int lockoutDurationMinutes)
-			throws InterruptedException, SQLException;
+			throws SQLException;
 
 	/**
 	 * Resets failed login attempts counter to 0 and unlocks the account.
@@ -53,7 +57,7 @@ public interface CustomerDAO {
 	 * @throws InterruptedException if thread is interrupted while getting connection
 	 * @throws SQLException if database error occurs
 	 */
-	void resetFailedLoginAttempts(String email) throws InterruptedException, SQLException;
+	void resetFailedLoginAttempts(String email) throws SQLException;
 
 	/**
 	 * Manually unlocks a customer account.
@@ -63,5 +67,5 @@ public interface CustomerDAO {
 	 * @throws InterruptedException if thread is interrupted while getting connection
 	 * @throws SQLException if database error occurs
 	 */
-	void unlockAccount(String email) throws InterruptedException, SQLException;
+	void unlockAccount(String email) throws SQLException;
 }

@@ -1,235 +1,139 @@
 package com.jhf.coupon.backend.periodicJob;
 
-import com.jhf.coupon.backend.beans.Coupon;
-import com.jhf.coupon.backend.couponCategory.Category;
-import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
-import com.jhf.coupon.sql.dao.coupon.CouponsDAO;
+import com.jhf.coupon.backend.security.PasswordHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Date;
-import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class CouponExpirationDailyJobTest {
 
-    @Mock
-    private CouponsDAO mockCouponsDAO;
-
+    @Autowired
     private CouponExpirationDailyJob job;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUp() throws Exception {
-        job = new CouponExpirationDailyJob();
-
-        // Use reflection to inject the mock DAO
-        Field daoField = CouponExpirationDailyJob.class.getDeclaredField("couponsDAO");
-        daoField.setAccessible(true);
-        daoField.set(job, mockCouponsDAO);
+        // Clean up database before each test
+        jdbcTemplate.execute("DELETE FROM coupons");
+        jdbcTemplate.execute("DELETE FROM companies");
+        jdbcTemplate.execute("DELETE FROM customers");
     }
 
     @Test
-    void testDeleteExpiredCoupons_WithExpiredCoupons_DeletesThem() throws Exception {
-        // Arrange
-        Date today = Date.valueOf(LocalDate.now());
+    void testExecuteJob_DeletesExpiredCoupons() throws Exception {
+        // Insert company first
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
+
+        // Insert expired coupon 1
         Date yesterday = Date.valueOf(LocalDate.now().minusDays(1));
-        Date tomorrow = Date.valueOf(LocalDate.now().plusDays(1));
+        Date tenDaysAgo = Date.valueOf(LocalDate.now().minusDays(10));
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, "SKYING", "Expired Coupon 1", "Test", tenDaysAgo, yesterday, 10, 50.0, "");
 
-        ArrayList<Coupon> coupons = new ArrayList<>();
-        coupons.add(new Coupon(1, 1, Category.SKYING, "Expired Coupon 1", "Test",
-                Date.valueOf(LocalDate.now().minusDays(10)), yesterday, 10, 50.0, ""));
-        coupons.add(new Coupon(2, 1, Category.SKY_DIVING, "Valid Coupon", "Test",
-                today, tomorrow, 10, 50.0, ""));
-        coupons.add(new Coupon(3, 1, Category.FANCY_RESTAURANT, "Expired Coupon 2", "Test",
-                Date.valueOf(LocalDate.now().minusDays(20)), Date.valueOf(LocalDate.now().minusDays(5)), 10, 50.0, ""));
-
-        when(mockCouponsDAO.getAllCoupons()).thenReturn(coupons);
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(200); // Give it time to execute deleteExpiredCoupons
-        job.stop();
-        jobThread.join(2000);
-
-        // Assert - should delete coupons 1 and 3 (expired), but not 2 (valid)
-        verify(mockCouponsDAO, times(1)).deleteCoupon(1);
-        verify(mockCouponsDAO, times(1)).deleteCoupon(3);
-        verify(mockCouponsDAO, never()).deleteCoupon(2);
-    }
-
-    @Test
-    void testDeleteExpiredCoupons_WithNoExpiredCoupons_DeletesNone() throws Exception {
-        // Arrange
-        Date tomorrow = Date.valueOf(LocalDate.now().plusDays(1));
-
-        ArrayList<Coupon> coupons = new ArrayList<>();
-        coupons.add(new Coupon(1, 1, Category.SKYING, "Valid Coupon", "Test",
-                Date.valueOf(LocalDate.now()), tomorrow, 10, 50.0, ""));
-
-        when(mockCouponsDAO.getAllCoupons()).thenReturn(coupons);
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(200);
-        job.stop();
-        jobThread.join(2000);
-
-        // Assert
-        verify(mockCouponsDAO, never()).deleteCoupon(anyInt());
-    }
-
-    @Test
-    void testDeleteExpiredCoupons_WithEmptyList_HandlesGracefully() throws Exception {
-        // Arrange
-        when(mockCouponsDAO.getAllCoupons()).thenReturn(new ArrayList<>());
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(200);
-        job.stop();
-        jobThread.join(2000);
-
-        // Assert
-        verify(mockCouponsDAO, times(1)).getAllCoupons();
-        verify(mockCouponsDAO, never()).deleteCoupon(anyInt());
-    }
-
-    @Test
-    void testStop_StopsTheJobLoop() throws Exception {
-        // Arrange
-        when(mockCouponsDAO.getAllCoupons()).thenReturn(new ArrayList<>());
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(300); // Give time for first execution
-        job.stop();
-        jobThread.interrupt(); // Interrupt to wake from sleep
-        jobThread.join(2000);
-
-        // Assert
-        assertFalse(jobThread.isAlive(), "Job thread should have stopped");
-    }
-
-    @Test
-    void testRun_WhenInterrupted_ExitsGracefully() throws Exception {
-        // Arrange
-        when(mockCouponsDAO.getAllCoupons()).thenReturn(new ArrayList<>());
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(200);
-        jobThread.interrupt(); // Interrupt instead of stopping
-        jobThread.join(2000);
-
-        // Assert
-        assertFalse(jobThread.isAlive(), "Job thread should have exited after interruption");
-    }
-
-    @Test
-    void testRun_WhenSQLExceptionOccurs_RetriesAfterDelay() throws Exception {
-        // Arrange
-        when(mockCouponsDAO.getAllCoupons())
-                .thenThrow(new SQLException("Database error"))
-                .thenReturn(new ArrayList<>());
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(300); // Wait for first attempt and error handling
-        job.stop();
-        jobThread.join(6500); // Wait for potential retry
-
-        // Assert
-        // Should have attempted at least once, got exception, then retried
-        verify(mockCouponsDAO, atLeastOnce()).getAllCoupons();
-    }
-
-    @Test
-    void testRun_WhenCategoryNotFoundExceptionOccurs_RetriesAfterDelay() throws Exception {
-        // Arrange
-        when(mockCouponsDAO.getAllCoupons())
-                .thenThrow(new CategoryNotFoundException("Category not found"))
-                .thenReturn(new ArrayList<>());
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(300);
-        job.stop();
-        jobThread.join(6500);
-
-        // Assert
-        verify(mockCouponsDAO, atLeastOnce()).getAllCoupons();
-    }
-
-    @Test
-    void testRun_WhenInterruptedDuringErrorRetry_ExitsGracefully() throws Exception {
-        // Arrange
-        when(mockCouponsDAO.getAllCoupons()).thenThrow(new SQLException("Database error"));
-
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(300); // Let it hit the error
-        jobThread.interrupt(); // Interrupt during retry sleep
-        jobThread.join(2000);
-
-        // Assert
-        assertFalse(jobThread.isAlive(), "Job thread should have exited after interruption during retry");
-    }
-
-    @Test
-    void testDeleteExpiredCoupons_WithCouponExactlyOnExpirationDate_DoesNotDelete() throws Exception {
-        // Arrange - coupon expires today (not before today)
+        // Insert valid coupon
         Date today = Date.valueOf(LocalDate.now());
+        Date tomorrow = Date.valueOf(LocalDate.now().plusDays(1));
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 1, "SKY_DIVING", "Valid Coupon", "Test", today, tomorrow, 10, 50.0, "");
 
-        ArrayList<Coupon> coupons = new ArrayList<>();
-        coupons.add(new Coupon(1, 1, Category.ALL_INCLUSIVE_VACATION, "Expires Today", "Test",
-                Date.valueOf(LocalDate.now().minusDays(1)), today, 10, 50.0, ""));
+        // Insert expired coupon 2
+        Date twentyDaysAgo = Date.valueOf(LocalDate.now().minusDays(20));
+        Date fiveDaysAgo = Date.valueOf(LocalDate.now().minusDays(5));
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            3, 1, "FANCY_RESTAURANT", "Expired Coupon 2", "Test", twentyDaysAgo, fiveDaysAgo, 10, 50.0, "");
 
-        when(mockCouponsDAO.getAllCoupons()).thenReturn(coupons);
+        // Execute job
+        job.executeJob();
 
-        // Act
-        Thread jobThread = new Thread(() -> job.run());
-        jobThread.start();
-        Thread.sleep(200);
-        job.stop();
-        jobThread.join(2000);
+        // Verify expired coupons deleted (1 and 3), but valid coupon remains (2)
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM coupons", Integer.class);
+        assertEquals(1, count, "Should have 1 coupon remaining");
 
-        // Assert - should NOT delete coupon that expires today (only before today)
-        verify(mockCouponsDAO, never()).deleteCoupon(1);
+        Integer validCouponCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM coupons WHERE ID = ?", Integer.class, 2);
+        assertEquals(1, validCouponCount, "Valid coupon should still exist");
     }
 
     @Test
-    void testConstructor_NoArgsConstructor_CreatesInstance() {
-        // Act
-        CouponExpirationDailyJob newJob = new CouponExpirationDailyJob();
+    void testExecuteJob_WithNoExpiredCoupons_DeletesNone() throws Exception {
+        // Insert company first
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-        // Assert
-        assertNotNull(newJob);
+        // Insert valid coupon
+        Date today = Date.valueOf(LocalDate.now());
+        Date tomorrow = Date.valueOf(LocalDate.now().plusDays(1));
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, "SKYING", "Valid Coupon", "Test", today, tomorrow, 10, 50.0, "");
+
+        // Execute job
+        job.executeJob();
+
+        // Verify no coupons deleted
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM coupons", Integer.class);
+        assertEquals(1, count, "Valid coupon should not be deleted");
     }
 
     @Test
-    void testConstructor_AllArgsConstructor_CreatesInstance() {
-        // Act
-        CouponExpirationDailyJob newJob = new CouponExpirationDailyJob(mockCouponsDAO, false);
+    void testExecuteJob_WithEmptyDatabase_HandlesGracefully() throws Exception {
+        // No coupons in database
 
-        // Assert
-        assertNotNull(newJob);
+        // Execute job
+        job.executeJob();
+
+        // Verify no errors and database still empty
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM coupons", Integer.class);
+        assertEquals(0, count, "Database should remain empty");
+    }
+
+
+    @Test
+    void testExecuteJob_WithCouponExpiringToday_DoesNotDelete() throws Exception {
+        // Insert company first
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
+
+        // Insert coupon that expires today (not before today)
+        Date yesterday = Date.valueOf(LocalDate.now().minusDays(1));
+        Date today = Date.valueOf(LocalDate.now());
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, "ALL_INCLUSIVE_VACATION", "Expires Today", "Test", yesterday, today, 10, 50.0, "");
+
+        // Execute job
+        job.executeJob();
+
+        // Verify coupon that expires today is NOT deleted (only before today)
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM coupons", Integer.class);
+        assertEquals(1, count, "Coupon expiring today should not be deleted");
+    }
+
+    @Test
+    void testScheduledAnnotation_IsConfiguredCorrectly() throws Exception {
+        // Verify that the executeJob method has @Scheduled annotation
+        Method executeJobMethod = CouponExpirationDailyJob.class.getMethod("executeJob");
+        Scheduled scheduledAnnotation = executeJobMethod.getAnnotation(Scheduled.class);
+
+        assertNotNull(scheduledAnnotation, "executeJob method should have @Scheduled annotation");
+
+        // Verify cron expression (runs daily at 2 AM)
+        String cronExpression = scheduledAnnotation.cron();
+        assertEquals("0 0 2 * * ?", cronExpression,
+                "Cron expression should run daily at 2 AM");
     }
 }

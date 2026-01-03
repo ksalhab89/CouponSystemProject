@@ -19,26 +19,34 @@ RUN addgroup -g 1001 appuser && \
 
 WORKDIR /app
 
-# Copy JAR as non-root user
+# Copy Spring Boot JAR as non-root user
 COPY --from=build --chown=appuser:appuser \
-    /app/target/CouponSystemProject-1.0-SNAPSHOT-jar-with-dependencies.jar \
+    /app/target/CouponSystemProject-1.0-SNAPSHOT.jar \
     app.jar
 
 # Switch to non-root user
 USER appuser
 
-# Health check - runs the HealthCheck class
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD java -cp app.jar com.jhf.coupon.health.HealthCheck || exit 1
+# Create directories for logs (writable by appuser)
+USER root
+RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs
+USER appuser
+
+# Health check - uses REST API health endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # JVM configuration for containers with JSON logging
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:MaxRAMPercentage=75.0 \
     -XX:+UseG1GC \
+    -XX:MaxGCPauseMillis=200 \
     -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/app/heapdump.hprof \
+    -XX:HeapDumpPath=/app/logs/heapdump.hprof \
+    -Xlog:gc*:file=/app/logs/gc.log:time,uptime:filecount=5,filesize=10m \
     -Dlogback.configurationFile=logback-json.xml"
 
-EXPOSE 8080
+# Expose REST API and Prometheus metrics ports
+EXPOSE 8080 9090
 
 CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

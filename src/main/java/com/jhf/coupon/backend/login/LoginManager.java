@@ -10,12 +10,11 @@ import com.jhf.coupon.backend.facade.CompanyFacade;
 import com.jhf.coupon.backend.facade.CustomerFacade;
 import com.jhf.coupon.backend.security.LockoutConfig;
 import com.jhf.coupon.sql.dao.company.CompaniesDAO;
-import com.jhf.coupon.sql.dao.company.CompaniesDAOImpl;
 import com.jhf.coupon.sql.dao.customer.CustomerDAO;
-import com.jhf.coupon.sql.dao.customer.CustomerDAOImpl;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,13 +22,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * LoginManager with account lockout functionality.
- * Singleton pattern with thread-safe lockout tracking.
+ * Spring component with thread-safe lockout tracking.
  */
+@Component
 public class LoginManager {
 	private static final Logger logger = LoggerFactory.getLogger(LoginManager.class);
 
-	private static LoginManager instance = null;
-	private static ClientFacade facade;
+	private ClientFacade facade;
 
 	// Thread-safe in-memory tracking for admin lockout attempts
 	// Key: email, Value: failed attempt count
@@ -42,18 +41,21 @@ public class LoginManager {
 	// Configuration
 	private final LockoutConfig lockoutConfig;
 
-	private LoginManager() {
-		this.adminFailedAttempts = new ConcurrentHashMap<>();
-		this.companiesDAO = new CompaniesDAOImpl();
-		this.customerDAO = new CustomerDAOImpl();
-		this.lockoutConfig = LockoutConfig.getInstance();
-	}
+	// Facades for authentication
+	private final AdminFacade adminFacade;
+	private final CompanyFacade companyFacade;
+	private final CustomerFacade customerFacade;
 
-	public static synchronized LoginManager getInstance() {
-		if (instance == null) {
-			instance = new LoginManager();
-		}
-		return instance;
+	public LoginManager(CompaniesDAO companiesDAO, CustomerDAO customerDAO,
+			LockoutConfig lockoutConfig, AdminFacade adminFacade,
+			CompanyFacade companyFacade, CustomerFacade customerFacade) {
+		this.adminFailedAttempts = new ConcurrentHashMap<>();
+		this.companiesDAO = companiesDAO;
+		this.customerDAO = customerDAO;
+		this.lockoutConfig = lockoutConfig;
+		this.adminFacade = adminFacade;
+		this.companyFacade = companyFacade;
+		this.customerFacade = customerFacade;
 	}
 
 	/**
@@ -71,13 +73,12 @@ public class LoginManager {
 	 * @param clientType Type of client (admin/company/customer)
 	 * @return Authenticated facade instance
 	 * @throws SQLException if database error occurs
-	 * @throws InterruptedException if thread is interrupted
 	 * @throws ClientTypeNotFoundException if invalid client type
 	 * @throws InvalidLoginCredentialsException if login fails
 	 * @throws AccountLockedException if account is locked
 	 */
 	public ClientFacade login(String email, String password, @NotNull ClientType clientType)
-			throws SQLException, InterruptedException, ClientTypeNotFoundException,
+			throws SQLException, ClientTypeNotFoundException,
 			InvalidLoginCredentialsException, AccountLockedException {
 
 		switch (clientType.getType()) {
@@ -93,7 +94,7 @@ public class LoginManager {
 	}
 
 	private ClientFacade loginAdmin(String email, String password)
-			throws SQLException, InterruptedException, InvalidLoginCredentialsException,
+			throws SQLException, InvalidLoginCredentialsException,
 			AccountLockedException {
 
 		// Check if admin lockout is enabled
@@ -109,8 +110,7 @@ public class LoginManager {
 		}
 
 		// Attempt login
-		facade = new AdminFacade();
-		boolean loginSuccess = facade.login(email, password);
+		boolean loginSuccess = adminFacade.login(email, password);
 
 		if (loginSuccess) {
 			// Reset failed attempts on success
@@ -118,7 +118,7 @@ public class LoginManager {
 				adminFailedAttempts.remove(email);
 			}
 			logger.debug("Admin login successful for {}", email);
-			return facade;
+			return adminFacade;
 		} else {
 			// Increment failed attempts on failure
 			if (lockoutConfig.isAdminLockoutEnabled()) {
@@ -139,7 +139,7 @@ public class LoginManager {
 	}
 
 	private ClientFacade loginCompany(String email, String password)
-			throws SQLException, InterruptedException, InvalidLoginCredentialsException,
+			throws SQLException, InvalidLoginCredentialsException,
 			AccountLockedException {
 
 		// 1. Check lockout status from database
@@ -161,14 +161,13 @@ public class LoginManager {
 		}
 
 		// 4. Attempt login
-		facade = new CompanyFacade();
-		boolean loginSuccess = facade.login(email, password);
+		boolean loginSuccess = companyFacade.login(email, password);
 
 		if (loginSuccess) {
 			// 5. Reset failed attempts on success
 			companiesDAO.resetFailedLoginAttempts(email);
 			logger.debug("Company login successful for {}", email);
-			return facade;
+			return companyFacade;
 		} else {
 			// 6. Increment failed attempts on failure
 			companiesDAO.incrementFailedLoginAttempts(email,
@@ -191,7 +190,7 @@ public class LoginManager {
 	}
 
 	private ClientFacade loginCustomer(String email, String password)
-			throws SQLException, InterruptedException, InvalidLoginCredentialsException,
+			throws SQLException, InvalidLoginCredentialsException,
 			AccountLockedException {
 
 		// 1. Check lockout status from database
@@ -213,14 +212,13 @@ public class LoginManager {
 		}
 
 		// 4. Attempt login
-		facade = new CustomerFacade();
-		boolean loginSuccess = facade.login(email, password);
+		boolean loginSuccess = customerFacade.login(email, password);
 
 		if (loginSuccess) {
 			// 5. Reset failed attempts on success
 			customerDAO.resetFailedLoginAttempts(email);
 			logger.debug("Customer login successful for {}", email);
-			return facade;
+			return customerFacade;
 		} else {
 			// 6. Increment failed attempts on failure
 			customerDAO.incrementFailedLoginAttempts(email,
@@ -248,9 +246,8 @@ public class LoginManager {
 	 *
 	 * @param email Company email address
 	 * @throws SQLException if database error occurs
-	 * @throws InterruptedException if thread is interrupted
 	 */
-	public void unlockCompanyAccount(String email) throws SQLException, InterruptedException {
+	public void unlockCompanyAccount(String email) throws SQLException {
 		companiesDAO.unlockAccount(email);
 		logger.info("Company account {} manually unlocked by administrator", email);
 	}
@@ -261,9 +258,8 @@ public class LoginManager {
 	 *
 	 * @param email Customer email address
 	 * @throws SQLException if database error occurs
-	 * @throws InterruptedException if thread is interrupted
 	 */
-	public void unlockCustomerAccount(String email) throws SQLException, InterruptedException {
+	public void unlockCustomerAccount(String email) throws SQLException {
 		customerDAO.unlockAccount(email);
 		logger.info("Customer account {} manually unlocked by administrator", email);
 	}

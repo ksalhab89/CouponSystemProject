@@ -8,21 +8,33 @@ import com.jhf.coupon.backend.exceptions.coupon.CantUpdateCouponException;
 import com.jhf.coupon.backend.exceptions.coupon.CouponAlreadyExistsForCompanyException;
 import com.jhf.coupon.backend.validation.InputValidator;
 import com.jhf.coupon.backend.validation.ValidationException;
+import com.jhf.coupon.sql.dao.company.CompaniesDAO;
 import com.jhf.coupon.sql.dao.coupon.CouponNotFoundException;
-import lombok.NoArgsConstructor;
+import com.jhf.coupon.sql.dao.coupon.CouponsDAO;
+import com.jhf.coupon.sql.dao.customer.CustomerDAO;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-@NoArgsConstructor
+@Service
 public class CompanyFacade extends ClientFacade {
 
-	public boolean login(String email, String password) throws SQLException, InterruptedException {
+	public CompanyFacade(CompaniesDAO companiesDAO, CustomerDAO customerDAO, CouponsDAO couponsDAO) {
+		super(companiesDAO, customerDAO, couponsDAO);
+	}
+
+	public boolean login(String email, String password) throws SQLException {
+		if (email == null || password == null) {
+			return false;
+		}
 		return companiesDAO.isCompanyExists(email, password);
 	}
 
-	public void addCoupon(Coupon coupon) throws SQLException, InterruptedException, CouponAlreadyExistsForCompanyException, ValidationException {
+	@Transactional(rollbackFor = {SQLException.class, CouponAlreadyExistsForCompanyException.class, ValidationException.class})
+	public void addCoupon(Coupon coupon) throws SQLException, CouponAlreadyExistsForCompanyException, ValidationException {
 		// Validate coupon input
 		if (!InputValidator.isValidString(coupon.getTitle())) {
 			throw new ValidationException("Invalid coupon title: must not be empty");
@@ -53,7 +65,8 @@ public class CompanyFacade extends ClientFacade {
 					                                                 ", Company Coupon ID " + coupon.getCompanyID() + " exists.");
 	}
 
-	public void updateCoupon(Coupon coupon) throws SQLException, InterruptedException, CategoryNotFoundException, CantUpdateCouponException, ValidationException {
+	@Transactional(rollbackFor = {SQLException.class, CategoryNotFoundException.class, CantUpdateCouponException.class, ValidationException.class})
+	public void updateCoupon(Coupon coupon) throws SQLException, CategoryNotFoundException, CantUpdateCouponException, ValidationException {
 		// Validate coupon input
 		if (!InputValidator.isValidId(coupon.getId())) {
 			throw new ValidationException("Invalid coupon ID");
@@ -74,35 +87,34 @@ public class CompanyFacade extends ClientFacade {
 			throw new ValidationException("Invalid price: must be positive");
 		}
 
-		if (!couponsDAO.couponExists(coupon)) {
-			throw new CouponNotFoundException("Could not find Coupon with id: " + coupon.getId());
-		}
-		if (couponsDAO.getCoupon(coupon.getId()).getId() != coupon.getId()) {
-			throw new CantUpdateCouponException("Unable to update coupon " + coupon.getId() + ", Coupon ID can't be updated");
-		}
-		if (couponsDAO.getCoupon(coupon.getId()).getCompanyID() != coupon.getCompanyID()) {
+		// Get existing coupon to check if it exists and validate immutable fields
+		Coupon existingCoupon = couponsDAO.getCoupon(coupon.getId());
+
+		// Company ID cannot be changed for a coupon
+		if (existingCoupon.getCompanyID() != coupon.getCompanyID()) {
 			throw new CantUpdateCouponException("Unable to update coupon " + coupon.getId() + ", Company ID can't be updated");
 		}
 		couponsDAO.updateCoupon(coupon);
 	}
 
-	public void deleteCoupon(int couponId) throws SQLException, InterruptedException {
+	@Transactional(rollbackFor = SQLException.class)
+	public void deleteCoupon(int couponId) throws SQLException {
 		couponsDAO.deleteCoupon(couponId);
 	}
 
-	public ArrayList<Coupon> getCompanyCoupons(@NotNull Company company) throws SQLException, CategoryNotFoundException, InterruptedException {
+	public ArrayList<Coupon> getCompanyCoupons(@NotNull Company company) throws SQLException, CategoryNotFoundException {
 		return couponsDAO.getCompanyCoupons(company.getId());
 	}
 
-	public ArrayList<Coupon> getCompanyCoupons(Company company, Category CATEGORY) throws SQLException, CategoryNotFoundException, InterruptedException {
+	public ArrayList<Coupon> getCompanyCoupons(Company company, Category CATEGORY) throws SQLException, CategoryNotFoundException {
 		return couponsDAO.getCompanyCoupons(company, CATEGORY);
 	}
 
-	public ArrayList<Coupon> getCompanyCoupons(Company company, double maxPrice) throws SQLException, CategoryNotFoundException, InterruptedException {
+	public ArrayList<Coupon> getCompanyCoupons(Company company, double maxPrice) throws SQLException, CategoryNotFoundException {
 		return couponsDAO.getCompanyCoupons(company, maxPrice);
 	}
 
-	public Company getCompanyDetails(@NotNull Company company) throws SQLException, InterruptedException {
+	public Company getCompanyDetails(@NotNull Company company) throws SQLException {
 		return companiesDAO.getCompany(company.getId());
 	}
 

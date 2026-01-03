@@ -15,9 +15,9 @@ public class InputValidator {
 			"^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
 	);
 
-	// Password constraints
-	private static final int MIN_PASSWORD_LENGTH = 6;
-	private static final int MAX_PASSWORD_LENGTH = 100;
+	// Password constraints (OWASP ASVS 4.0: minimum 8 characters, recommend 12+)
+	private static final int MIN_PASSWORD_LENGTH = 8;
+	private static final int MAX_PASSWORD_LENGTH = 64;
 
 	// Name constraints
 	private static final int MIN_NAME_LENGTH = 2;

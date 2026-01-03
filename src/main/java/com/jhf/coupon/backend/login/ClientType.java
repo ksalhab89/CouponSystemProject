@@ -19,9 +19,9 @@ public enum ClientType {
 	}
 
 	@NotNull
-	private static ClientType getClientType(String type) throws ClientTypeNotFoundException {
+	public static ClientType fromString(String type) throws ClientTypeNotFoundException {
 		for (ClientType clientType : values()) {
-			if (clientType.type.equals(type)) {
+			if (clientType.type.equalsIgnoreCase(type)) {
 				return clientType;
 			}
 		}

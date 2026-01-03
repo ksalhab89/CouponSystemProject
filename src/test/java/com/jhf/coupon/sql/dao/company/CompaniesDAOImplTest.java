@@ -2,285 +2,227 @@ package com.jhf.coupon.sql.dao.company;
 
 import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.backend.security.PasswordHasher;
-import com.jhf.coupon.sql.utils.ConnectionPool;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
 class CompaniesDAOImplTest {
 
-    @Mock
-    private ConnectionPool mockPool;
+    @Autowired
+    private CompaniesDAO companiesDAO;
 
-    @Mock
-    private Connection mockConnection;
-
-    @Mock
-    private PreparedStatement mockPreparedStatement;
-
-    @Mock
-    private ResultSet mockResultSet;
-
-    @Mock
-    private Statement mockStatement;
-
-    private CompaniesDAOImpl dao;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void setUp() {
-        // DAO will be initialized inside each test with mocked ConnectionPool
+        // Clean up database before each test
+        jdbcTemplate.execute("DELETE FROM companies");
+        jdbcTemplate.execute("DELETE FROM coupons");
+        jdbcTemplate.execute("DELETE FROM customers");
     }
 
     @Test
     void testIsCompanyExists_WhenExists_ReturnsTrue() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Insert test data directly
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)",
+                "TestCompany", "test@company.com", hashedPassword);
 
-            // Hash the test password to simulate what's stored in the database
-            String storedHash = PasswordHasher.hashPassword("password123");
+        // Test the DAO method
+        boolean result = companiesDAO.isCompanyExists("test@company.com", "password123");
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(true);
-            when(mockResultSet.getString("PASSWORD")).thenReturn(storedHash);
-
-            boolean result = dao.isCompanyExists("test@company.com", "password123");
-
-            assertTrue(result);
-            verify(mockPreparedStatement).setString(1, "test@company.com");
-            // Note: No longer verifying password in query since it's now verified via bcrypt
-        }
+        assertTrue(result);
     }
 
     @Test
     void testIsCompanyExists_WhenNotExists_ReturnsFalse() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Test with non-existent credentials
+        boolean result = companiesDAO.isCompanyExists("nonexistent@company.com", "wrongpass");
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            boolean result = dao.isCompanyExists("nonexistent@company.com", "wrongpass");
-
-            assertFalse(result);
-        }
+        assertFalse(result);
     }
 
     @Test
     void testIsCompanyNameExists_WhenExists_ReturnsTrue() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Insert test data directly
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)",
+                "ExistingCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(true);
+        // Test the DAO method
+        boolean result = companiesDAO.isCompanyNameExists("ExistingCompany");
 
-            boolean result = dao.isCompanyNameExists("ExistingCompany");
-
-            assertTrue(result);
-            verify(mockPreparedStatement).setString(1, "ExistingCompany");
-        }
+        assertTrue(result);
     }
 
     @Test
     void testIsCompanyNameExists_WhenNotExists_ReturnsFalse() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Test with non-existent company name
+        boolean result = companiesDAO.isCompanyNameExists("NonexistentCompany");
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            boolean result = dao.isCompanyNameExists("NonexistentCompany");
-
-            assertFalse(result);
-        }
+        assertFalse(result);
     }
 
     @Test
     void testAddCompany_Success() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Create a new company
+        Company company = new Company(0, "TestCompany", "test@company.com", "password123");
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        // Add the company
+        companiesDAO.addCompany(company);
 
-            Company company = new Company(0, "TestCompany", "test@company.com", "password123");
+        // Verify the company was added
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM companies WHERE NAME = ? AND EMAIL = ?",
+                Integer.class,
+                "TestCompany", "test@company.com"
+        );
+        assertEquals(1, count);
 
-            dao.addCompany(company);
-
-            verify(mockPreparedStatement).setString(1, "TestCompany");
-            verify(mockPreparedStatement).setString(2, "test@company.com");
-
-            // Capture the password argument to verify it's a bcrypt hash
-            ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
-            verify(mockPreparedStatement).setString(eq(3), passwordCaptor.capture());
-            String capturedPassword = passwordCaptor.getValue();
-
-            // Verify it's a valid bcrypt hash format
-            assertEquals(60, capturedPassword.length(), "Bcrypt hash should be 60 characters");
-            assertTrue(capturedPassword.startsWith("$2a$"), "Bcrypt hash should start with $2a$");
-
-            verify(mockPreparedStatement).execute();
-        }
+        // Verify the password was hashed (bcrypt hashes are 60 characters)
+        String storedPassword = jdbcTemplate.queryForObject(
+                "SELECT PASSWORD FROM companies WHERE EMAIL = ?",
+                String.class,
+                "test@company.com"
+        );
+        assertNotNull(storedPassword);
+        assertEquals(60, storedPassword.length(), "Bcrypt hash should be 60 characters");
+        assertTrue(storedPassword.startsWith("$2a$"), "Bcrypt hash should start with $2a$");
     }
 
     @Test
     void testUpdateCompany_Success() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Insert initial test data
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)",
+                "OldCompany", "old@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        // Get the ID of the inserted company
+        Integer companyId = jdbcTemplate.queryForObject(
+                "SELECT ID FROM companies WHERE EMAIL = ?",
+                Integer.class,
+                "old@company.com"
+        );
 
-            Company company = new Company(1, "UpdatedCompany", "updated@company.com", "newpassword");
+        // Update the company
+        Company company = new Company(companyId, "UpdatedCompany", "updated@company.com", "newpassword");
+        companiesDAO.updateCompany(company);
 
-            dao.updateCompany(company);
+        // Verify the company was updated
+        Company updatedCompany = jdbcTemplate.queryForObject(
+                "SELECT ID, NAME, EMAIL, PASSWORD FROM companies WHERE ID = ?",
+                (rs, rowNum) -> new Company(
+                        rs.getInt("ID"),
+                        rs.getString("NAME"),
+                        rs.getString("EMAIL"),
+                        rs.getString("PASSWORD")
+                ),
+                companyId
+        );
 
-            verify(mockPreparedStatement).setString(1, "UpdatedCompany");
-            verify(mockPreparedStatement).setString(2, "updated@company.com");
+        assertNotNull(updatedCompany);
+        assertEquals("UpdatedCompany", updatedCompany.getName());
+        assertEquals("updated@company.com", updatedCompany.getEmail());
 
-            // Capture the password argument to verify it's a bcrypt hash
-            ArgumentCaptor<String> passwordCaptor = ArgumentCaptor.forClass(String.class);
-            verify(mockPreparedStatement).setString(eq(3), passwordCaptor.capture());
-            String capturedPassword = passwordCaptor.getValue();
-
-            // Verify it's a valid bcrypt hash format
-            assertEquals(60, capturedPassword.length(), "Bcrypt hash should be 60 characters");
-            assertTrue(capturedPassword.startsWith("$2a$"), "Bcrypt hash should start with $2a$");
-
-            verify(mockPreparedStatement).setInt(4, 1);
-            verify(mockPreparedStatement).executeUpdate();
-        }
+        // Verify the password was hashed
+        assertEquals(60, updatedCompany.getPassword().length(), "Bcrypt hash should be 60 characters");
+        assertTrue(updatedCompany.getPassword().startsWith("$2a$"), "Bcrypt hash should start with $2a$");
     }
 
     @Test
     void testDeleteCompany_Success() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Insert test data
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)",
+                "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        // Get the ID of the inserted company
+        Integer companyId = jdbcTemplate.queryForObject(
+                "SELECT ID FROM companies WHERE EMAIL = ?",
+                Integer.class,
+                "test@company.com"
+        );
 
-            dao.deleteCompany(1);
+        // Delete the company
+        companiesDAO.deleteCompany(companyId);
 
-            verify(mockPreparedStatement).setInt(1, 1);
-            verify(mockPreparedStatement).executeUpdate();
-        }
+        // Verify the company was deleted
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM companies WHERE ID = ?",
+                Integer.class,
+                companyId
+        );
+        assertEquals(0, count);
     }
 
     @Test
     void testGetAllCompanies_ReturnsCompanies() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Insert test data
+        String hashedPassword1 = PasswordHasher.hashPassword("password1");
+        String hashedPassword2 = PasswordHasher.hashPassword("password2");
+        jdbcTemplate.update("INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)",
+                "Company1", "c1@mail.com", hashedPassword1);
+        jdbcTemplate.update("INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)",
+                "Company2", "c2@mail.com", hashedPassword2);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.createStatement()).thenReturn(mockStatement);
-            when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        // Get all companies
+        var companies = companiesDAO.getAllCompanies();
 
-            when(mockResultSet.next()).thenReturn(true, true, false);
-            when(mockResultSet.getInt("ID")).thenReturn(1, 2);
-            when(mockResultSet.getString("NAME")).thenReturn("Company1", "Company2");
-            when(mockResultSet.getString("EMAIL")).thenReturn("c1@mail.com", "c2@mail.com");
-            when(mockResultSet.getString("PASSWORD")).thenReturn("pass1", "pass2");
-
-            var companies = dao.getAllCompanies();
-
-            assertEquals(2, companies.size());
-            assertEquals("Company1", companies.get(0).getName());
-            assertEquals("Company2", companies.get(1).getName());
-        }
+        // Verify the results
+        assertEquals(2, companies.size());
+        assertEquals("Company1", companies.get(0).getName());
+        assertEquals("Company2", companies.get(1).getName());
     }
 
     @Test
     void testGetAllCompanies_ReturnsEmptyList() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Don't insert any data
+        var companies = companiesDAO.getAllCompanies();
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.createStatement()).thenReturn(mockStatement);
-            when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            var companies = dao.getAllCompanies();
-
-            assertEquals(0, companies.size());
-        }
+        // Verify empty list
+        assertEquals(0, companies.size());
     }
 
     @Test
     void testGetCompany_WhenExists_ReturnsCompany() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Insert test data
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (NAME, EMAIL, PASSWORD) VALUES (?, ?, ?)",
+                "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        // Get the ID of the inserted company
+        Integer companyId = jdbcTemplate.queryForObject(
+                "SELECT ID FROM companies WHERE EMAIL = ?",
+                Integer.class,
+                "test@company.com"
+        );
 
-            when(mockResultSet.next()).thenReturn(true);
-            when(mockResultSet.getInt("ID")).thenReturn(1);
-            when(mockResultSet.getString("NAME")).thenReturn("TestCompany");
-            when(mockResultSet.getString("EMAIL")).thenReturn("test@company.com");
-            when(mockResultSet.getString("PASSWORD")).thenReturn("password123");
+        // Get the company by ID
+        Company result = companiesDAO.getCompany(companyId);
 
-            Company result = dao.getCompany(1);
-
-            assertNotNull(result);
-            assertEquals(1, result.getId());
-            assertEquals("TestCompany", result.getName());
-            assertEquals("test@company.com", result.getEmail());
-            assertEquals("password123", result.getPassword());
-            verify(mockPreparedStatement).setInt(1, 1);
-        }
+        // Verify the results
+        assertNotNull(result);
+        assertEquals(companyId, result.getId());
+        assertEquals("TestCompany", result.getName());
+        assertEquals("test@company.com", result.getEmail());
+        assertEquals(hashedPassword, result.getPassword());
     }
 
     @Test
     void testGetCompany_WhenNotExists_ThrowsException() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CompaniesDAOImpl();
+        // Test with non-existent ID
+        CompanyNotFoundException exception = assertThrows(
+                CompanyNotFoundException.class,
+                () -> companiesDAO.getCompany(999)
+        );
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            CompanyNotFoundException exception = assertThrows(
-                    CompanyNotFoundException.class,
-                    () -> dao.getCompany(999)
-            );
-
-            assertTrue(exception.getMessage().contains("999"));
-        }
+        assertTrue(exception.getMessage().contains("999"));
     }
 }

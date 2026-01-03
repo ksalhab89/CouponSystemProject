@@ -4,576 +4,537 @@ import com.jhf.coupon.backend.beans.Company;
 import com.jhf.coupon.backend.beans.Coupon;
 import com.jhf.coupon.backend.beans.Customer;
 import com.jhf.coupon.backend.couponCategory.Category;
-import com.jhf.coupon.sql.utils.ConnectionPool;
+import com.jhf.coupon.backend.security.PasswordHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CouponDAOImplTest {
 
-    @Mock
-    private ConnectionPool mockPool;
+    @Autowired
+    private CouponsDAO couponsDAO;
 
-    @Mock
-    private Connection mockConnection;
-
-    @Mock
-    private PreparedStatement mockPreparedStatement;
-
-    @Mock
-    private ResultSet mockResultSet;
-
-    @Mock
-    private Statement mockStatement;
-
-    private CouponDAOImpl dao;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
-    void setUp() {
-        // DAO will be initialized inside each test with mocked ConnectionPool
+    void setUp() throws Exception {
+        // Clean up database before each test
+        jdbcTemplate.execute("DELETE FROM customers_vs_coupons");
+        jdbcTemplate.execute("DELETE FROM coupons");
+        jdbcTemplate.execute("DELETE FROM companies");
+        jdbcTemplate.execute("DELETE FROM customers");
     }
 
     @Test
     void testCouponExists_WhenExists_ReturnsTrue() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(true);
+        // Insert test coupon
+        jdbcTemplate.update("INSERT INTO coupons (COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, Category.SKYING.name(), "Test Coupon", "Description", Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            Coupon testCoupon = new Coupon(1, 1, Category.SKYING, "Test Coupon", "Description",
-                    Date.valueOf("2025-01-01"),
-                    Date.valueOf("2025-12-31"),
-                    10, 99.99, "image.jpg");
+        // Create coupon bean and test
+        Coupon testCoupon = new Coupon(0, 1, Category.SKYING, "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            boolean result = dao.couponExists(testCoupon);
+        boolean result = couponsDAO.couponExists(testCoupon);
 
-            assertTrue(result);
-            verify(mockPreparedStatement).setString(1, "Test Coupon");
-            verify(mockPreparedStatement).setInt(2, 1);
-        }
+        assertTrue(result);
     }
 
     @Test
     void testCouponExists_WhenNotExists_ReturnsFalse() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
+        // Create coupon bean that doesn't exist in database
+        Coupon testCoupon = new Coupon(0, 1, Category.SKYING, "Nonexistent Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            Coupon testCoupon = new Coupon(1, 1, Category.SKYING, "Nonexistent Coupon", "Description",
-                    Date.valueOf("2025-01-01"),
-                    Date.valueOf("2025-12-31"),
-                    10, 99.99, "image.jpg");
+        boolean result = couponsDAO.couponExists(testCoupon);
 
-            boolean result = dao.couponExists(testCoupon);
-
-            assertFalse(result);
-        }
+        assertFalse(result);
     }
 
     @Test
     void testAddCoupon_Success() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        // Create and add coupon
+        Coupon testCoupon = new Coupon(0, 1, Category.SKYING, "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            Coupon testCoupon = new Coupon(1, 1, Category.SKYING, "Test Coupon", "Description",
-                    Date.valueOf("2025-01-01"),
-                    Date.valueOf("2025-12-31"),
-                    10, 99.99, "image.jpg");
+        couponsDAO.addCoupon(testCoupon);
 
-            dao.addCoupon(testCoupon);
-
-            verify(mockPreparedStatement).setInt(1, 1); // COMPANY_ID
-            verify(mockPreparedStatement).setInt(2, Category.SKYING.getId()); // CATEGORY_ID
-            verify(mockPreparedStatement).setString(3, "Test Coupon"); // TITLE
-            verify(mockPreparedStatement).setString(4, "Description"); // DESCRIPTION
-            verify(mockPreparedStatement).setDate(5, Date.valueOf("2025-01-01")); // START_DATE
-            verify(mockPreparedStatement).setDate(6, Date.valueOf("2025-12-31")); // END_DATE
-            verify(mockPreparedStatement).setInt(7, 10); // AMOUNT
-            verify(mockPreparedStatement).setDouble(8, 99.99); // PRICE
-            verify(mockPreparedStatement).setString(9, "image.jpg"); // IMAGE
-            verify(mockPreparedStatement).execute();
-        }
+        // Verify coupon was added
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM coupons WHERE TITLE = ? AND COMPANY_ID = ?",
+            Integer.class, "Test Coupon", 1);
+        assertEquals(1, count);
     }
 
     @Test
     void testUpdateCoupon_Success() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert companies first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany1", "test1@company.com", hashedPassword);
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            2, "TestCompany2", "test2@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        // Insert initial coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Original Coupon", "Original Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "original.jpg");
 
-            Coupon testCoupon = new Coupon(1, 2, Category.SKY_DIVING, "Updated Coupon", "Updated Description",
-                    Date.valueOf("2025-02-01"),
-                    Date.valueOf("2025-11-30"),
-                    20, 149.99, "updated_image.jpg");
+        // Update the coupon
+        Coupon updatedCoupon = new Coupon(1, 2, Category.SKY_DIVING, "Updated Coupon", "Updated Description",
+            Date.valueOf("2025-02-01"), Date.valueOf("2025-11-30"), 20, 149.99, "updated_image.jpg");
 
-            dao.updateCoupon(testCoupon);
+        couponsDAO.updateCoupon(updatedCoupon);
 
-            verify(mockPreparedStatement).setInt(1, 2); // COMPANY_ID
-            verify(mockPreparedStatement).setInt(2, Category.SKY_DIVING.getId()); // CATEGORY_ID
-            verify(mockPreparedStatement).setString(3, "Updated Coupon"); // TITLE
-            verify(mockPreparedStatement).setString(4, "Updated Description"); // DESCRIPTION
-            verify(mockPreparedStatement).setDate(5, Date.valueOf("2025-02-01")); // START_DATE
-            verify(mockPreparedStatement).setDate(6, Date.valueOf("2025-11-30")); // END_DATE
-            verify(mockPreparedStatement).setInt(7, 20); // AMOUNT
-            verify(mockPreparedStatement).setDouble(8, 149.99); // PRICE
-            verify(mockPreparedStatement).setString(9, "updated_image.jpg"); // IMAGE
-            verify(mockPreparedStatement).setInt(10, 1); // ID (WHERE clause)
-            verify(mockPreparedStatement).executeUpdate();
-        }
+        // Verify coupon was updated
+        String title = jdbcTemplate.queryForObject(
+            "SELECT TITLE FROM coupons WHERE ID = ?", String.class, 1);
+        assertEquals("Updated Coupon", title);
+
+        Integer companyId = jdbcTemplate.queryForObject(
+            "SELECT COMPANY_ID FROM coupons WHERE ID = ?", Integer.class, 1);
+        assertEquals(2, companyId);
     }
 
     @Test
     void testDeleteCoupon_Success() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        // Insert coupon to delete
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            dao.deleteCoupon(1);
+        couponsDAO.deleteCoupon(1);
 
-            verify(mockPreparedStatement).setInt(1, 1);
-            verify(mockPreparedStatement).executeUpdate();
-        }
+        // Verify coupon was deleted
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM coupons WHERE ID = ?", Integer.class, 1);
+        assertEquals(0, count);
     }
 
     @Test
     void testGetCoupon_WhenExists_ReturnsCoupon() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        // Insert test coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            when(mockResultSet.next()).thenReturn(true);
-            when(mockResultSet.getInt("ID")).thenReturn(1);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(1);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(10);
-            when(mockResultSet.getString("TITLE")).thenReturn("Test Coupon");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Description");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(Date.valueOf("2025-01-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(Date.valueOf("2025-12-31"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(10);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(99.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("image.jpg");
+        Coupon result = couponsDAO.getCoupon(1);
 
-            Coupon result = dao.getCoupon(1);
-
-            assertNotNull(result);
-            assertEquals(1, result.getId());
-            assertEquals(1, result.getCompanyID());
-            assertEquals(Category.SKYING, result.getCATEGORY());
-            assertEquals("Test Coupon", result.getTitle());
-            assertEquals("Description", result.getDescription());
-            assertEquals(Date.valueOf("2025-01-01"), result.getStartDate());
-            assertEquals(Date.valueOf("2025-12-31"), result.getEndDate());
-            assertEquals(10, result.getAmount());
-            assertEquals(99.99, result.getPrice());
-            assertEquals("image.jpg", result.getImage());
-            verify(mockPreparedStatement).setInt(1, 1);
-        }
+        assertNotNull(result);
+        assertEquals(1, result.getId());
+        assertEquals(1, result.getCompanyID());
+        assertEquals(Category.SKYING, result.getCATEGORY());
+        assertEquals("Test Coupon", result.getTitle());
+        assertEquals("Description", result.getDescription());
+        assertEquals(Date.valueOf("2025-01-01"), result.getStartDate());
+        assertEquals(Date.valueOf("2025-12-31"), result.getEndDate());
+        assertEquals(10, result.getAmount());
+        assertEquals(99.99, result.getPrice());
+        assertEquals("image.jpg", result.getImage());
     }
 
     @Test
     void testGetCoupon_WhenNotExists_ThrowsException() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        CouponNotFoundException exception = assertThrows(
+            CouponNotFoundException.class,
+            () -> couponsDAO.getCoupon(999)
+        );
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            CouponNotFoundException exception = assertThrows(
-                    CouponNotFoundException.class,
-                    () -> dao.getCoupon(999)
-            );
-
-            assertTrue(exception.getMessage().contains("999"));
-        }
+        assertTrue(exception.getMessage().contains("999"));
     }
 
     @Test
     void testGetAllCoupons_ReturnsList() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert companies first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany1", "test1@company.com", hashedPassword);
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            2, "TestCompany2", "test2@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.createStatement()).thenReturn(mockStatement);
-            when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        // Insert test coupons
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Coupon1", "Desc1",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image1.jpg");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 2, Category.SKY_DIVING.name(), "Coupon2", "Desc2",
+            Date.valueOf("2025-02-01"), Date.valueOf("2025-11-30"), 20, 149.99, "image2.jpg");
 
-            when(mockResultSet.next()).thenReturn(true, true, false);
-            when(mockResultSet.getInt("ID")).thenReturn(1, 2);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(1, 2);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(10, 20);
-            when(mockResultSet.getString("TITLE")).thenReturn("Coupon1", "Coupon2");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Desc1", "Desc2");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(
-                    Date.valueOf("2025-01-01"), Date.valueOf("2025-02-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(
-                    Date.valueOf("2025-12-31"), Date.valueOf("2025-11-30"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(10, 20);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(99.99, 149.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("image1.jpg", "image2.jpg");
+        var coupons = couponsDAO.getAllCoupons();
 
-            var coupons = dao.getAllCoupons();
-
-            assertEquals(2, coupons.size());
-            assertEquals("Coupon1", coupons.get(0).getTitle());
-            assertEquals("Coupon2", coupons.get(1).getTitle());
-        }
+        assertEquals(2, coupons.size());
+        assertEquals("Coupon1", coupons.get(0).getTitle());
+        assertEquals("Coupon2", coupons.get(1).getTitle());
     }
 
     @Test
     void testGetAllCoupons_ReturnsEmptyList() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        var coupons = couponsDAO.getAllCoupons();
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.createStatement()).thenReturn(mockStatement);
-            when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            var coupons = dao.getAllCoupons();
-
-            assertEquals(0, coupons.size());
-        }
+        assertEquals(0, coupons.size());
     }
 
     @Test
     void testGetCompanyCoupons_ByCompanyId_ReturnsCoupons() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        // Insert test coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Company Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            when(mockResultSet.next()).thenReturn(true, false);
-            when(mockResultSet.getInt("ID")).thenReturn(1);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(1);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(10);
-            when(mockResultSet.getString("TITLE")).thenReturn("Company Coupon");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Description");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(Date.valueOf("2025-01-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(Date.valueOf("2025-12-31"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(10);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(99.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("image.jpg");
+        var coupons = couponsDAO.getCompanyCoupons(1);
 
-            var coupons = dao.getCompanyCoupons(1);
-
-            assertEquals(1, coupons.size());
-            assertEquals("Company Coupon", coupons.get(0).getTitle());
-            assertEquals(1, coupons.get(0).getCompanyID());
-            verify(mockPreparedStatement).setInt(1, 1);
-        }
+        assertEquals(1, coupons.size());
+        assertEquals("Company Coupon", coupons.get(0).getTitle());
+        assertEquals(1, coupons.get(0).getCompanyID());
     }
 
     @Test
     void testGetCompanyCoupons_ByCompanyObject_ReturnsCoupons() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            2, "TestCompany", "test@mail.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        // Insert test coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 2, Category.SKYING.name(), "Company Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            when(mockResultSet.next()).thenReturn(true, false);
-            when(mockResultSet.getInt("ID")).thenReturn(1);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(2);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(10);
-            when(mockResultSet.getString("TITLE")).thenReturn("Company Coupon");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Description");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(Date.valueOf("2025-01-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(Date.valueOf("2025-12-31"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(10);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(99.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("image.jpg");
+        Company company = new Company(2, "TestCompany", "test@mail.com", "password");
+        var coupons = couponsDAO.getCompanyCoupons(company, Category.SKYING);
 
-            Company company = new Company(2, "TestCompany", "test@mail.com", "password");
-            var coupons = dao.getCompanyCoupons(company, Category.SKYING);
-
-            assertEquals(1, coupons.size());
-            assertEquals("Company Coupon", coupons.get(0).getTitle());
-            verify(mockPreparedStatement).setInt(1, 2);
-            verify(mockPreparedStatement).setInt(2, Category.SKYING.getId());
-        }
+        assertEquals(1, coupons.size());
+        assertEquals("Company Coupon", coupons.get(0).getTitle());
     }
 
     @Test
     void testGetCompanyCoupons_FilteredByCategory() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@mail.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        // Insert test coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKY_DIVING.name(), "Sky Diving Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 199.99, "skydiving.jpg");
 
-            when(mockResultSet.next()).thenReturn(true, false);
-            when(mockResultSet.getInt("ID")).thenReturn(1);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(1);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(20);
-            when(mockResultSet.getString("TITLE")).thenReturn("Sky Diving Coupon");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Description");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(Date.valueOf("2025-01-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(Date.valueOf("2025-12-31"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(10);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(199.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("skydiving.jpg");
+        Company company = new Company(1, "TestCompany", "test@mail.com", "password");
+        var coupons = couponsDAO.getCompanyCoupons(company, Category.SKY_DIVING);
 
-            Company company = new Company(1, "TestCompany", "test@mail.com", "password");
-            var coupons = dao.getCompanyCoupons(company, Category.SKY_DIVING);
-
-            assertEquals(1, coupons.size());
-            assertEquals(Category.SKY_DIVING, coupons.get(0).getCATEGORY());
-            verify(mockPreparedStatement).setInt(1, 1);
-            verify(mockPreparedStatement).setInt(2, Category.SKY_DIVING.getId());
-        }
+        assertEquals(1, coupons.size());
+        assertEquals(Category.SKY_DIVING, coupons.get(0).getCATEGORY());
     }
 
     @Test
     void testGetCompanyCoupons_FilteredByMaxPrice() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@mail.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        // Insert test coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Cheap Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 49.99, "cheap.jpg");
 
-            when(mockResultSet.next()).thenReturn(true, false);
-            when(mockResultSet.getInt("ID")).thenReturn(1);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(1);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(10);
-            when(mockResultSet.getString("TITLE")).thenReturn("Cheap Coupon");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Description");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(Date.valueOf("2025-01-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(Date.valueOf("2025-12-31"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(10);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(49.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("cheap.jpg");
+        Company company = new Company(1, "TestCompany", "test@mail.com", "password");
+        var coupons = couponsDAO.getCompanyCoupons(company, 100.0);
 
-            Company company = new Company(1, "TestCompany", "test@mail.com", "password");
-            var coupons = dao.getCompanyCoupons(company, 100.0);
-
-            assertEquals(1, coupons.size());
-            assertEquals(49.99, coupons.get(0).getPrice());
-            verify(mockPreparedStatement).setInt(1, 1);
-            verify(mockPreparedStatement).setDouble(2, 100.0);
-        }
+        assertEquals(1, coupons.size());
+        assertEquals(49.99, coupons.get(0).getPrice());
     }
 
     @Test
     void testGetCompanyCoupons_ByCompanyId_ReturnsEmptyList() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        var coupons = couponsDAO.getCompanyCoupons(999);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            var coupons = dao.getCompanyCoupons(999);
-
-            assertEquals(0, coupons.size());
-        }
+        assertEquals(0, coupons.size());
     }
 
     @Test
     void testGetCompanyCoupons_ByCompanyAndCategory_ReturnsEmptyList() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        Company company = new Company(999, "TestCompany", "test@mail.com", "password");
+        var coupons = couponsDAO.getCompanyCoupons(company, Category.SKYING);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            Company company = new Company(999, "TestCompany", "test@mail.com", "password");
-            var coupons = dao.getCompanyCoupons(company, Category.SKYING);
-
-            assertEquals(0, coupons.size());
-        }
+        assertEquals(0, coupons.size());
     }
 
     @Test
     void testGetCompanyCoupons_ByCompanyAndMaxPrice_ReturnsEmptyList() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        Company company = new Company(999, "TestCompany", "test@mail.com", "password");
+        var coupons = couponsDAO.getCompanyCoupons(company, 50.0);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
-
-            Company company = new Company(999, "TestCompany", "test@mail.com", "password");
-            var coupons = dao.getCompanyCoupons(company, 50.0);
-
-            assertEquals(0, coupons.size());
-        }
+        assertEquals(0, coupons.size());
     }
 
     @Test
     void testCouponExists_WithDifferentCategory() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
-            when(mockResultSet.next()).thenReturn(false);
+        // Create coupon bean that doesn't exist in database
+        Coupon testCoupon = new Coupon(0, 1, Category.SKY_DIVING, "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
-            Coupon testCoupon = new Coupon(1, 1, Category.SKY_DIVING, "Test Coupon", "Description",
-                    Date.valueOf("2025-01-01"),
-                    Date.valueOf("2025-12-31"),
-                    10, 99.99, "image.jpg");
+        boolean result = couponsDAO.couponExists(testCoupon);
 
-            boolean result = dao.couponExists(testCoupon);
-
-            assertFalse(result);
-        }
+        assertFalse(result);
     }
 
     @Test
     void testAddCoupon_WithDifferentCategories() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        Coupon testCoupon1 = new Coupon(0, 1, Category.SKY_DIVING, "Skydiving", "Exciting",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 299.99, "sky.jpg");
 
-            Coupon testCoupon1 = new Coupon(1, 1, Category.SKY_DIVING, "Skydiving", "Exciting",
-                    Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 299.99, "sky.jpg");
+        couponsDAO.addCoupon(testCoupon1);
 
-            dao.addCoupon(testCoupon1);
-
-            verify(mockPreparedStatement).setInt(2, Category.SKY_DIVING.getId());
-        }
+        // Verify coupon was added with correct category
+        String categoryName = jdbcTemplate.queryForObject(
+            "SELECT CATEGORY FROM coupons WHERE TITLE = ?", String.class, "Skydiving");
+        assertEquals(Category.SKY_DIVING.name(), categoryName);
     }
 
     @Test
     void testUpdateCoupon_WithDifferentCategory() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            2, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
+        // Insert initial coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 2, Category.SKYING.name(), "Original", "Original",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "original.jpg");
 
-            Coupon testCoupon = new Coupon(1, 2, Category.FANCY_RESTAURANT, "Restaurant", "Fine Dining",
-                    Date.valueOf("2025-02-01"), Date.valueOf("2025-11-30"),
-                    15, 89.99, "restaurant.jpg");
+        Coupon testCoupon = new Coupon(1, 2, Category.FANCY_RESTAURANT, "Restaurant", "Fine Dining",
+            Date.valueOf("2025-02-01"), Date.valueOf("2025-11-30"), 15, 89.99, "restaurant.jpg");
 
-            dao.updateCoupon(testCoupon);
+        couponsDAO.updateCoupon(testCoupon);
 
-            verify(mockPreparedStatement).setInt(2, Category.FANCY_RESTAURANT.getId());
-        }
+        // Verify category was updated
+        String categoryName = jdbcTemplate.queryForObject(
+            "SELECT CATEGORY FROM coupons WHERE ID = ?", String.class, 1);
+        assertEquals(Category.FANCY_RESTAURANT.name(), categoryName);
     }
 
     @Test
     void testGetCoupon_WithDifferentCategory() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.prepareStatement(anyString())).thenReturn(mockPreparedStatement);
-            when(mockPreparedStatement.executeQuery()).thenReturn(mockResultSet);
+        // Insert test coupon with SKY_DIVING category
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKY_DIVING.name(), "Sky Diving", "Adventure",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 299.99, "adventure.jpg");
 
-            when(mockResultSet.next()).thenReturn(true);
-            when(mockResultSet.getInt("ID")).thenReturn(1);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(1);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(20);
-            when(mockResultSet.getString("TITLE")).thenReturn("Sky Diving");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Adventure");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(Date.valueOf("2025-01-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(Date.valueOf("2025-12-31"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(5);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(299.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("adventure.jpg");
+        Coupon result = couponsDAO.getCoupon(1);
 
-            Coupon result = dao.getCoupon(1);
-
-            assertNotNull(result);
-            assertEquals(Category.SKY_DIVING, result.getCATEGORY());
-        }
+        assertNotNull(result);
+        assertEquals(Category.SKY_DIVING, result.getCATEGORY());
     }
 
     @Test
     void testGetAllCoupons_WithMultipleCategories() throws Exception {
-        try (MockedStatic<ConnectionPool> mockedStatic = mockStatic(ConnectionPool.class)) {
-            mockedStatic.when(ConnectionPool::getInstance).thenReturn(mockPool);
-            dao = new CouponDAOImpl();
+        // Insert companies first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany1", "test1@company.com", hashedPassword);
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            2, "TestCompany2", "test2@company.com", hashedPassword);
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            3, "TestCompany3", "test3@company.com", hashedPassword);
 
-            when(mockPool.getConnection()).thenReturn(mockConnection);
-            when(mockConnection.createStatement()).thenReturn(mockStatement);
-            when(mockStatement.executeQuery(anyString())).thenReturn(mockResultSet);
+        // Insert coupons with different categories
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Skiing", "Winter",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 199.99, "ski.jpg");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 2, Category.SKY_DIVING.name(), "Skydiving", "Summer",
+            Date.valueOf("2025-02-01"), Date.valueOf("2025-11-30"), 5, 299.99, "sky.jpg");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            3, 3, Category.FANCY_RESTAURANT.name(), "Restaurant", "Food",
+            Date.valueOf("2025-03-01"), Date.valueOf("2025-10-31"), 20, 89.99, "food.jpg");
 
-            when(mockResultSet.next()).thenReturn(true, true, true, false);
-            when(mockResultSet.getInt("ID")).thenReturn(1, 2, 3);
-            when(mockResultSet.getInt("COMPANY_ID")).thenReturn(1, 2, 3);
-            when(mockResultSet.getInt("CATEGORY_ID")).thenReturn(10, 20, 30);
-            when(mockResultSet.getString("TITLE")).thenReturn("Skiing", "Skydiving", "Restaurant");
-            when(mockResultSet.getString("DESCRIPTION")).thenReturn("Winter", "Summer", "Food");
-            when(mockResultSet.getDate("START_DATE")).thenReturn(
-                    Date.valueOf("2025-01-01"), Date.valueOf("2025-02-01"), Date.valueOf("2025-03-01"));
-            when(mockResultSet.getDate("END_DATE")).thenReturn(
-                    Date.valueOf("2025-12-31"), Date.valueOf("2025-11-30"), Date.valueOf("2025-10-31"));
-            when(mockResultSet.getInt("AMOUNT")).thenReturn(10, 5, 20);
-            when(mockResultSet.getDouble("PRICE")).thenReturn(199.99, 299.99, 89.99);
-            when(mockResultSet.getString("IMAGE")).thenReturn("ski.jpg", "sky.jpg", "food.jpg");
+        var coupons = couponsDAO.getAllCoupons();
 
-            var coupons = dao.getAllCoupons();
+        assertEquals(3, coupons.size());
+        assertEquals(Category.SKYING, coupons.get(0).getCATEGORY());
+        assertEquals(Category.SKY_DIVING, coupons.get(1).getCATEGORY());
+        assertEquals(Category.FANCY_RESTAURANT, coupons.get(2).getCATEGORY());
+    }
 
-            assertEquals(3, coupons.size());
-            assertEquals(Category.SKYING, coupons.get(0).getCATEGORY());
-            assertEquals(Category.SKY_DIVING, coupons.get(1).getCATEGORY());
-            assertEquals(Category.FANCY_RESTAURANT, coupons.get(2).getCATEGORY());
-        }
+    @Test
+    void testCustomerCouponPurchaseExists_WhenExists_ReturnsTrue() throws Exception {
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
+
+        // Insert customer (foreign key dependency)
+        jdbcTemplate.update("INSERT INTO customers (ID, FIRST_NAME, LAST_NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?, ?)",
+            1, "John", "Doe", "john@customer.com", hashedPassword);
+
+        // Insert coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
+
+        // Insert customer coupon purchase
+        jdbcTemplate.update("INSERT INTO customers_vs_coupons (CUSTOMER_ID, COUPON_ID) VALUES (?, ?)",
+            1, 1);
+
+        boolean result = couponsDAO.customerCouponPurchaseExists(1, 1);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void testCustomerCouponPurchaseExists_WhenNotExists_ReturnsFalse() throws Exception {
+        boolean result = couponsDAO.customerCouponPurchaseExists(999, 999);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testAddCouponPurchase_Success() throws Exception {
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
+
+        // Insert customer (foreign key dependency)
+        jdbcTemplate.update("INSERT INTO customers (ID, FIRST_NAME, LAST_NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?, ?)",
+            1, "John", "Doe", "john@customer.com", hashedPassword);
+
+        // Insert coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
+
+        couponsDAO.addCouponPurchase(1, 1);
+
+        // Verify purchase was added
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM customers_vs_coupons WHERE CUSTOMER_ID = ? AND COUPON_ID = ?",
+            Integer.class, 1, 1);
+        assertEquals(1, count);
+    }
+
+    @Test
+    void testGetCustomerCoupons_ReturnsCoupons() throws Exception {
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
+
+        // Insert customer (foreign key dependency)
+        jdbcTemplate.update("INSERT INTO customers (ID, FIRST_NAME, LAST_NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?, ?)",
+            1, "John", "Doe", "john@customer.com", hashedPassword);
+
+        // Insert coupons
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Coupon1", "Description1",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image1.jpg");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 1, Category.SKY_DIVING.name(), "Coupon2", "Description2",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 199.99, "image2.jpg");
+
+        // Insert customer coupon purchases
+        jdbcTemplate.update("INSERT INTO customers_vs_coupons (CUSTOMER_ID, COUPON_ID) VALUES (?, ?)", 1, 1);
+        jdbcTemplate.update("INSERT INTO customers_vs_coupons (CUSTOMER_ID, COUPON_ID) VALUES (?, ?)", 1, 2);
+
+        Customer customer = new Customer(1, "John", "Doe", "john@customer.com", "password");
+        var coupons = couponsDAO.getCustomerCoupons(customer);
+
+        assertEquals(2, coupons.size());
+        assertEquals("Coupon1", coupons.get(0).getTitle());
+        assertEquals("Coupon2", coupons.get(1).getTitle());
+    }
+
+    @Test
+    void testGetCustomerCoupons_ReturnsEmptyList() throws Exception {
+        Customer customer = new Customer(999, "John", "Doe", "john@customer.com", "password");
+        var coupons = couponsDAO.getCustomerCoupons(customer);
+
+        assertEquals(0, coupons.size());
+    }
+
+    @Test
+    void testDeleteCouponPurchase_Success() throws Exception {
+        // Insert company first (foreign key dependency)
+        String hashedPassword = PasswordHasher.hashPassword("password123");
+        jdbcTemplate.update("INSERT INTO companies (ID, NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?)",
+            1, "TestCompany", "test@company.com", hashedPassword);
+
+        // Insert customer (foreign key dependency)
+        jdbcTemplate.update("INSERT INTO customers (ID, FIRST_NAME, LAST_NAME, EMAIL, PASSWORD) VALUES (?, ?, ?, ?, ?)",
+            1, "John", "Doe", "john@customer.com", hashedPassword);
+
+        // Insert coupon
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+            Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
+
+        // Insert customer coupon purchase
+        jdbcTemplate.update("INSERT INTO customers_vs_coupons (CUSTOMER_ID, COUPON_ID) VALUES (?, ?)", 1, 1);
+
+        couponsDAO.deleteCouponPurchase(1, 1);
+
+        // Verify purchase was deleted
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM customers_vs_coupons WHERE CUSTOMER_ID = ? AND COUPON_ID = ?",
+            Integer.class, 1, 1);
+        assertEquals(0, count);
     }
 }

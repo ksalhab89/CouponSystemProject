@@ -2,60 +2,41 @@ package com.jhf.coupon.backend.periodicJob;
 
 import com.jhf.coupon.backend.beans.Coupon;
 import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
-import com.jhf.coupon.sql.dao.coupon.CouponDAOImpl;
 import com.jhf.coupon.sql.dao.coupon.CouponsDAO;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.sql.Date;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
-@NoArgsConstructor
-@AllArgsConstructor
-public class CouponExpirationDailyJob implements Runnable {
+@Component
+public class CouponExpirationDailyJob {
 	private static final Logger logger = LoggerFactory.getLogger(CouponExpirationDailyJob.class);
 
-	private CouponsDAO couponsDAO = new CouponDAOImpl();
-	private volatile boolean quit = false;
+	private final CouponsDAO couponsDAO;
 
-	// Run once per day (24 hours in milliseconds)
-	private static final long DAILY_INTERVAL_MS = TimeUnit.HOURS.toMillis(24);
+	public CouponExpirationDailyJob(CouponsDAO couponsDAO) {
+		this.couponsDAO = couponsDAO;
+	}
 
-	// Retry delay on error (5 minutes)
-	private static final long ERROR_RETRY_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
-
-	@Override
-	public void run() {
-		while (!quit) {
-			try {
-				deleteExpiredCoupons();
-
-				// Sleep for 24 hours before next execution
-				Thread.sleep(DAILY_INTERVAL_MS);
-			} catch (InterruptedException e) {
-				// Thread interrupted, likely shutting down
-				Thread.currentThread().interrupt();
-				break;
-			} catch (Exception e) {
-				// Log error and retry after delay
-				logger.error("Error in CouponExpirationDailyJob, will retry in 5 minutes", e);
-
-				try {
-					Thread.sleep(ERROR_RETRY_DELAY_MS);
-				} catch (InterruptedException ie) {
-					Thread.currentThread().interrupt();
-					break;
-				}
-			}
+	@Scheduled(cron = "0 0 2 * * ?")
+	public void executeJob() {
+		try {
+			deleteExpiredCoupons();
+		} catch (SQLException e) {
+			logger.error("Error in CouponExpirationDailyJob while deleting expired coupons", e);
+		} catch (CategoryNotFoundException e) {
+			logger.error("Category not found error in CouponExpirationDailyJob", e);
+		} catch (Exception e) {
+			logger.error("Unexpected error in CouponExpirationDailyJob", e);
 		}
 	}
 
-	private void deleteExpiredCoupons() throws SQLException, InterruptedException, CategoryNotFoundException {
+	private void deleteExpiredCoupons() throws SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> coupons = couponsDAO.getAllCoupons();
 		Date today = Date.valueOf(LocalDate.now());
 		int deletedCount = 0;
@@ -70,10 +51,6 @@ public class CouponExpirationDailyJob implements Runnable {
 		if (deletedCount > 0) {
 			logger.info("Deleted {} expired coupons", deletedCount);
 		}
-	}
-
-	public void stop() {
-		quit = true;
 	}
 
 }

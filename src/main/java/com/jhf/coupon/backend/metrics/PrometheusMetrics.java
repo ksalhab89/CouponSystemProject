@@ -1,163 +1,101 @@
 package com.jhf.coupon.backend.metrics;
 
-import io.prometheus.client.*;
-import io.prometheus.client.exporter.HTTPServer;
-import io.prometheus.client.hotspot.*;
+import io.micrometer.core.instrument.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
- * Centralized Prometheus metrics for the Coupon System.
- * Provides application-specific metrics and JVM metrics.
+ * Centralized Prometheus metrics for the Coupon System using Micrometer.
+ * Provides application-specific metrics and integrates with Spring Boot Actuator.
  *
- * <p>Metrics are exposed on HTTP endpoint /metrics (default port 9090)
+ * <p>Metrics are exposed via Spring Boot Actuator at /actuator/prometheus
  *
  * <p>Usage:
  * <pre>
+ * // Inject this component
+ * @Autowired
+ * private PrometheusMetrics metrics;
+ *
  * // Record a successful login
- * PrometheusMetrics.recordLogin("company", true);
+ * metrics.recordLogin("company", true);
  *
  * // Record a coupon purchase
- * PrometheusMetrics.recordCouponPurchase("SKYING", 99.99);
+ * metrics.recordCouponPurchase("SKYING", 99.99);
  * </pre>
  */
+@Component
 public class PrometheusMetrics {
 
     private static final Logger logger = LoggerFactory.getLogger(PrometheusMetrics.class);
 
+    private final MeterRegistry meterRegistry;
+
     // ========== Authentication Metrics ==========
-
-    /**
-     * Counter for login attempts, labeled by client type and success status.
-     * Labels: client_type={admin,company,customer}, success={true,false}
-     */
-    public static final Counter loginAttempts = Counter.build()
-            .name("coupon_system_login_attempts_total")
-            .help("Total number of login attempts")
-            .labelNames("client_type", "success")
-            .register();
-
-    /**
-     * Counter for account lockouts.
-     * Labels: client_type={company,customer}
-     */
-    public static final Counter accountLockouts = Counter.build()
-            .name("coupon_system_account_lockouts_total")
-            .help("Total number of account lockouts due to failed login attempts")
-            .labelNames("client_type")
-            .register();
-
-    /**
-     * Gauge for currently locked accounts.
-     * Labels: client_type={company,customer}
-     */
-    public static final Gauge lockedAccounts = Gauge.build()
-            .name("coupon_system_locked_accounts_current")
-            .help("Current number of locked accounts")
-            .labelNames("client_type")
-            .register();
+    private final Counter.Builder loginAttemptsBuilder;
+    private final Counter.Builder accountLockoutsBuilder;
 
     // ========== Coupon Metrics ==========
+    private final Counter.Builder couponPurchasesBuilder;
+    private final Counter.Builder couponsCreatedBuilder;
+    private final Counter expiredCouponsDeleted;
 
-    /**
-     * Counter for coupon purchases.
-     * Labels: category={SKYING,SKY_DIVING,FANCY_RESTAURANT,ALL_INCLUSIVE_VACATION}
-     */
-    public static final Counter couponPurchases = Counter.build()
-            .name("coupon_system_coupon_purchases_total")
-            .help("Total number of coupon purchases")
-            .labelNames("category")
-            .register();
-
-    /**
-     * Histogram for coupon prices (to track price distribution).
-     * Buckets: 0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000
-     */
-    public static final Histogram couponPrices = Histogram.build()
-            .name("coupon_system_coupon_price")
-            .help("Distribution of coupon prices")
-            .buckets(0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000)
-            .register();
-
-    /**
-     * Counter for coupons created by companies.
-     * Labels: category
-     */
-    public static final Counter couponsCreated = Counter.build()
-            .name("coupon_system_coupons_created_total")
-            .help("Total number of coupons created")
-            .labelNames("category")
-            .register();
-
-    /**
-     * Counter for expired coupons deleted by cleanup job.
-     */
-    public static final Counter expiredCouponsDeleted = Counter.build()
-            .name("coupon_system_expired_coupons_deleted_total")
-            .help("Total number of expired coupons deleted by cleanup job")
-            .register();
-
-    // ========== Company Metrics ==========
-
-    /**
-     * Counter for company registrations.
-     */
-    public static final Counter companyRegistrations = Counter.build()
-            .name("coupon_system_company_registrations_total")
-            .help("Total number of company registrations")
-            .register();
-
-    // ========== Customer Metrics ==========
-
-    /**
-     * Counter for customer registrations.
-     */
-    public static final Counter customerRegistrations = Counter.build()
-            .name("coupon_system_customer_registrations_total")
-            .help("Total number of customer registrations")
-            .register();
+    // ========== Company & Customer Metrics ==========
+    private final Counter companyRegistrations;
+    private final Counter customerRegistrations;
 
     // ========== Database Metrics ==========
-
-    /**
-     * Histogram for database query execution time.
-     * Labels: operation={select,insert,update,delete}, table
-     * Buckets: 1ms, 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2.5s
-     */
-    public static final Histogram dbQueryDuration = Histogram.build()
-            .name("coupon_system_db_query_duration_seconds")
-            .help("Database query execution time in seconds")
-            .labelNames("operation", "table")
-            .buckets(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5)
-            .register();
-
-    /**
-     * Gauge for database connection pool size.
-     */
-    public static final Gauge dbConnectionPoolSize = Gauge.build()
-            .name("coupon_system_db_connection_pool_size")
-            .help("Current number of database connections in the pool")
-            .register();
-
-    /**
-     * Gauge for active database connections.
-     */
-    public static final Gauge dbActiveConnections = Gauge.build()
-            .name("coupon_system_db_active_connections")
-            .help("Current number of active database connections")
-            .register();
+    private final Timer.Builder dbQueryDurationBuilder;
 
     // ========== Error Metrics ==========
+    private final Counter.Builder errorsBuilder;
 
-    /**
-     * Counter for application errors/exceptions.
-     * Labels: exception_type, severity={error,warn}
-     */
-    public static final Counter errors = Counter.build()
-            .name("coupon_system_errors_total")
-            .help("Total number of application errors")
-            .labelNames("exception_type", "severity")
-            .register();
+    public PrometheusMetrics(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+
+        // Initialize counter builders (actual counters created with labels on first use)
+        this.loginAttemptsBuilder = Counter.builder("coupon_system_login_attempts_total")
+                .description("Total number of login attempts")
+                .tags("application", "coupon-system");
+
+        this.accountLockoutsBuilder = Counter.builder("coupon_system_account_lockouts_total")
+                .description("Total number of account lockouts due to failed login attempts")
+                .tags("application", "coupon-system");
+
+        this.couponPurchasesBuilder = Counter.builder("coupon_system_coupon_purchases_total")
+                .description("Total number of coupon purchases")
+                .tags("application", "coupon-system");
+
+        this.couponsCreatedBuilder = Counter.builder("coupon_system_coupons_created_total")
+                .description("Total number of coupons created")
+                .tags("application", "coupon-system");
+
+        this.errorsBuilder = Counter.builder("coupon_system_errors_total")
+                .description("Total number of application errors")
+                .tags("application", "coupon-system");
+
+        this.dbQueryDurationBuilder = Timer.builder("coupon_system_db_query_duration")
+                .description("Database query execution time")
+                .tags("application", "coupon-system");
+
+        // Initialize non-labeled counters
+        this.expiredCouponsDeleted = Counter.builder("coupon_system_expired_coupons_deleted_total")
+                .description("Total number of expired coupons deleted by cleanup job")
+                .tags("application", "coupon-system")
+                .register(meterRegistry);
+
+        this.companyRegistrations = Counter.builder("coupon_system_company_registrations_total")
+                .description("Total number of company registrations")
+                .tags("application", "coupon-system")
+                .register(meterRegistry);
+
+        this.customerRegistrations = Counter.builder("coupon_system_customer_registrations_total")
+                .description("Total number of customer registrations")
+                .tags("application", "coupon-system")
+                .register(meterRegistry);
+
+        logger.info("Prometheus metrics initialized with Micrometer");
+    }
 
     // ========== Helper Methods ==========
 
@@ -167,8 +105,11 @@ public class PrometheusMetrics {
      * @param clientType "admin", "company", or "customer"
      * @param success true if login successful, false otherwise
      */
-    public static void recordLogin(String clientType, boolean success) {
-        loginAttempts.labels(clientType, String.valueOf(success)).inc();
+    public void recordLogin(String clientType, boolean success) {
+        loginAttemptsBuilder
+                .tags("client_type", clientType, "success", String.valueOf(success))
+                .register(meterRegistry)
+                .increment();
     }
 
     /**
@@ -176,9 +117,16 @@ public class PrometheusMetrics {
      *
      * @param clientType "company" or "customer"
      */
-    public static void recordAccountLockout(String clientType) {
-        accountLockouts.labels(clientType).inc();
-        lockedAccounts.labels(clientType).inc();
+    public void recordAccountLockout(String clientType) {
+        accountLockoutsBuilder
+                .tags("client_type", clientType)
+                .register(meterRegistry)
+                .increment();
+
+        // Update gauge for locked accounts
+        meterRegistry.gauge("coupon_system_locked_accounts_current",
+                Tags.of("client_type", clientType, "application", "coupon-system"),
+                1);
     }
 
     /**
@@ -186,8 +134,11 @@ public class PrometheusMetrics {
      *
      * @param clientType "company" or "customer"
      */
-    public static void recordAccountUnlock(String clientType) {
-        lockedAccounts.labels(clientType).dec();
+    public void recordAccountUnlock(String clientType) {
+        // Update gauge for locked accounts (decrement by setting to 0 or actual count)
+        meterRegistry.gauge("coupon_system_locked_accounts_current",
+                Tags.of("client_type", clientType, "application", "coupon-system"),
+                0);
     }
 
     /**
@@ -196,9 +147,19 @@ public class PrometheusMetrics {
      * @param category Coupon category
      * @param price Coupon price
      */
-    public static void recordCouponPurchase(String category, double price) {
-        couponPurchases.labels(category).inc();
-        couponPrices.observe(price);
+    public void recordCouponPurchase(String category, double price) {
+        couponPurchasesBuilder
+                .tags("category", category)
+                .register(meterRegistry)
+                .increment();
+
+        // Record price distribution
+        DistributionSummary.builder("coupon_system_coupon_price")
+                .description("Distribution of coupon prices")
+                .tags("application", "coupon-system")
+                .serviceLevelObjectives(10, 25, 50, 100, 250, 500, 1000, 2500, 5000)
+                .register(meterRegistry)
+                .record(price);
     }
 
     /**
@@ -206,22 +167,32 @@ public class PrometheusMetrics {
      *
      * @param category Coupon category
      */
-    public static void recordCouponCreation(String category) {
-        couponsCreated.labels(category).inc();
+    public void recordCouponCreation(String category) {
+        couponsCreatedBuilder
+                .tags("category", category)
+                .register(meterRegistry)
+                .increment();
+    }
+
+    /**
+     * Records expired coupon deletion.
+     */
+    public void recordExpiredCouponDeletion() {
+        expiredCouponsDeleted.increment();
     }
 
     /**
      * Records company registration.
      */
-    public static void recordCompanyRegistration() {
-        companyRegistrations.inc();
+    public void recordCompanyRegistration() {
+        companyRegistrations.increment();
     }
 
     /**
      * Records customer registration.
      */
-    public static void recordCustomerRegistration() {
-        customerRegistrations.inc();
+    public void recordCustomerRegistration() {
+        customerRegistrations.increment();
     }
 
     /**
@@ -230,8 +201,11 @@ public class PrometheusMetrics {
      * @param exceptionType Exception class name
      * @param severity "error" or "warn"
      */
-    public static void recordError(String exceptionType, String severity) {
-        errors.labels(exceptionType, severity).inc();
+    public void recordError(String exceptionType, String severity) {
+        errorsBuilder
+                .tags("exception_type", exceptionType, "severity", severity)
+                .register(meterRegistry)
+                .increment();
     }
 
     /**
@@ -239,44 +213,39 @@ public class PrometheusMetrics {
      *
      * @param operation "select", "insert", "update", or "delete"
      * @param table Table name
-     * @return Timer to stop when query completes
+     * @return Timer.Sample to stop when query completes
      */
-    public static Histogram.Timer startDbQueryTimer(String operation, String table) {
-        return dbQueryDuration.labels(operation, table).startTimer();
+    public Timer.Sample startDbQueryTimer(String operation, String table) {
+        return Timer.start(meterRegistry);
     }
 
     /**
-     * Registers JVM metrics (memory, GC, threads, etc.).
-     * Should be called once at application startup.
-     */
-    public static void registerJvmMetrics() {
-        DefaultExports.initialize();
-        logger.info("JVM metrics registered");
-    }
-
-    /**
-     * Starts the Prometheus HTTP server to expose metrics.
+     * Stops the database query timer and records the duration.
      *
-     * @param port Port to listen on (default: 9090)
-     * @throws IOException if server cannot start
+     * @param sample Timer sample from startDbQueryTimer
+     * @param operation "select", "insert", "update", or "delete"
+     * @param table Table name
      */
-    public static void startMetricsServer(int port) throws java.io.IOException {
-        HTTPServer server = new HTTPServer.Builder()
-                .withPort(port)
-                .build();
-
-        logger.info("Prometheus metrics server started on port {}", port);
-        logger.info("Metrics available at http://localhost:{}/metrics", port);
+    public void stopDbQueryTimer(Timer.Sample sample, String operation, String table) {
+        sample.stop(dbQueryDurationBuilder
+                .tags("operation", operation, "table", table)
+                .register(meterRegistry));
     }
 
     /**
      * Updates database connection pool metrics.
+     * Note: HikariCP metrics are automatically exposed by Spring Boot Actuator.
+     * This method is kept for backward compatibility but may not be needed.
      *
      * @param poolSize Total pool size
      * @param activeConnections Number of active connections
      */
-    public static void updateConnectionPoolMetrics(int poolSize, int activeConnections) {
-        dbConnectionPoolSize.set(poolSize);
-        dbActiveConnections.set(activeConnections);
+    public void updateConnectionPoolMetrics(int poolSize, int activeConnections) {
+        meterRegistry.gauge("coupon_system_db_connection_pool_size",
+                Tags.of("application", "coupon-system"),
+                poolSize);
+        meterRegistry.gauge("coupon_system_db_active_connections",
+                Tags.of("application", "coupon-system"),
+                activeConnections);
     }
 }

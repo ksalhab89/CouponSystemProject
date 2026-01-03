@@ -1,13 +1,14 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: mysql-container
+    container_name: coupon-system-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: couponsystem
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
-    # Expose MySQL to host for local testing
+    # Expose MySQL to host for local development/testing only
+    # In production, remove this port exposure for security
     ports:
       - "3306:3306"
     volumes:
@@ -37,16 +38,53 @@ services:
     build: .
     container_name: coupon-system-app
     ports:
-      - '8080:8080'
+      - '8080:8080'   # REST API endpoint
+      - '9090:9090'   # Prometheus metrics endpoint
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      DB_URL: jdbc:mysql://mysql:3306/couponsystem?serverTimezone=UTC
+      # Database Configuration
+      DB_URL: jdbc:mysql://coupon-system-mysql:3306/couponsystem?serverTimezone=UTC
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
+
+      # Admin Account
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-3600000}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-86400000}
+
+      # Server Configuration
+      SERVER_PORT: ${SERVER_PORT:-8080}
+      METRICS_PORT: ${METRICS_PORT:-9090}
+      LOGGING_LEVEL: ${LOGGING_LEVEL:-INFO}
+
+      # Security Configuration
+      ACCOUNT_LOCKOUT_MAX_ATTEMPTS: ${ACCOUNT_LOCKOUT_MAX_ATTEMPTS:-5}
+      ACCOUNT_LOCKOUT_DURATION_MINUTES: ${ACCOUNT_LOCKOUT_DURATION_MINUTES:-30}
+      ACCOUNT_LOCKOUT_ADMIN_ENABLED: ${ACCOUNT_LOCKOUT_ADMIN_ENABLED:-false}
+      PASSWORD_BCRYPT_STRENGTH: ${PASSWORD_BCRYPT_STRENGTH:-12}
+
+      # CORS Configuration
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+
+      # Rate Limiting
+      RATE_LIMIT_AUTH_CAPACITY: ${RATE_LIMIT_AUTH_CAPACITY:-5}
+      RATE_LIMIT_AUTH_REFILL_RATE_MINUTES: ${RATE_LIMIT_AUTH_REFILL_RATE_MINUTES:-1}
+      RATE_LIMIT_GENERAL_CAPACITY: ${RATE_LIMIT_GENERAL_CAPACITY:-100}
+      RATE_LIMIT_GENERAL_REFILL_RATE_MINUTES: ${RATE_LIMIT_GENERAL_REFILL_RATE_MINUTES:-1}
+
+      # Database Connection Pool
+      DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-5}
+      DB_POOL_MAX_POOL_SIZE: ${DB_POOL_MAX_POOL_SIZE:-20}
+      DB_POOL_CONNECTION_TIMEOUT: ${DB_POOL_CONNECTION_TIMEOUT:-30000}
+    volumes:
+      # Persistent log storage
+      - app_logs:/app/logs
     restart: unless-stopped
     networks:
       - backend
@@ -68,6 +106,8 @@ services:
 
 volumes:
   mysql_data:
+    driver: local
+  app_logs:
     driver: local
 
 networks:

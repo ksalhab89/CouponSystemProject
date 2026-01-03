@@ -8,19 +8,23 @@ import java.util.ArrayList;
 
 public interface CompaniesDAO {
 
-	boolean isCompanyExists(String companyEmail, String companyPassword) throws InterruptedException, SQLException;
+	boolean isCompanyExists(String companyEmail, String companyPassword) throws SQLException;
 
-	boolean isCompanyNameExists(String companyName) throws InterruptedException, SQLException;
+	boolean isCompanyEmailExists(String companyEmail) throws SQLException;
 
-	void addCompany(Company company) throws InterruptedException, SQLException;
+	boolean isCompanyNameExists(String companyName) throws SQLException;
 
-	void updateCompany(Company company) throws InterruptedException, SQLException;
+	void addCompany(Company company) throws SQLException;
 
-	void deleteCompany(int companyID) throws InterruptedException, SQLException;
+	void updateCompany(Company company) throws SQLException;
 
-	ArrayList<Company> getAllCompanies() throws InterruptedException, SQLException;
+	void deleteCompany(int companyID) throws SQLException;
 
-	Company getCompany(int companyID) throws InterruptedException, SQLException;
+	ArrayList<Company> getAllCompanies() throws SQLException;
+
+	Company getCompany(int companyID) throws SQLException;
+
+	Company getCompanyByEmail(String email) throws SQLException;
 
 	// Account Lockout Methods
 
@@ -32,7 +36,7 @@ public interface CompaniesDAO {
 	 * @throws InterruptedException if thread is interrupted while getting connection
 	 * @throws SQLException if database error occurs
 	 */
-	AccountLockoutStatus getAccountLockoutStatus(String email) throws InterruptedException, SQLException;
+	AccountLockoutStatus getAccountLockoutStatus(String email) throws SQLException;
 
 	/**
 	 * Increments the failed login attempts counter for a company account.
@@ -45,7 +49,7 @@ public interface CompaniesDAO {
 	 * @throws SQLException if database error occurs
 	 */
 	void incrementFailedLoginAttempts(String email, int maxAttempts, int lockoutDurationMinutes)
-			throws InterruptedException, SQLException;
+			throws SQLException;
 
 	/**
 	 * Resets failed login attempts counter to 0 and unlocks the account.
@@ -55,7 +59,7 @@ public interface CompaniesDAO {
 	 * @throws InterruptedException if thread is interrupted while getting connection
 	 * @throws SQLException if database error occurs
 	 */
-	void resetFailedLoginAttempts(String email) throws InterruptedException, SQLException;
+	void resetFailedLoginAttempts(String email) throws SQLException;
 
 	/**
 	 * Manually unlocks a company account.
@@ -65,5 +69,5 @@ public interface CompaniesDAO {
 	 * @throws InterruptedException if thread is interrupted while getting connection
 	 * @throws SQLException if database error occurs
 	 */
-	void unlockAccount(String email) throws InterruptedException, SQLException;
+	void unlockAccount(String email) throws SQLException;
 }

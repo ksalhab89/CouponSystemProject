@@ -4,7 +4,9 @@
 [![Java Version](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/projects/jdk/21/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A production-ready coupon management system built for the JHF FullStack Bootcamp. Features enterprise-grade security, monitoring, and observability.
+A production-ready **REST API** coupon management system with **JWT authentication** built for the JHF FullStack Bootcamp. Features enterprise-grade security, monitoring, and observability.
+
+> 📘 **[View Complete API Documentation](docs/API.md)** | **[Deployment Guide](docs/DEPLOYMENT.md)**
 
 ## 🚀 Features
 
@@ -15,8 +17,11 @@ A production-ready coupon management system built for the JHF FullStack Bootcamp
 - **Automated Cleanup**: Daily job to remove expired coupons
 
 ### Security
+- **🔑 JWT Authentication**: Stateless token-based authentication with access & refresh tokens
+- **⏱️ Rate Limiting**: Token bucket algorithm (5 req/min auth, 100 req/min general) prevents abuse
 - **🔒 Account Lockout Protection**: Prevents brute force attacks (5 failed attempts → 30-minute lockout)
 - **🔐 bcrypt Password Hashing**: Industry-standard password encryption (strength 12)
+- **🌐 CORS Protection**: Configurable cross-origin resource sharing for secure frontend integration
 - **🛡️ OWASP Dependency Check**: Automated CVE scanning (CVSS threshold: 7)
 - **📝 Security Audit Logging**: Dedicated security event log with 90-day retention
 - **🐳 Docker Security**: Non-root containers, no-new-privileges, tmpfs for temp files

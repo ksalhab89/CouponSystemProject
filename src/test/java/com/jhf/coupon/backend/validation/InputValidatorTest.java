@@ -45,9 +45,9 @@ class InputValidatorTest {
     // Password validation tests
     @Test
     void testIsValidPassword_WithValidLength_ReturnsTrue() {
-        assertTrue(InputValidator.isValidPassword("123456")); // Minimum 6
+        assertTrue(InputValidator.isValidPassword("12345678")); // Minimum 8
         assertTrue(InputValidator.isValidPassword("password123"));
-        assertTrue(InputValidator.isValidPassword("a".repeat(100))); // Maximum 100
+        assertTrue(InputValidator.isValidPassword("a".repeat(64))); // Maximum 64
     }
 
     @Test

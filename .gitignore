@@ -23,3 +23,9 @@ target/dependency-check-report.*
 .dependency-check/
 dependency-check-report.*
 dependency-check-data/
+
+# Backup files
+*.bak
+
+# Docker test results (temporary)
+docker-test-results.txt
