@@ -1,55 +1,79 @@
-# Coupon System Project
+# Coupon System REST API
 
 [![Java CI](https://github.com/ksalhab89/CouponSystemProject/workflows/Java%20CI/badge.svg)](https://github.com/ksalhab89/CouponSystemProject/actions)
 [![Java Version](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A production-ready **REST API** coupon management system with **JWT authentication** built for the JHF FullStack Bootcamp. Features enterprise-grade security, monitoring, and observability.
+A production-ready **Spring Boot REST API** for coupon management with **JWT authentication**, enterprise-grade security, and comprehensive monitoring. Built for the JHF FullStack Bootcamp.
 
-> 📘 **[View Complete API Documentation](docs/API.md)** | **[Deployment Guide](docs/DEPLOYMENT.md)**
+> 📘 **[API Documentation](docs/API.md)** | **[Deployment Guide](docs/DEPLOYMENT.md)** | **[Swagger UI](http://localhost:8080/swagger-ui.html)**
+
+---
 
 ## 🚀 Features
 
 ### Core Functionality
-- **Multi-tenant Architecture**: Admin, Company, and Customer user types
-- **Coupon Management**: Create, update, delete, and purchase coupons
-- **Category System**: Organize coupons by categories (Food, Electricity, Restaurant, etc.)
-- **Automated Cleanup**: Daily job to remove expired coupons
+- **REST API** with JWT stateless authentication (access + refresh tokens)
+- **Multi-tenant Architecture**: Admin, Company, and Customer roles
+- **Coupon Management**: Full CRUD operations with category filtering
+- **Automated Cleanup**: Scheduled daily job to remove expired coupons
 
 ### Security
-- **🔑 JWT Authentication**: Stateless token-based authentication with access & refresh tokens
-- **⏱️ Rate Limiting**: Token bucket algorithm (5 req/min auth, 100 req/min general) prevents abuse
-- **🔒 Account Lockout Protection**: Prevents brute force attacks (5 failed attempts → 30-minute lockout)
-- **🔐 bcrypt Password Hashing**: Industry-standard password encryption (strength 12)
-- **🌐 CORS Protection**: Configurable cross-origin resource sharing for secure frontend integration
-- **🛡️ OWASP Dependency Check**: Automated CVE scanning (CVSS threshold: 7)
-- **📝 Security Audit Logging**: Dedicated security event log with 90-day retention
-- **🐳 Docker Security**: Non-root containers, no-new-privileges, tmpfs for temp files
+- **🔑 JWT Authentication**: Access tokens (1h) + refresh tokens (24h)
+- **⏱️ Rate Limiting**: 5 req/min (auth), 100 req/min (general API)
+- **🔒 Account Lockout**: Brute force protection (5 attempts → 30min lockout)
+- **🔐 bcrypt Password Hashing**: Strength 12 (4096 rounds)
+- **🌐 CORS Protection**: Configurable allowed origins
+- **🛡️ OWASP Dependency Check**: Automated CVE scanning in CI/CD
+- **🐳 Docker Security**: Non-root containers, no-new-privileges
 
 ### Monitoring & Observability
-- **📊 Prometheus Metrics**: Application and JVM metrics exposed on `:9090/metrics`
+- **📊 Prometheus Metrics**: `/actuator/prometheus`
   - Authentication metrics (login attempts, lockouts)
-  - Business KPIs (purchases, registrations, revenue)
+  - Business KPIs (purchases, revenue, registrations)
   - Database performance (query latency, connection pool)
-  - Error tracking and system health
-- **📝 Structured JSON Logging**: Machine-readable logs for ELK, Splunk, Datadog
-  - Request/user context tracking via MDC
-  - Separate security audit trail
-  - Async logging for performance
+- **📝 JSON Structured Logging**: ELK/Splunk/Datadog ready
+- **🏥 Health Checks**: `/actuator/health` with database validation
 
 ### Database
 - **⚡ Performance Indexes**: 7 optimized indexes for critical queries
-- **🔄 Database Migrations**: Versioned schema changes with automated deployment
-- **📊 Connection Pool Monitoring**: Real-time pool size and active connection metrics
+- **🔄 Automated Migrations**: Versioned schema changes
+- **📊 HikariCP Connection Pool**: Real-time monitoring
 
-## 📋 Prerequisites
+---
 
-- **Java 21** (OpenJDK or Oracle JDK)
-- **Maven 3.9+**
-- **Docker** and **Docker Compose**
-- **Git**
+## 🛠️ Technology Stack
 
-## 🏗️ Quick Start
+### Backend
+- **Spring Boot 3.2.1** - REST API framework
+- **Spring Security** - JWT authentication & authorization
+- **Spring Data JDBC** - Database access with HikariCP
+- **Spring Boot Actuator** - Health checks & metrics
+- **Java 21** (LTS)
+
+### API & Documentation
+- **Swagger/OpenAPI 3** - Interactive API documentation
+- **Bean Validation** - Request/response validation
+
+### Database
+- **MySQL 8.0** - Production database
+- **H2** - In-memory testing database
+
+### Security & Monitoring
+- **JJWT 0.12.5** - JWT token generation/validation
+- **bcrypt** - Password hashing
+- **Prometheus** - Metrics collection
+- **Logback + Logstash Encoder** - Structured JSON logging
+
+### Build & Deployment
+- **Maven 3.9+** - Build tool
+- **Docker & Docker Compose** - Containerization
+- **JUnit 5 + Mockito** - Testing (549 tests, 80% coverage)
+
+---
+
+## 🏁 Quick Start
 
 ### 1. Clone the Repository
 
@@ -64,69 +88,114 @@ cd CouponSystemProject
 # Copy environment template
 cp .env.example .env
 
-# Edit .env and set your values
-# Required: DB_USER, DB_PASSWORD, MYSQL_ROOT_PASSWORD, ADMIN_EMAIL, ADMIN_PASSWORD
+# CRITICAL: Edit .env and set these values
+# - JWT_SECRET (minimum 32 characters - generate with: openssl rand -base64 32)
+# - DB_PASSWORD (strong database password)
+# - MYSQL_ROOT_PASSWORD (MySQL root password)
+# - ADMIN_PASSWORD (admin account password)
+nano .env
 ```
 
-### 3. Run Tests
+### 3. Start Services with Docker
 
 ```bash
-# Automated testing with database
-./test-local.sh
+# Build and start all services (app + MySQL)
+docker-compose up -d
 
-# Manual testing
-mvn test
+# Wait for services to be healthy (~30 seconds)
+docker-compose ps
 ```
 
-### 4. Build the Application
+### 4. Access the Application
+
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **REST API**: http://localhost:8080/api/v1
+- **Health Check**: http://localhost:8080/actuator/health
+- **Prometheus Metrics**: http://localhost:8080/actuator/prometheus
+
+### 5. Test the API
 
 ```bash
-# Build JAR with dependencies
-mvn clean package
+# Login as admin
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@admin.com",
+    "password": "admin",
+    "clientType": "admin"
+  }'
 
-# JAR location: target/CouponSystemProject-1.0-SNAPSHOT-jar-with-dependencies.jar
+# Returns: {"accessToken":"eyJ...","refreshToken":"eyJ...","userInfo":{...}}
 ```
 
-### 5. Run with Docker Compose
+---
 
-```bash
-# Start all services (app + MySQL)
-docker-compose up
+## 📚 REST API Documentation
 
-# Access application
-# App: http://localhost:8080
-# Metrics: http://localhost:9090/metrics
-```
+### Interactive Documentation
+**Swagger UI**: http://localhost:8080/swagger-ui.html
+- Test all endpoints directly in your browser
+- View request/response schemas
+- See authentication requirements
+
+### Complete API Reference
+**[docs/API.md](docs/API.md)** - Comprehensive documentation including:
+- All endpoints (Auth, Admin, Company, Customer, Public)
+- Request/response examples with curl commands
+- Error handling and status codes
+- Rate limiting details
+- Security best practices
+
+### Key Endpoints
+
+**Authentication:**
+- `POST /api/v1/auth/login` - Login with JWT tokens
+- `POST /api/v1/auth/refresh` - Refresh access token
+
+**Admin** (requires ADMIN role):
+- `GET /api/v1/admin/companies` - List all companies
+- `POST /api/v1/admin/companies` - Create company
+- `POST /api/v1/admin/companies/{email}/unlock` - Unlock account
+
+**Company** (requires COMPANY role):
+- `GET /api/v1/company/coupons` - List company's coupons
+- `POST /api/v1/company/coupons` - Create coupon
+
+**Customer** (requires CUSTOMER role):
+- `POST /api/v1/customer/coupons/{id}/purchase` - Purchase coupon
+- `GET /api/v1/customer/coupons` - View purchased coupons
+
+**Public** (no authentication):
+- `GET /api/v1/public/coupons` - Browse available coupons
+
+---
 
 ## 🧪 Testing
 
 ### Run All Tests
 
 ```bash
+# Using Docker (recommended - includes MySQL)
 ./test-local.sh
+
+# Or manually
+mvn test
 ```
 
-This script automatically:
-1. Starts MySQL via docker-compose
-2. Waits for database health check
-3. Runs all 280 tests
-4. Generates coverage report
-5. Cleans up containers
-
-### Test Coverage
-
-- **280 tests** covering all critical paths
-- **JaCoCo coverage reports**: `target/site/jacoco/index.html`
-- **Test categories**: Unit tests, DAO integration tests, facade tests
+**Test Suite:**
+- **549 comprehensive tests** covering all layers
+- **80% instruction coverage**, 75% branch coverage
+- Unit tests, integration tests, controller tests
+- JaCoCo coverage report: `target/site/jacoco/index.html`
 
 ### Run Specific Tests
 
 ```bash
-# Start database
+# Start test database
 docker-compose up -d mysql
 
 # Run specific test class
-mvn test -Dtest=LoginManagerTest
+mvn test -Dtest=AuthControllerTest
 
 # Run specific test method
 mvn test -Dtest=LoginManagerTest#testLogin_AsAdmin
@@ -135,235 +204,199 @@ mvn test -Dtest=LoginManagerTest#testLogin_AsAdmin
 docker-compose down -v
 ```
 
-See [TESTING.md](TESTING.md) for detailed testing guide.
+---
 
 ## 📊 Monitoring
 
+### Health Checks
+
+```bash
+# Application health (includes database check)
+curl http://localhost:8080/actuator/health
+```
+
 ### Prometheus Metrics
 
-Access metrics at `http://localhost:9090/metrics`
-
-**Available metrics:**
-- `coupon_system_login_attempts_total` - Login attempts by type and status
-- `coupon_system_account_lockouts_total` - Account lockouts by client type
-- `coupon_system_locked_accounts_current` - Currently locked accounts
-- `coupon_system_coupon_purchases_total` - Coupon purchases by category
-- `coupon_system_db_query_duration_seconds` - Database query performance
-- `coupon_system_errors_total` - Application errors by type
-- Standard JVM metrics (memory, GC, threads)
-
-See [PROMETHEUS_METRICS_GUIDE.md](PROMETHEUS_METRICS_GUIDE.md) for complete metrics documentation and Grafana dashboard queries.
-
-### Structured Logging
-
-**Production logging** (JSON format):
 ```bash
-docker-compose up  # Uses logback-json.xml automatically
+# All metrics
+curl http://localhost:8080/actuator/prometheus
+
+# Key metrics available:
+# - coupon_system_login_attempts_total
+# - coupon_system_account_lockouts_total
+# - coupon_system_coupon_purchases_total
+# - hikaricp_connections (connection pool)
+# - jvm_memory_used_bytes (JVM metrics)
 ```
 
-**Development logging** (plain text):
-```bash
-java -jar app.jar  # Uses logback.xml
-```
+**Detailed guides:**
+- [PROMETHEUS_METRICS_GUIDE.md](PROMETHEUS_METRICS_GUIDE.md) - Metrics reference & Grafana dashboards
+- [STRUCTURED_LOGGING_GUIDE.md](STRUCTURED_LOGGING_GUIDE.md) - JSON logging & log analysis
 
-**Log files:**
-- `logs/coupon-system-json.log` - Application logs (30-day retention, 2GB max)
-- `logs/security-json.log` - Security audit trail (90-day retention, 5GB max)
-
-See [STRUCTURED_LOGGING_GUIDE.md](STRUCTURED_LOGGING_GUIDE.md) for logging best practices and query examples.
-
-## 🗄️ Database
-
-### Schema Management
-
-**Main schema**: `src/main/resources/couponSystemSchemaToImport.sql`
-**Migrations**: `src/main/resources/db-migrations/`
-
-Migrations run automatically on container startup (executed alphabetically):
-1. `01-schema.sql` - Base schema (tables, relationships, data)
-2. `02-add-lockout-columns.sql` - Account lockout feature + performance indexes
-
-### Performance Indexes
-
-7 optimized indexes for common queries:
-- Company name lookups (`idx_companies_name`)
-- Expired coupon cleanup (`idx_coupons_end_date`)
-- Category-filtered queries (`idx_coupons_company_category`)
-- Price-range queries (`idx_coupons_company_price`)
-- Duplicate detection (`idx_coupons_title_company`)
-- Account lockout checks (`idx_companies_account_locked`, `idx_customers_account_locked`)
-
-See [DATABASE_INDEXING_ANALYSIS.md](DATABASE_INDEXING_ANALYSIS.md) for query optimization details.
-
-## 🔒 Security
-
-### Account Lockout
-
-**Configuration** (via `config.properties`):
-```properties
-account.lockout.max_attempts=5
-account.lockout.duration_minutes=30
-account.lockout.admin_enabled=false
-```
-
-**Behavior:**
-- Lock account after 5 failed login attempts
-- Auto-unlock after 30 minutes
-- Admin can manually unlock via `AdminFacade`
-- All lockout events logged to security audit trail
-
-### Password Security
-
-- **bcrypt** hashing with strength 12 (2^12 = 4096 rounds)
-- Salted hashing (unique salt per password)
-- Constant-time comparison to prevent timing attacks
-
-### OWASP Dependency Check
-
-**Run security scan:**
-```bash
-# Enable OWASP check (skipped by default for speed)
-mvn dependency-check:check -Dowasp.skip=false
-
-# View report
-open target/dependency-check-report.html
-```
-
-**Get NVD API Key (highly recommended):**
-1. Request free API key: https://nvd.nist.gov/developers/request-an-api-key
-2. Set environment variable:
-   ```bash
-   export NVD_API_KEY=your-api-key-here
-   ```
-3. Without API key, initial download takes 30-60 minutes (325k+ records)
-4. With API key, downloads complete in 2-3 minutes
-
-**CI/CD:**
-- Automatic scanning on every push
-- Add `NVD_API_KEY` to GitHub repository secrets
-- Reports uploaded as workflow artifacts
+---
 
 ## 🏗️ Architecture
 
 ### Project Structure
 
 ```
-src/
-├── main/
-│   ├── java/com/jhf/coupon/
-│   │   ├── backend/
-│   │   │   ├── beans/          # Data models (Company, Customer, Coupon)
-│   │   │   ├── exceptions/     # Custom exceptions
-│   │   │   ├── facade/         # Business logic layer
-│   │   │   ├── login/          # Authentication & session management
-│   │   │   ├── logging/        # Structured logging utilities
-│   │   │   ├── metrics/        # Prometheus metrics
-│   │   │   ├── periodicJob/    # Background jobs (cleanup)
-│   │   │   ├── security/       # Password hashing, lockout config
-│   │   │   └── validation/     # Input validation
-│   │   ├── health/             # Health checks
-│   │   └── sql/
-│   │       ├── dao/            # Data Access Objects
-│   │       └── utils/          # Connection pool, H2 test DB
-│   └── resources/
-│       ├── config.properties   # Application configuration
-│       ├── couponSystemSchemaToImport.sql
-│       ├── db-migrations/      # Database migrations
-│       ├── logback.xml         # Development logging
-│       └── logback-json.xml    # Production JSON logging
-└── test/                       # 280 comprehensive tests
+src/main/java/com/jhf/coupon/
+├── CouponSystemApplication.java    # Spring Boot main class
+├── api/
+│   ├── controller/                 # REST controllers (Auth, Admin, Company, Customer)
+│   ├── dto/                        # Request/Response DTOs with validation
+│   ├── exception/                  # Global exception handler
+│   └── filter/                     # Request/response logging
+├── config/                         # Spring configuration (OpenAPI, CORS, Rate Limiting)
+├── security/                       # JWT authentication & filters
+├── service/                        # Business services (Authentication)
+├── backend/
+│   ├── facade/                     # Business logic layer (Admin, Company, Customer)
+│   ├── beans/                      # Domain models (Company, Customer, Coupon)
+│   ├── exceptions/                 # Custom business exceptions
+│   ├── login/                      # Login manager & client types
+│   ├── metrics/                    # Prometheus metrics
+│   ├── periodicJob/                # Scheduled tasks (daily cleanup)
+│   ├── security/                   # Password hashing, lockout config
+│   └── validation/                 # Input validation
+└── sql/
+    ├── dao/                        # Data Access Objects (Spring-managed)
+    └── utils/                      # H2 test database utilities
+
+src/main/resources/
+├── application.properties          # Spring Boot configuration
+├── db-migrations/                  # Database migration scripts
+├── logback.xml                     # Development logging
+└── logback-json.xml               # Production JSON logging
 ```
 
-### Technology Stack
+### Architecture Layers
 
-- **Java 21** (LTS)
-- **MySQL 8.0** (production database)
-- **H2** (in-memory testing)
-- **Maven** (build tool)
-- **Docker** (containerization)
-- **Lombok** (boilerplate reduction)
-- **bcrypt** (password hashing)
-- **Prometheus** (metrics)
-- **Logback + Logstash** (structured logging)
-- **JUnit 5 + Mockito** (testing)
-
-## 📚 Documentation
-
-Comprehensive guides available:
-
-- **[TESTING.md](TESTING.md)** - Testing guide and best practices
-- **[PROMETHEUS_METRICS_GUIDE.md](PROMETHEUS_METRICS_GUIDE.md)** - Metrics, queries, and dashboards
-- **[STRUCTURED_LOGGING_GUIDE.md](STRUCTURED_LOGGING_GUIDE.md)** - JSON logging and log analysis
-- **[DATABASE_INDEXING_ANALYSIS.md](DATABASE_INDEXING_ANALYSIS.md)** - Query optimization guide
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Required environment variables (set in `.env`):
-
-```env
-# Database
-DB_URL=jdbc:mysql://mysql:3306/couponsystem?serverTimezone=UTC
-DB_USER=your_db_user
-DB_PASSWORD=your_secure_password
-
-# MySQL Root
-MYSQL_ROOT_PASSWORD=your_root_password
-
-# Admin Account
-ADMIN_EMAIL=admin@yourcompany.com
-ADMIN_PASSWORD=your_admin_password_or_bcrypt_hash
+```
+REST Controllers (@RestController)
+    ↓ DTOs with validation
+Authentication Service (JWT)
+    ↓
+Facades (@Service) - Business Logic
+    ↓
+DAOs (@Repository) - Data Access
+    ↓
+HikariCP DataSource
+    ↓
+MySQL Database
 ```
 
-### Application Configuration
-
-Edit `src/main/resources/config.properties`:
-
-```properties
-# Database Connection Pool
-db.pool.min_idle=5
-db.pool.max_pool_size=20
-db.pool.connection_timeout=30000
-
-# Account Lockout
-account.lockout.max_attempts=5
-account.lockout.duration_minutes=30
-account.lockout.admin_enabled=false
-
-# Password Security
-password.bcrypt.strength=12
-```
+---
 
 ## 🚀 Deployment
 
-### Production Deployment
+### Local Development
 
 ```bash
-# Build production JAR
+# Build JAR
 mvn clean package
 
-# Start with docker-compose
+# JAR location: target/CouponSystemProject-1.0-SNAPSHOT.jar
+
+# Run locally (requires MySQL)
+java -jar target/CouponSystemProject-1.0-SNAPSHOT.jar
+```
+
+### Docker Production Deployment
+
+```bash
+# Build and start
 docker-compose up -d
 
 # View logs
 docker-compose logs -f app
 
-# Check health
-curl http://localhost:8080/health
-curl http://localhost:9090/metrics
+# Stop services
+docker-compose down
 ```
 
-### JVM Configuration
+### Production Checklist
 
-Production JVM settings (configured in Dockerfile):
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for complete production deployment guide including:
+- Environment configuration (40+ variables)
+- JWT secret generation
+- Database setup and backups
+- SSL/TLS configuration
+- Security hardening
+- Monitoring setup
+- Scaling and performance tuning
+
+---
+
+## 🗄️ Database
+
+### Schema Management
+
+**Automated migrations** run on container startup:
+1. `db-migrations/01-schema.sql` - Base schema (tables, relationships, seed data)
+2. `db-migrations/02-add-lockout-columns.sql` - Account lockout + performance indexes
+
+### Performance Indexes
+
+7 optimized indexes for common queries:
+- `idx_companies_name` - Company name lookups
+- `idx_coupons_end_date` - Expired coupon cleanup
+- `idx_coupons_company_category` - Category filtering
+- `idx_coupons_company_price` - Price-range queries
+- `idx_coupons_title_company` - Duplicate detection
+- `idx_companies_account_locked`, `idx_customers_account_locked` - Lockout checks
+
+**See:** [DATABASE_INDEXING_ANALYSIS.md](DATABASE_INDEXING_ANALYSIS.md) for query optimization details
+
+---
+
+## 🔒 Security
+
+### JWT Authentication
+
+- **Access Tokens**: 1 hour expiration, contains user ID and role
+- **Refresh Tokens**: 24 hour expiration, used to obtain new access tokens
+- **Algorithm**: HMAC SHA-256 (HS256)
+- **Secret**: Configurable via `JWT_SECRET` environment variable (minimum 32 characters)
+
+### Account Lockout
+
+- **Trigger**: 5 failed login attempts
+- **Duration**: 30 minutes (configurable)
+- **Admin accounts**: Lockout disabled by default
+- **Manual unlock**: Admin can unlock via API
+
+### Password Security
+
+- **Algorithm**: bcrypt with strength 12 (4096 rounds)
+- **Salted hashing**: Unique salt per password
+- **Timing attack prevention**: Constant-time comparison
+
+### OWASP Dependency Check
+
 ```bash
--XX:+UseContainerSupport       # Respect container memory limits
--XX:MaxRAMPercentage=75.0      # Use up to 75% of container memory
--XX:+UseG1GC                   # G1 garbage collector
--XX:+HeapDumpOnOutOfMemoryError
--Dlogback.configurationFile=logback-json.xml
+# Run security scan
+mvn dependency-check:check -Dowasp.skip=false
+
+# View report
+open target/dependency-check-report.html
 ```
+
+CI/CD automatically scans on every push. Set `NVD_API_KEY` in GitHub secrets for faster scans.
+
+---
+
+## 📖 Documentation
+
+- **[docs/API.md](docs/API.md)** - Complete REST API reference with examples
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** - Production deployment guide
+- **[TESTING.md](TESTING.md)** - Testing guide and best practices
+- **[PROMETHEUS_METRICS_GUIDE.md](PROMETHEUS_METRICS_GUIDE.md)** - Metrics reference & Grafana dashboards
+- **[STRUCTURED_LOGGING_GUIDE.md](STRUCTURED_LOGGING_GUIDE.md)** - JSON logging & log analysis
+- **[DATABASE_INDEXING_ANALYSIS.md](DATABASE_INDEXING_ANALYSIS.md)** - Query optimization guide
+- **[Swagger UI](http://localhost:8080/swagger-ui.html)** - Interactive API documentation
+
+---
 
 ## 🤝 Contributing
 
@@ -374,18 +407,24 @@ Production JVM settings (configured in Dockerfile):
 5. Open a Pull Request
 
 **Before submitting:**
-- All tests must pass (`./test-local.sh`)
+- All 549 tests must pass (`mvn test`)
 - Code coverage should not decrease
 - OWASP scan must pass (no high-severity vulnerabilities)
 - Follow existing code style and conventions
+
+---
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+---
+
 ## 👥 Authors
 
-- **JHF FullStack Bootcamp Team**
+**JHF FullStack Bootcamp Team**
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -395,4 +434,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ using Java 21 and modern DevOps practices**
+**Built with ❤️ using Spring Boot 3, Java 21, and modern DevOps practices**

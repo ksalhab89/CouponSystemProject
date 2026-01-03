@@ -12,7 +12,8 @@ jobs:
       DB_PASSWORD: testpass
       MYSQL_ROOT_PASSWORD: rootpass
       ADMIN_EMAIL: admin@admin.com
-      ADMIN_PASSWORD: admin
+      # bcrypt hash of "admin" (same as test configuration)
+      ADMIN_PASSWORD: $2a$12$76PAg.kgl/VsAQd9bJZNZ.NH4e99JlDWW0uX4Irn5y6SMqdEOXoaq
 
     steps:
     - uses: actions/checkout@v4
