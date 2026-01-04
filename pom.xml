@@ -27,6 +27,27 @@
         <owasp.skip>true</owasp.skip>
     </properties>
 
+    <!-- Dependency Management - Override transitive dependency versions for CVE fixes -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Protobuf - Override vulnerable transitive dependency from MySQL connector -->
+            <!-- Fixes CVE-2024-7254 (CVSS 8.7) -->
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>4.31.1</version>
+            </dependency>
+
+            <!-- Apache Commons Lang3 - Override vulnerable transitive dependency from swagger-core -->
+            <!-- Fixes CVE-2025-48924 (CVSS 5.3) - Uncontrolled Recursion vulnerability -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.18.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <plugins>
             <!-- Spring Boot Maven Plugin -->
@@ -233,21 +254,7 @@
             <version>8.4.0</version>
         </dependency>
 
-        <!-- Protobuf - Override vulnerable transitive dependency from MySQL connector -->
-        <!-- Fixes CVE-2024-7254 (CVSS 8.7) -->
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>4.31.1</version>
-        </dependency>
-
-        <!-- Apache Commons Lang3 - Override vulnerable transitive dependency from swagger-core -->
-        <!-- Fixes CVE-2025-48924 (CVSS 5.3) - Uncontrolled Recursion vulnerability -->
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.18.0</version>
-        </dependency>
+        <!-- Transitive dependency versions (protobuf, commons-lang3) overridden in <dependencyManagement> -->
 
         <dependency>
             <groupId>org.jetbrains</groupId>
