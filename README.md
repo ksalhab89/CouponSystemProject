@@ -2,7 +2,7 @@
 
 [![Java CI](https://github.com/ksalhab89/CouponSystemProject/workflows/Java%20CI/badge.svg)](https://github.com/ksalhab89/CouponSystemProject/actions)
 [![Java Version](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A production-ready **Spring Boot REST API** for coupon management with **JWT authentication**, enterprise-grade security, and comprehensive monitoring. Built for the JHF FullStack Bootcamp.
@@ -46,7 +46,7 @@ A production-ready **Spring Boot REST API** for coupon management with **JWT aut
 ## 🛠️ Technology Stack
 
 ### Backend
-- **Spring Boot 3.2.1** - REST API framework
+- **Spring Boot 3.5.9** - REST API framework
 - **Spring Security** - JWT authentication & authorization
 - **Spring Data JDBC** - Database access with HikariCP
 - **Spring Boot Actuator** - Health checks & metrics
@@ -69,7 +69,7 @@ A production-ready **Spring Boot REST API** for coupon management with **JWT aut
 ### Build & Deployment
 - **Maven 3.9+** - Build tool
 - **Docker & Docker Compose** - Containerization
-- **JUnit 5 + Mockito** - Testing (549 tests, 80% coverage)
+- **JUnit 5 + Mockito** - Testing (550 tests, 80% coverage)
 
 ---
 
@@ -183,7 +183,7 @@ mvn test
 ```
 
 **Test Suite:**
-- **549 comprehensive tests** covering all layers
+- **550 comprehensive tests** covering all layers
 - **80% instruction coverage**, 75% branch coverage
 - Unit tests, integration tests, controller tests
 - JaCoCo coverage report: `target/site/jacoco/index.html`
@@ -407,7 +407,7 @@ CI/CD automatically scans on every push. Set `NVD_API_KEY` in GitHub secrets for
 5. Open a Pull Request
 
 **Before submitting:**
-- All 549 tests must pass (`mvn test`)
+- All 550 tests must pass (`mvn test`)
 - Code coverage should not decrease
 - OWASP scan must pass (no high-severity vulnerabilities)
 - Follow existing code style and conventions

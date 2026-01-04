@@ -147,14 +147,24 @@ class PasswordHasherTest {
     }
 
     @Test
-    @DisplayName("Hash password should handle very long passwords")
+    @DisplayName("Hash password should handle long passwords up to bcrypt's 72 byte limit")
     void testHashPassword_WithLongPassword() {
-        String longPassword = "a".repeat(200); // 200 character password
+        String longPassword = "a".repeat(72); // 72 character password (bcrypt max)
         String hash = PasswordHasher.hashPassword(longPassword);
 
-        assertNotNull(hash, "Should successfully hash very long password");
+        assertNotNull(hash, "Should successfully hash long password (72 bytes)");
         assertTrue(PasswordHasher.verifyPassword(longPassword, hash),
-                "Should verify very long password");
+                "Should verify long password (72 bytes)");
+    }
+
+    @Test
+    @DisplayName("Hash password should reject passwords exceeding bcrypt's 72 byte limit")
+    void testHashPassword_WithTooLongPassword() {
+        String tooLongPassword = "a".repeat(73); // Exceeds bcrypt's 72 byte limit
+
+        assertThrows(IllegalArgumentException.class,
+                () -> PasswordHasher.hashPassword(tooLongPassword),
+                "Should throw IllegalArgumentException for passwords > 72 bytes");
     }
 
     @Test
