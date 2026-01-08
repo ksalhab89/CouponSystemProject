@@ -151,7 +151,68 @@ Need to find a **secure** way to handle Dependabot PRs without:
 - ❌ Exposing secrets in plaintext
 - ❌ Using fallback values that compromise security
 
-### Research Areas to Explore
+---
+
+## ✅ SOLUTION FOUND (2026-01-08)
+
+**Status**: Ready to implement (requires manual GitHub UI setup)
+
+### The Solution: Dependabot Secrets Namespace
+
+**Key Discovery**: GitHub provides a separate "Dependabot secrets" namespace specifically for this use case. Dependabot PRs can ONLY access Dependabot secrets, not GitHub Actions secrets (security feature).
+
+### How It Works
+
+1. **Dual Secret Storage**: Store the same secrets in BOTH namespaces:
+   - **GitHub Actions secrets** (for regular PRs)
+   - **Dependabot secrets** (for Dependabot PRs)
+
+2. **Automatic Selection**: GitHub automatically uses the correct secrets based on the triggering actor:
+   - Regular PRs → Uses GitHub Actions secrets
+   - Dependabot PRs → Uses Dependabot secrets
+
+3. **No Code Changes**: Workflow file stays exactly as is! No conditional logic needed.
+
+### Implementation Steps
+
+Add these 3 secrets to the **Dependabot secrets** namespace:
+
+1. Go to: **Settings** → **Security** → **Secrets and variables** → **Dependabot**
+2. Add the following secrets (same names, same values as Actions secrets):
+   - `TEST_DB_PASSWORD` = `testpass`
+   - `TEST_MYSQL_ROOT_PASSWORD` = `rootpass`
+   - `ADMIN_PASSWORD_HASH` = (bcrypt hash of "admin")
+
+### Why This Is Secure ✅
+
+- ✅ Secrets are isolated in separate namespace
+- ✅ Dependabot can't access other Actions secrets
+- ✅ Read-only `GITHUB_TOKEN` still enforced
+- ✅ No secrets in code or workflow files
+- ✅ Full audit trail maintained
+- ✅ Test credentials only (not production)
+
+### Expected Results
+
+After adding Dependabot secrets:
+- ✅ MySQL container will start successfully
+- ✅ All 614 tests will pass
+- ✅ Full integration test coverage maintained
+- ✅ All 10 Dependabot PRs should pass
+
+### Documentation
+
+See **`DEPENDABOT_SECRETS_SETUP.md`** for complete step-by-step instructions, testing procedure, and FAQ.
+
+### References
+
+- [GitHub Docs: Dependabot Secrets](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-encrypted-secrets-for-dependabot)
+- [GitHub Changelog: Dependabot Receives Dependabot Secrets](https://github.blog/changelog/2021-11-30-github-actions-workflows-triggered-by-dependabot-receive-dependabot-secrets/)
+- [Troubleshooting Dependabot on GitHub Actions](https://docs.github.com/en/code-security/dependabot/troubleshooting-dependabot/troubleshooting-dependabot-on-github-actions)
+
+---
+
+### Research Areas to Explore (KEPT FOR REFERENCE)
 
 1. **Dependabot Secrets**
    - GitHub has a special `dependabot` secrets namespace
@@ -197,11 +258,17 @@ Need to find a **secure** way to handle Dependabot PRs without:
 
 ## Remaining Work
 
-### Priority 1: Fix Dependabot PRs (URGENT)
-- Research secure solutions (see "Research Areas" above)
-- Implement solution that maintains security
-- Test with one Dependabot PR first
-- Apply to all 10 PRs once validated
+### Priority 1: Fix Dependabot PRs (URGENT) - ✅ SOLUTION READY
+**Status**: Solution identified, ready to implement (manual setup required)
+
+**Action Required**:
+1. ✅ Research completed - Dependabot Secrets solution found
+2. ⏭️ **Next Step**: Add 3 secrets to Dependabot namespace (see `DEPENDABOT_SECRETS_SETUP.md`)
+3. ⏭️ Test with PR #16 (Mockito) first
+4. ⏭️ Rebase all 10 PRs to trigger re-runs
+5. ⏭️ Verify all PRs pass
+
+**Estimated Time**: 10 minutes setup + 10 minutes testing
 
 ### Priority 2: Continue Coverage Improvements
 **Target**: 95-100% overall coverage (currently 89%)
