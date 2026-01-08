@@ -44,9 +44,9 @@ jobs:
         name: coverage-report
         path: target/site/jacoco/
 
-    # Run OWASP security scan on PRs and main branch
+    # Run OWASP security scan on main branch only (not on PRs)
     - name: Free up disk space
-      if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main'
       run: |
         sudo rm -rf /tmp/*
         sudo apt-get clean
@@ -56,7 +56,7 @@ jobs:
         df -h
 
     - name: Cache OWASP Dependency-Check data
-      if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main'
       uses: actions/cache@v4
       with:
         path: dependency-check-data
@@ -66,7 +66,7 @@ jobs:
           ${{ runner.os }}-owasp-data-
 
     - name: OWASP Dependency Check
-      if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main'
       run: |
         mvn dependency-check:check \
           -Dowasp.skip=false \
@@ -76,7 +76,7 @@ jobs:
 
     - name: Upload OWASP report
       uses: actions/upload-artifact@v4
-      if: always() && (github.event_name == 'pull_request' || github.ref == 'refs/heads/main')
+      if: always() && github.ref == 'refs/heads/main'
       with:
         name: owasp-report
         path: target/dependency-check-report.html
