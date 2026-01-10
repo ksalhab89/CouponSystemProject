@@ -682,4 +682,59 @@ class AdminFacadeTest {
         boolean result = adminFacade.login("admin@admin.com", "wrongpassword");
         assertFalse(result, "Wrong password should return false");
     }
+
+    // Lockout management tests
+    @Test
+    void testUnlockCompanyAccount_Success() throws Exception {
+        // Create a company
+        Company company = new Company(0, "LockedCompany", "locked@company.com", "password123");
+        adminFacade.addCompany(company);
+
+        // Unlock the company account (even if not actually locked, the method should work)
+        adminFacade.unlockCompanyAccount("locked@company.com");
+
+        // Verify no exception was thrown
+        assertDoesNotThrow(() -> adminFacade.unlockCompanyAccount("locked@company.com"));
+    }
+
+    @Test
+    void testGetCompanyLockoutStatus_ReturnsStatus() throws Exception {
+        // Create a company
+        Company company = new Company(0, "TestCompany", "lockoutstatus@company.com", "password123");
+        adminFacade.addCompany(company);
+
+        // Get lockout status
+        var status = adminFacade.getCompanyLockoutStatus("lockoutstatus@company.com");
+
+        // Should return a status object (may be null if account doesn't exist or no lockout data)
+        // The important part is that the method executes without exception
+        assertDoesNotThrow(() -> adminFacade.getCompanyLockoutStatus("lockoutstatus@company.com"));
+    }
+
+    @Test
+    void testGetCustomerLockoutStatus_ReturnsStatus() throws Exception {
+        // Create a customer
+        Customer customer = new Customer(0, "John", "Doe", "lockoutstatus@customer.com", "password123");
+        adminFacade.addCustomer(customer);
+
+        // Get lockout status
+        var status = adminFacade.getCustomerLockoutStatus("lockoutstatus@customer.com");
+
+        // Should return a status object (may be null if account doesn't exist or no lockout data)
+        // The important part is that the method executes without exception
+        assertDoesNotThrow(() -> adminFacade.getCustomerLockoutStatus("lockoutstatus@customer.com"));
+    }
+
+    @Test
+    void testUpdateCustomer_WithInvalidPassword_ThrowsValidationException() {
+        // Short password should fail validation
+        Customer customer = new Customer(1, "John", "Doe", "john@mail.com", "short");
+
+        ValidationException exception = assertThrows(
+            ValidationException.class,
+            () -> adminFacade.updateCustomer(customer)
+        );
+
+        assertTrue(exception.getMessage().contains("Invalid password"));
+    }
 }

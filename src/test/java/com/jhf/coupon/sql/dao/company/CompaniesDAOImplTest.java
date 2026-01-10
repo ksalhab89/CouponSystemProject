@@ -71,6 +71,17 @@ class CompaniesDAOImplTest {
     }
 
     @Test
+    void testGetCompanyByEmail_WhenNotExists_ThrowsException() {
+        // Test getting company by non-existent email
+        CompanyNotFoundException exception = assertThrows(
+            CompanyNotFoundException.class,
+            () -> companiesDAO.getCompanyByEmail("nonexistent@test.com")
+        );
+
+        assertTrue(exception.getMessage().contains("nonexistent@test.com"));
+    }
+
+    @Test
     void testAddCompany_Success() throws Exception {
         // Create a new company
         Company company = new Company(0, "TestCompany", "test@company.com", "password123");
@@ -224,5 +235,11 @@ class CompaniesDAOImplTest {
         );
 
         assertTrue(exception.getMessage().contains("999"));
+    }
+
+    @Test
+    void testIsCompanyEmailExists_WhenNotExists_ReturnsFalse() throws Exception {
+        boolean result = companiesDAO.isCompanyEmailExists("nonexistent@test.com");
+        assertFalse(result);
     }
 }

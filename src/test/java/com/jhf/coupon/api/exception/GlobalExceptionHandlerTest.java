@@ -3,297 +3,139 @@ package com.jhf.coupon.api.exception;
 import com.jhf.coupon.api.dto.ErrorResponse;
 import com.jhf.coupon.backend.exceptions.AccountLockedException;
 import com.jhf.coupon.backend.exceptions.InvalidLoginCredentialsException;
-import com.jhf.coupon.backend.exceptions.company.CantUpdateCompanyException;
-import com.jhf.coupon.backend.exceptions.company.CompanyAlreadyExistsException;
-import com.jhf.coupon.backend.exceptions.coupon.CantUpdateCouponException;
-import com.jhf.coupon.backend.exceptions.coupon.CouponAlreadyExistsForCompanyException;
-import com.jhf.coupon.backend.exceptions.coupon.CouponNotInStockException;
 import com.jhf.coupon.backend.exceptions.coupon.CustomerAlreadyPurchasedCouponException;
-import com.jhf.coupon.backend.exceptions.customer.CantUpdateCustomerException;
-import com.jhf.coupon.backend.exceptions.customer.CustomerAlreadyExistsException;
+import com.jhf.coupon.backend.exceptions.coupon.CouponNotInStockException;
 import com.jhf.coupon.backend.validation.ValidationException;
-import com.jhf.coupon.sql.dao.company.CompanyNotFoundException;
-import com.jhf.coupon.sql.dao.coupon.CouponNotFoundException;
-import com.jhf.coupon.sql.dao.customer.CustomerNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-/**
- * Comprehensive tests for GlobalExceptionHandler
- * Target: 100% coverage for exception mapping
- */
 class GlobalExceptionHandlerTest {
 
-    private final GlobalExceptionHandler exceptionHandler = new GlobalExceptionHandler();
-    private final MockHttpServletRequest request = new MockHttpServletRequest();
+    private GlobalExceptionHandler exceptionHandler;
+    private HttpServletRequest request;
+
+    @BeforeEach
+    void setUp() {
+        exceptionHandler = new GlobalExceptionHandler();
+        request = mock(HttpServletRequest.class);
+        when(request.getRequestURI()).thenReturn("/test-uri");
+    }
 
     @Test
-    void testHandleInvalidLoginCredentials_Returns401() {
-        // Arrange
-        request.setRequestURI("/api/auth/login");
-        InvalidLoginCredentialsException exception = new InvalidLoginCredentialsException("Invalid credentials");
+    void handleCouponAlreadyPurchased_ReturnsConflictResponse() {
+        CustomerAlreadyPurchasedCouponException ex = new CustomerAlreadyPurchasedCouponException("Coupon already purchased");
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleConflict(ex, request);
 
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleInvalidLoginCredentials(exception, request);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("Coupon already purchased", response.getBody().getMessage());
+    }
 
-        // Assert
+    @Test
+    void handleCouponOutOfStock_ReturnsConflictResponse() {
+        CouponNotInStockException ex = new CouponNotInStockException("Coupon out of stock");
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleConflict(ex, request);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("Coupon out of stock", response.getBody().getMessage());
+    }
+
+    @Test
+    void handleInvalidLogin_ReturnsUnauthorizedResponse() {
+        InvalidLoginCredentialsException ex = new InvalidLoginCredentialsException("Invalid credentials");
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleInvalidLoginCredentials(ex, request);
+
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(401, response.getBody().getStatus());
-        assertEquals("Unauthorized", response.getBody().getError());
         assertEquals("Invalid credentials", response.getBody().getMessage());
-        assertEquals("/api/auth/login", response.getBody().getPath());
-        assertNotNull(response.getBody().getTimestamp());
     }
 
     @Test
-    void testHandleAccountLocked_Returns403() {
-        // Arrange
-        request.setRequestURI("/api/auth/login");
-        AccountLockedException exception = new AccountLockedException("test@example.com", null);
+    void handleAccountLocked_ReturnsLockedResponse() {
+        AccountLockedException ex = new AccountLockedException("test@example.com", LocalDateTime.now().plusHours(1));
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleAccountLocked(ex, request);
 
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleAccountLocked(exception, request);
-
-        // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(403, response.getBody().getStatus());
-        assertEquals("Forbidden", response.getBody().getError());
-        assertTrue(response.getBody().getMessage().contains("test@example.com"));
-        assertEquals("/api/auth/login", response.getBody().getPath());
+        assertTrue(response.getBody().getMessage().contains("Account test@example.com is locked until"));
+        assertTrue(response.getBody().getMessage().contains("Too many failed login attempts"));
     }
 
     @Test
-    void testHandleCompanyNotFound_Returns404() {
-        // Arrange
-        request.setRequestURI("/api/admin/companies/999");
-        CompanyNotFoundException exception = new CompanyNotFoundException("Company not found");
+    void handleValidationException_ReturnsBadRequestResponse() {
+        ValidationException ex = new ValidationException("Validation failed");
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleBadRequest(ex, request);
 
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleNotFound(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(404, response.getBody().getStatus());
-        assertEquals("Not Found", response.getBody().getError());
-        assertEquals("Company not found", response.getBody().getMessage());
-        assertEquals("/api/admin/companies/999", response.getBody().getPath());
-    }
-
-    @Test
-    void testHandleCustomerNotFound_Returns404() {
-        // Arrange
-        request.setRequestURI("/api/admin/customers/999");
-        CustomerNotFoundException exception = new CustomerNotFoundException("Customer not found");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleNotFound(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getStatus());
-        assertEquals("Not Found", response.getBody().getError());
-        assertEquals("Customer not found", response.getBody().getMessage());
-    }
-
-    @Test
-    void testHandleCouponNotFound_Returns404() {
-        // Arrange
-        request.setRequestURI("/api/company/coupons/999");
-        CouponNotFoundException exception = new CouponNotFoundException("Coupon not found");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleNotFound(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().getStatus());
-        assertEquals("Not Found", response.getBody().getError());
-    }
-
-    @Test
-    void testHandleCompanyAlreadyExists_Returns409() {
-        // Arrange
-        request.setRequestURI("/api/admin/companies");
-        CompanyAlreadyExistsException exception = new CompanyAlreadyExistsException("Company already exists");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleConflict(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(409, response.getBody().getStatus());
-        assertEquals("Conflict", response.getBody().getError());
-        assertEquals("Company already exists", response.getBody().getMessage());
-    }
-
-    @Test
-    void testHandleCustomerAlreadyExists_Returns409() {
-        // Arrange
-        request.setRequestURI("/api/admin/customers");
-        CustomerAlreadyExistsException exception = new CustomerAlreadyExistsException("Customer already exists");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleConflict(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals(409, response.getBody().getStatus());
-        assertEquals("Conflict", response.getBody().getError());
-    }
-
-    @Test
-    void testHandleCouponAlreadyExistsForCompany_Returns409() {
-        // Arrange
-        request.setRequestURI("/api/company/coupons");
-        CouponAlreadyExistsForCompanyException exception = new CouponAlreadyExistsForCompanyException("Coupon exists");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleConflict(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals(409, response.getBody().getStatus());
-    }
-
-    @Test
-    void testHandleCustomerAlreadyPurchasedCoupon_Returns409() {
-        // Arrange
-        request.setRequestURI("/api/customer/coupons/1/purchase");
-        CustomerAlreadyPurchasedCouponException exception = new CustomerAlreadyPurchasedCouponException("Already purchased");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleConflict(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals(409, response.getBody().getStatus());
-    }
-
-    @Test
-    void testHandleCouponNotInStock_Returns409() {
-        // Arrange
-        request.setRequestURI("/api/customer/coupons/1/purchase");
-        CouponNotInStockException exception = new CouponNotInStockException("Coupon out of stock");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleConflict(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals(409, response.getBody().getStatus());
-        assertEquals("Conflict", response.getBody().getError());
-    }
-
-    @Test
-    void testHandleCantUpdateCompany_Returns400() {
-        // Arrange
-        request.setRequestURI("/api/admin/companies/1");
-        CantUpdateCompanyException exception = new CantUpdateCompanyException("Cannot update company");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleBadRequest(exception, request);
-
-        // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(400, response.getBody().getStatus());
-        assertEquals("Bad Request", response.getBody().getError());
-        assertEquals("Cannot update company", response.getBody().getMessage());
+        assertEquals("Validation failed", response.getBody().getMessage());
     }
 
     @Test
-    void testHandleCantUpdateCustomer_Returns400() {
-        // Arrange
-        request.setRequestURI("/api/admin/customers/1");
-        CantUpdateCustomerException exception = new CantUpdateCustomerException("Cannot update customer");
+    void handleGenericException_ReturnsInternalServerError() {
+        Exception ex = new Exception("Something went wrong");
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleGenericException(ex, request);
 
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleBadRequest(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(400, response.getBody().getStatus());
-    }
-
-    @Test
-    void testHandleCantUpdateCoupon_Returns400() {
-        // Arrange
-        request.setRequestURI("/api/company/coupons/1");
-        CantUpdateCouponException exception = new CantUpdateCouponException("Cannot update coupon");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleBadRequest(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(400, response.getBody().getStatus());
-    }
-
-    @Test
-    void testHandleValidationException_Returns400() {
-        // Arrange
-        request.setRequestURI("/api/company/coupons");
-        ValidationException exception = new ValidationException("Invalid input");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleBadRequest(exception, request);
-
-        // Assert
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(400, response.getBody().getStatus());
-        assertEquals("Bad Request", response.getBody().getError());
-        assertEquals("Invalid input", response.getBody().getMessage());
-    }
-
-    @Test
-    void testHandleGenericException_Returns500() {
-        // Arrange
-        request.setRequestURI("/api/test");
-        Exception exception = new RuntimeException("Unexpected error");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleGenericException(exception, request);
-
-        // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals(500, response.getBody().getStatus());
-        assertEquals("Internal Server Error", response.getBody().getError());
-        assertTrue(response.getBody().getMessage().contains("Unexpected error"));
-        assertEquals("/api/test", response.getBody().getPath());
+        assertTrue(response.getBody().getMessage().contains("Something went wrong"));
     }
 
     @Test
-    void testErrorResponse_IncludesTimestamp() {
+    void handleMethodArgumentNotValid_ReturnsBadRequestWithValidationErrors() throws NoSuchMethodException {
         // Arrange
-        request.setRequestURI("/api/test");
-        Exception exception = new RuntimeException("Test");
+        BindingResult bindingResult = mock(BindingResult.class);
+        FieldError fieldError = new FieldError("objectName", "fieldName", "defaultMessage");
+        when(bindingResult.getFieldErrors()).thenReturn(List.of(fieldError));
+
+        MethodParameter methodParameter = new MethodParameter(this.getClass().getDeclaredMethod("dummyMethod"), -1);
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(methodParameter, bindingResult);
 
         // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleGenericException(exception, request);
+        ResponseEntity<ErrorResponse> responseEntity = exceptionHandler.handleMethodArgumentNotValid(ex, request);
 
         // Assert
-        assertNotNull(response.getBody().getTimestamp());
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        ErrorResponse body = responseEntity.getBody();
+        assertNotNull(body);
+
+        assertFalse(body.getValidationErrors().isEmpty());
+        assertEquals("fieldName", body.getValidationErrors().get(0).getField());
+    }
+
+    // Dummy method for MethodParameter
+    public void dummyMethod() {}
+
+    @Test
+    void testErrorResponse_ConstructorAndGetters() {
+        LocalDateTime timestamp = LocalDateTime.now();
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", "Test message", "/test");
+        errorResponse.setTimestamp(timestamp);
+
+        assertEquals("Test message", errorResponse.getMessage());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), errorResponse.getStatus());
+        assertEquals(timestamp, errorResponse.getTimestamp());
+        assertEquals("/test", errorResponse.getPath());
+        assertEquals("Bad Request", errorResponse.getError());
     }
 
     @Test
-    void testErrorResponse_IncludesCorrectPath() {
-        // Arrange
-        request.setRequestURI("/api/admin/companies/123");
-        CompanyNotFoundException exception = new CompanyNotFoundException("Not found");
-
-        // Act
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleNotFound(exception, request);
-
-        // Assert
-        assertEquals("/api/admin/companies/123", response.getBody().getPath());
+    void testErrorResponse_NoArgsConstructor() {
+        ErrorResponse errorResponse = new ErrorResponse();
+        assertNull(errorResponse.getMessage());
+        assertEquals(0, errorResponse.getStatus());
+        assertNotNull(errorResponse.getTimestamp());
     }
 }

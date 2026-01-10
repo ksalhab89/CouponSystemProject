@@ -43,10 +43,28 @@ public class StructuredLogger {
     }
 
     /**
+     * Creates a TRACE level structured log entry with exception.
+     */
+    public static StructuredLogger trace(Logger logger, String message, Throwable throwable) {
+        StructuredLogger sl = new StructuredLogger(logger, message, LogLevel.TRACE);
+        sl.throwable = throwable;
+        return sl;
+    }
+
+    /**
      * Creates a DEBUG level structured log entry.
      */
     public static StructuredLogger debug(Logger logger, String message) {
         return new StructuredLogger(logger, message, LogLevel.DEBUG);
+    }
+
+    /**
+     * Creates a DEBUG level structured log entry with exception.
+     */
+    public static StructuredLogger debug(Logger logger, String message, Throwable throwable) {
+        StructuredLogger sl = new StructuredLogger(logger, message, LogLevel.DEBUG);
+        sl.throwable = throwable;
+        return sl;
     }
 
     /**
@@ -57,10 +75,28 @@ public class StructuredLogger {
     }
 
     /**
+     * Creates an INFO level structured log entry with exception.
+     */
+    public static StructuredLogger info(Logger logger, String message, Throwable throwable) {
+        StructuredLogger sl = new StructuredLogger(logger, message, LogLevel.INFO);
+        sl.throwable = throwable;
+        return sl;
+    }
+
+    /**
      * Creates a WARN level structured log entry.
      */
     public static StructuredLogger warn(Logger logger, String message) {
         return new StructuredLogger(logger, message, LogLevel.WARN);
+    }
+
+    /**
+     * Creates a WARN level structured log entry with exception.
+     */
+    public static StructuredLogger warn(Logger logger, String message, Throwable throwable) {
+        StructuredLogger sl = new StructuredLogger(logger, message, LogLevel.WARN);
+        sl.throwable = throwable;
+        return sl;
     }
 
     /**

@@ -105,9 +105,9 @@ class StructuredLoggerTest {
     @DisplayName("Trace with exception should work")
     void testTraceWithException() {
         Exception ex = new RuntimeException("Trace exception");
-        StructuredLogger sl = StructuredLogger.trace(logger, "Trace message");
-        // Manually set throwable for trace level
-        sl.log();
+        StructuredLogger.trace(logger, "Trace message with exception", ex)
+                .field("errorCode", "TRACE_ERROR")
+                .log();
 
         assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
     }
@@ -115,21 +115,33 @@ class StructuredLoggerTest {
     @Test
     @DisplayName("Debug with exception should work")
     void testDebugWithException() {
-        StructuredLogger.debug(logger, "Debug message").log();
+        Exception ex = new RuntimeException("Debug exception");
+        StructuredLogger.debug(logger, "Debug message with exception", ex)
+                .field("errorCode", "DEBUG_ERROR")
+                .log();
+
         assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
     }
 
     @Test
     @DisplayName("Info with exception should work")
     void testInfoWithException() {
-        StructuredLogger.info(logger, "Info message").log();
+        Exception ex = new RuntimeException("Info exception");
+        StructuredLogger.info(logger, "Info message with exception", ex)
+                .field("errorCode", "INFO_ERROR")
+                .log();
+
         assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
     }
 
     @Test
     @DisplayName("Warn with exception should work")
     void testWarnWithException() {
-        StructuredLogger.warn(logger, "Warn message").log();
+        Exception ex = new RuntimeException("Warn exception");
+        StructuredLogger.warn(logger, "Warn message with exception", ex)
+                .field("errorCode", "WARN_ERROR")
+                .log();
+
         assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
     }
 

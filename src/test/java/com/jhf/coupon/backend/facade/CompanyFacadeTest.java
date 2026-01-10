@@ -351,6 +351,18 @@ class CompanyFacadeTest {
     }
 
     @Test
+    void testAddCoupon_WithEndDateNotInFuture_ThrowsValidationException() {
+        // End date is today (not sufficiently in the future)
+        Date today = Date.valueOf(java.time.LocalDate.now());
+        Date tomorrow = Date.valueOf(java.time.LocalDate.now().plusDays(1));
+
+        Coupon coupon = new Coupon(0, testCompany.getId(), Category.SKYING, "Test Coupon", "Description",
+                tomorrow, today, 10, 99.99, "image.jpg");
+
+        assertThrows(ValidationException.class, () -> companyFacade.addCoupon(coupon));
+    }
+
+    @Test
     void testAddCoupon_WithZeroAmount_ThrowsValidationException() {
         Coupon coupon = new Coupon(0, testCompany.getId(), Category.SKYING, "Test Coupon", "Description",
                 Date.valueOf("2026-06-01"), Date.valueOf("2026-12-31"), 0, 99.99, "image.jpg");
@@ -455,5 +467,19 @@ class CompanyFacadeTest {
         boolean result = companyFacade.login("test@mail.com", null);
 
         assertFalse(result);
+    }
+
+    @Test
+    void testAddCoupon_TitleAlreadyExists_ThrowsException() throws Exception {
+        Coupon coupon1 = new Coupon(0, testCompany.getId(), Category.SKYING, "Duplicate Title", "Description",
+                Date.valueOf("2026-06-01"), Date.valueOf("2026-12-31"), 10, 99.99, "image.jpg");
+        companyFacade.addCoupon(coupon1);
+
+        Coupon coupon2 = new Coupon(0, testCompany.getId(), Category.SKY_DIVING, "Duplicate Title", "Another Description",
+                Date.valueOf("2026-07-01"), Date.valueOf("2026-11-30"), 5, 149.99, "image2.jpg");
+
+        assertThrows(CouponAlreadyExistsForCompanyException.class, () -> 
+            companyFacade.addCoupon(coupon2)
+        );
     }
 }

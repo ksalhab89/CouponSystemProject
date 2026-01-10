@@ -220,6 +220,17 @@ class CustomerDAOImplTest {
     }
 
     @Test
+    void testGetCustomerByEmail_WhenNotExists_ThrowsException() {
+        // Test getting customer by non-existent email
+        CustomerNotFoundException exception = assertThrows(
+            CustomerNotFoundException.class,
+            () -> customerDAO.getCustomerByEmail("nonexistent@test.com")
+        );
+
+        assertTrue(exception.getMessage().contains("nonexistent@test.com"));
+    }
+
+    @Test
     void testGetAccountLockoutStatus_WhenExists_ReturnsStatus() throws Exception {
         // Insert test customer with lockout data
         String hashedPassword = PasswordHasher.hashPassword("password");

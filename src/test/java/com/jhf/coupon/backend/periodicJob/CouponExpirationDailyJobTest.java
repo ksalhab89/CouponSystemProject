@@ -1,19 +1,24 @@
 package com.jhf.coupon.backend.periodicJob;
 
+import com.jhf.coupon.backend.exceptions.CategoryNotFoundException;
 import com.jhf.coupon.backend.security.PasswordHasher;
+import com.jhf.coupon.sql.dao.coupon.CouponsDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class CouponExpirationDailyJobTest {
@@ -23,6 +28,9 @@ class CouponExpirationDailyJobTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @SpyBean
+    private CouponsDAO couponsDAO;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -135,5 +143,42 @@ class CouponExpirationDailyJobTest {
         String cronExpression = scheduledAnnotation.cron();
         assertEquals("0 0 2 * * ?", cronExpression,
                 "Cron expression should run daily at 2 AM");
+    }
+
+    // Exception handling tests
+    @Test
+    void testExecuteJob_HandlesSQLException_LogsErrorAndContinues() throws Exception {
+        // Setup: Make couponsDAO throw SQLException
+        doThrow(new SQLException("Database error")).when(couponsDAO).getAllCoupons();
+
+        // Execute: Job should handle exception gracefully
+        assertDoesNotThrow(() -> job.executeJob());
+
+        // Verify: Exception was caught and logged (job didn't crash)
+        verify(couponsDAO).getAllCoupons();
+    }
+
+    @Test
+    void testExecuteJob_HandlesCategoryNotFoundException_LogsErrorAndContinues() throws Exception {
+        // Setup: Make couponsDAO throw CategoryNotFoundException
+        doThrow(new CategoryNotFoundException("Category not found")).when(couponsDAO).getAllCoupons();
+
+        // Execute: Job should handle exception gracefully
+        assertDoesNotThrow(() -> job.executeJob());
+
+        // Verify: Exception was caught and logged (job didn't crash)
+        verify(couponsDAO).getAllCoupons();
+    }
+
+    @Test
+    void testExecuteJob_HandlesGenericException_LogsErrorAndContinues() throws Exception {
+        // Setup: Make couponsDAO throw a generic RuntimeException
+        doThrow(new RuntimeException("Unexpected error")).when(couponsDAO).getAllCoupons();
+
+        // Execute: Job should handle exception gracefully
+        assertDoesNotThrow(() -> job.executeJob());
+
+        // Verify: Exception was caught and logged (job didn't crash)
+        verify(couponsDAO).getAllCoupons();
     }
 }

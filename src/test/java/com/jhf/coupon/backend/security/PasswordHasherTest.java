@@ -226,6 +226,18 @@ class PasswordHasherTest {
     }
 
     @Test
+    @DisplayName("Needs rehash should return true for hash with non-numeric cost factor")
+    void testNeedsRehash_NonNumericCostFactor_ReturnsTrue() {
+        // Create a hash with valid structure but non-numeric cost factor
+        // Format: $2a$XX$... where XX is not a number
+        String invalidCostHash = "$2a$XX$N9qo8uLOickgx2ZMRZoMye1J9VqQQzPr0hJhXxXxXxXxXxXxXxXxXu";
+
+        boolean needsRehash = PasswordHasher.needsRehash(invalidCostHash);
+
+        assertTrue(needsRehash, "Hash with non-numeric cost factor should indicate need for rehashing");
+    }
+
+    @Test
     @DisplayName("Verify password should be case sensitive")
     void testVerifyPassword_CaseSensitive() {
         String password = "MyPassword123";

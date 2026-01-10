@@ -172,6 +172,23 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    void testValidateToken_WithUnsupportedToken_ReturnsFalse() {
+        // A JWT with NO signature is often considered "unsupported" by many parsers
+        // if they expect a signed one.
+        String unsignedToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.";
+        boolean isValid = tokenProvider.validateToken(unsignedToken);
+        assertFalse(isValid);
+    }
+
+    @Test
+    void testValidateToken_WithIllegalArgument_ReturnsFalse() {
+        // Empty string with just dots might trigger IllegalArgumentException in some versions of jjwt
+        // depending on how strict the decoder is before validation.
+        boolean isValid = tokenProvider.validateToken(" . . ");
+        assertFalse(isValid);
+    }
+
+    @Test
     void testGetEmailFromToken_WithValidToken_ReturnsEmail() {
         String expectedEmail = "user@example.com";
         String token = tokenProvider.generateAccessToken(expectedEmail, ClientType.CUSTOMER, 1);
