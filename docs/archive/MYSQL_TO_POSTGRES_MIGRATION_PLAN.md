@@ -3,10 +3,10 @@
 
 ## Executive Summary
 
-This document outlines the complete migration strategy from MySQL 8.4 to PostgreSQL 16-alpine, including schema conversion, code changes, testing procedures, and rollback strategies.
+This document outlines the complete migration strategy from MySQL 8.4 to PostgreSQL 17-alpine, including schema conversion, code changes, testing procedures, and rollback strategies.
 
 **Target Benefits:**
-- **Image Size Reduction**: MySQL 8.4 (1.09GB) → PostgreSQL 16-alpine (~150-200MB) = **~900MB savings**
+- **Image Size Reduction**: MySQL 8.4 (1.09GB) → PostgreSQL 17-alpine (~150-200MB) = **~900MB savings**
 - **Better Performance**: PostgreSQL's superior query optimizer and indexing
 - **Advanced Features**: Window functions, CTEs, JSONB, full-text search
 - **Better Standards Compliance**: ANSI SQL compliance
