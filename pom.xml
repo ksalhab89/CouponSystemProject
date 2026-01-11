@@ -191,7 +191,7 @@
                     </formats>
 
                     <!-- Cache NVD data for 24 hours -->
-                    <cveValidForHours>24</cveValidForHours>
+                    <nvdValidForHours>24</nvdValidForHours>
 
                     <!-- Disable Sonatype OSS Index Analyzer (requires authentication) -->
                     <!-- NVD is sufficient and more comprehensive -->
