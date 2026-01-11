@@ -24,7 +24,7 @@ This document outlines the complete migration strategy from MySQL 8.4 to Postgre
 - **Data Types Used**: INT, VARCHAR, DATE, DOUBLE, BOOLEAN, TIMESTAMP
 
 ### Application Stack
-- **Backend**: Spring Boot 3.5.9 + Java 21
+- **Backend**: Spring Boot 3.5.9 + Java 25
 - **ORM**: Raw JDBC (no JPA/Hibernate) - **CRITICAL IMPACT**
 - **Connection Pool**: HikariCP
 - **Driver**: MySQL Connector/J 8.4.0

@@ -60,7 +60,7 @@ docker-compose down -v
 Tests run automatically in GitHub Actions on every push and pull request.
 
 The CI workflow:
-1. Sets up JDK 21
+1. Sets up JDK 25
 2. Starts MySQL with docker-compose
 3. Waits for database to be healthy
 4. Runs full test suite
