@@ -19,7 +19,7 @@ This guide covers deploying the Coupon System REST API to production environment
 ### Required Software
 - **Docker** 20.10+ and **Docker Compose** 2.0+
 - **MySQL** 8.0+ (or Docker container)
-- **Java 21** (for local builds)
+- **Java 25** (for local builds)
 - **Maven 3.9+** (for local builds)
 
 ### System Requirements

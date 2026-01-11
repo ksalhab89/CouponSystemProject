@@ -1,7 +1,7 @@
 # 🎫 Coupon System - Enterprise-Grade Coupon Management Platform
 
 [![Java CI](https://github.com/ksalhab89/CouponSystemProject/workflows/Java%20CI/badge.svg)](https://github.com/ksalhab89/CouponSystemProject/actions)
-[![Java 21](https://img.shields.io/badge/Java-21-orange.svg)](https://www.oracle.com/java/)
+[![Java 25](https://img.shields.io/badge/Java-25-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot 3.5.9](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen.svg)](https://spring.io/projects/spring-boot)
 [![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
 [![React 18](https://img.shields.io/badge/React-18-61DAFB.svg)](https://reactjs.org/)
@@ -65,7 +65,7 @@ A **secure, scalable, and production-ready** coupon management system built with
 ## 🛠 Tech Stack
 
 ### Backend
-- **Java 21** (LTS) - Modern Java with virtual threads support
+- **Java 25** (LTS) - Modern Java with virtual threads support
 - **Spring Boot 3.5.9** - Framework for production-ready applications
 - **PostgreSQL 16** - Advanced open-source relational database (replaces MySQL)
 - **HikariCP** - High-performance JDBC connection pool
@@ -99,7 +99,7 @@ A **secure, scalable, and production-ready** coupon management system built with
 - **OpenSSL** - for generating cryptographically secure secrets
 
 ### Optional (for local development)
-- **Java 21** JDK
+- **Java 25** JDK
 - **Maven 3.9+**
 - **Node.js 18+ & npm**
 - **PostgreSQL Client** (psql) - for database administration
