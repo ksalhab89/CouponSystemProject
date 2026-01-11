@@ -3,7 +3,7 @@
 [![Java CI](https://github.com/ksalhab89/CouponSystemProject/workflows/Java%20CI/badge.svg)](https://github.com/ksalhab89/CouponSystemProject/actions)
 [![Java 25](https://img.shields.io/badge/Java-25-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot 3.5.9](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL-16-blue.svg)](https://www.postgresql.org/)
+[![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-blue.svg)](https://www.postgresql.org/)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB.svg)](https://reactjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -67,7 +67,7 @@ A **secure, scalable, and production-ready** coupon management system built with
 ### Backend
 - **Java 25** (LTS) - Modern Java with virtual threads support
 - **Spring Boot 3.5.9** - Framework for production-ready applications
-- **PostgreSQL 16** - Advanced open-source relational database (replaces MySQL)
+- **PostgreSQL 17** - Advanced open-source relational database (replaces MySQL)
 - **HikariCP** - High-performance JDBC connection pool
 - **Bucket4j** - Rate limiting library
 - **JWT (jjwt 0.12.6)** - JSON Web Token implementation
@@ -87,7 +87,7 @@ A **secure, scalable, and production-ready** coupon management system built with
 - **Docker** & **Docker Compose** - Containerization
 - **Traefik v3** - Reverse proxy with automatic SSL (production)
 - **nginx** - Frontend web server
-- **PostgreSQL 16-alpine** - Database (285MB container, down from 1GB MySQL)
+- **PostgreSQL 17-alpine** - Database (285MB container, down from 1GB MySQL)
 - **GitHub Actions** - CI/CD pipeline with OWASP dependency checks
 
 ---
@@ -616,7 +616,7 @@ docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
     └────────────────┘              └────────┬────────┘
                                              │
                                     ┌────────▼────────────┐
-                                    │   PostgreSQL 16     │
+                                    │   PostgreSQL 17     │
                                     │   Port: 5432        │
                                     │   (internal only)   │
                                     └─────────────────────┘
@@ -649,7 +649,7 @@ docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
                                ▼
 ┌──────────────────────────────────────────────────────────────┐
 │                        Database                               │
-│  PostgreSQL 16 (couponsystem database)                       │
+│  PostgreSQL 17 (couponsystem database)                       │
 │  - 8 performance indexes                                      │
 │  - Foreign key constraints                                    │
 │  - SERIAL primary keys                                        │
@@ -909,7 +909,7 @@ CORS_ALLOWED_ORIGINS=https://myapp.com,https://www.myapp.com
 ### Local Development (without Docker)
 ```bash
 # 1. Start PostgreSQL locally
-# Install PostgreSQL 16 or use Docker:
+# Install PostgreSQL 17 or use Docker:
 docker run -d --name postgres-dev \
   -e POSTGRES_DB=couponsystem \
   -e POSTGRES_USER=appuser \

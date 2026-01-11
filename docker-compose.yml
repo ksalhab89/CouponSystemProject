@@ -1,7 +1,7 @@
 services:
   postgres:
-    # PostgreSQL 16-alpine - Lightweight and optimized (~150-200MB)
-    image: postgres:16-alpine
+    # PostgreSQL 17.7-alpine - Lightweight and optimized (~150-200MB)
+    image: postgres:17.7-alpine
     container_name: coupon-system-postgres
     environment:
       POSTGRES_DB: couponsystem
