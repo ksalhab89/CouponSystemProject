@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM maven:3-eclipse-temurin-25 AS build
+FROM maven:3-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy dependency files first (for better caching)
@@ -10,8 +10,14 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Stage 2: Runtime
-FROM eclipse-temurin:25-jre-alpine
+# Extract Spring Boot layers for better optimization
+RUN java -Djarmode=layertools -jar target/CouponSystemProject-1.0-SNAPSHOT.jar extract
+
+# Stage 2: Runtime with minimal alpine JRE (optimized with layers)
+FROM eclipse-temurin:21-jre-alpine
+
+# Install curl for healthchecks (adds ~1MB)
+RUN apk add --no-cache curl
 
 # Create non-root user
 RUN addgroup -g 1001 appuser && \
@@ -19,34 +25,26 @@ RUN addgroup -g 1001 appuser && \
 
 WORKDIR /app
 
-# Copy Spring Boot JAR as non-root user
-COPY --from=build --chown=appuser:appuser \
-    /app/target/CouponSystemProject-1.0-SNAPSHOT.jar \
-    app.jar
+# Create logs directory with proper ownership
+RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs
+
+# Copy extracted layers from Spring Boot (better caching and smaller final image)
+COPY --from=build --chown=appuser:appuser /app/dependencies/ ./
+COPY --from=build --chown=appuser:appuser /app/spring-boot-loader/ ./
+COPY --from=build --chown=appuser:appuser /app/snapshot-dependencies/ ./
+COPY --from=build --chown=appuser:appuser /app/application/ ./
 
 # Switch to non-root user
 USER appuser
 
-# Create directories for logs (writable by appuser)
-USER root
-RUN mkdir -p /app/logs && chown -R appuser:appuser /app/logs
-USER appuser
-
-# Health check - uses REST API health endpoint
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
-
-# JVM configuration for containers with JSON logging
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=200 \
-    -XX:+HeapDumpOnOutOfMemoryError \
-    -XX:HeapDumpPath=/app/logs/heapdump.hprof \
-    -Xlog:gc*:file=/app/logs/gc.log:time,uptime:filecount=5,filesize=10m \
-    -Dlogback.configurationFile=logback-json.xml"
-
 # Expose REST API and Prometheus metrics ports
 EXPOSE 8080 9090
 
-CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Run Spring Boot app with optimized JVM settings for containers
+ENTRYPOINT ["java", \
+    "-XX:+UseContainerSupport", \
+    "-XX:MaxRAMPercentage=75.0", \
+    "-XX:+UseG1GC", \
+    "-XX:MaxGCPauseMillis=200", \
+    "-Dlogback.configurationFile=logback-json.xml", \
+    "org.springframework.boot.loader.launch.JarLauncher"]

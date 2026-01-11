@@ -1,22 +1,22 @@
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: coupon-system-mysql
+  postgres:
+    # PostgreSQL 16-alpine - Lightweight and optimized (~150-200MB)
+    image: postgres:16-alpine
+    container_name: coupon-system-postgres
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: couponsystem
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    # Expose MySQL to host for local development/testing only
-    # In production, remove this port exposure for security
+      POSTGRES_DB: couponsystem
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # Expose PostgreSQL to host for local development/testing only
+    # Bound to localhost (127.0.0.1) for security - not accessible from network
+    # In production, remove this port exposure entirely
     ports:
-      - "3306:3306"
+      - "127.0.0.1:5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./src/main/resources/couponSystemSchemaToImport.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./src/main/resources/db-migrations/02-add-lockout-columns.sql:/docker-entrypoint-initdb.d/02-add-lockout-columns.sql:ro
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/main/resources/postgres-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d couponsystem"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,10 +29,10 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 2G
+          memory: 1G
         reservations:
           cpus: '0.5'
-          memory: 512M
+          memory: 256M
 
   app:
     build: .
@@ -41,13 +41,19 @@ services:
       - '8080:8080'   # REST API endpoint
       - '9090:9090'   # Prometheus metrics endpoint
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8080/api/v1/public/coupons > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     environment:
       # Database Configuration
-      DB_URL: jdbc:mysql://coupon-system-mysql:3306/couponsystem?serverTimezone=UTC
+      DB_URL: jdbc:postgresql://coupon-system-postgres:5432/couponsystem
       DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
 
       # Admin Account
       ADMIN_EMAIL: ${ADMIN_EMAIL}
@@ -104,8 +110,37 @@ services:
     tmpfs:
       - /tmp
 
+  frontend:
+    build:
+      context: ./coupon-system-frontend
+      dockerfile: Dockerfile
+    container_name: coupon-system-frontend
+    ports:
+      - "3000:80"
+    environment:
+      # Use relative URL - nginx proxies /api to backend (line 19-25 in nginx.conf)
+      - REACT_APP_API_URL=/api/v1
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    # Security hardening
+    security_opt:
+      - no-new-privileges:true
+
 volumes:
-  mysql_data:
+  postgres_data:
     driver: local
   app_logs:
     driver: local

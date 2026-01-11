@@ -21,22 +21,22 @@ ADD COLUMN LOCKED_UNTIL TIMESTAMP NULL COMMENT 'Time when account will be automa
 ADD COLUMN LAST_FAILED_LOGIN TIMESTAMP NULL COMMENT 'Timestamp of last failed login attempt';
 
 -- Add indexes for lockout queries
-CREATE INDEX IF NOT EXISTS idx_companies_account_locked ON companies(ACCOUNT_LOCKED, LOCKED_UNTIL);
-CREATE INDEX IF NOT EXISTS idx_customers_account_locked ON customers(ACCOUNT_LOCKED, LOCKED_UNTIL);
+CREATE INDEX idx_companies_account_locked ON companies(ACCOUNT_LOCKED, LOCKED_UNTIL);
+CREATE INDEX idx_customers_account_locked ON customers(ACCOUNT_LOCKED, LOCKED_UNTIL);
 
 -- Additional Performance Indexes
 
 -- Company name existence checks
-CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(NAME);
+CREATE INDEX idx_companies_name ON companies(NAME);
 
 -- Expired coupon cleanup (daily job)
-CREATE INDEX IF NOT EXISTS idx_coupons_end_date ON coupons(END_DATE);
+CREATE INDEX idx_coupons_end_date ON coupons(END_DATE);
 
 -- Company coupons by category
-CREATE INDEX IF NOT EXISTS idx_coupons_company_category ON coupons(COMPANY_ID, CATEGORY_ID);
+CREATE INDEX idx_coupons_company_category ON coupons(COMPANY_ID, CATEGORY_ID);
 
 -- Company coupons by price range
-CREATE INDEX IF NOT EXISTS idx_coupons_company_price ON coupons(COMPANY_ID, PRICE);
+CREATE INDEX idx_coupons_company_price ON coupons(COMPANY_ID, PRICE);
 
 -- Coupon duplicate detection
-CREATE INDEX IF NOT EXISTS idx_coupons_title_company ON coupons(COMPANY_ID, TITLE);
+CREATE INDEX idx_coupons_title_company ON coupons(COMPANY_ID, TITLE);

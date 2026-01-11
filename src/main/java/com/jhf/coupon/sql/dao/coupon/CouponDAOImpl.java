@@ -22,7 +22,7 @@ public class CouponDAOImpl implements CouponsDAO {
 
 	@Override
 	public boolean couponExists(@NotNull Coupon coupon) throws SQLException {
-		String sqlQuery = "SELECT * FROM `coupons` WHERE `TITLE` = ? AND `COMPANY_ID` = ?";
+		String sqlQuery = "SELECT * FROM coupons WHERE title = ? AND company_id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setString(1, coupon.getTitle());
@@ -34,12 +34,12 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	public void addCoupon(@NotNull Coupon coupon) throws SQLException {
-		String sqlQuery = "INSERT INTO coupons (COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, " +
-				"START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+		String sqlQuery = "INSERT INTO coupons (company_id, category_id, title, description, " +
+				"start_date, end_date, amount, price, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, coupon.getCompanyID());
-			preparedStatement.setString(2, coupon.getCATEGORY().name());
+			preparedStatement.setInt(2, coupon.getCATEGORY().getId());
 			preparedStatement.setString(3, coupon.getTitle());
 			preparedStatement.setString(4, coupon.getDescription());
 			preparedStatement.setDate(5, coupon.getStartDate());
@@ -52,13 +52,13 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	public void updateCoupon(@NotNull Coupon coupon) throws SQLException {
-		String sqlQuery = "UPDATE coupons SET `COMPANY_ID` = ?, `CATEGORY` = ?, `TITLE` = ?, " +
-				"`DESCRIPTION` = ?, `START_DATE` = ?, `END_DATE` = ?, `AMOUNT` = ?, `PRICE` = ?, " +
-				"`IMAGE` = ? WHERE `ID` = ?";
+		String sqlQuery = "UPDATE coupons SET company_id = ?, category_id = ?, title = ?, " +
+				"description = ?, start_date = ?, end_date = ?, amount = ?, price = ?, " +
+				"image = ? WHERE id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, coupon.getCompanyID());
-			preparedStatement.setString(2, coupon.getCATEGORY().name());
+			preparedStatement.setInt(2, coupon.getCATEGORY().getId());
 			preparedStatement.setString(3, coupon.getTitle());
 			preparedStatement.setString(4, coupon.getDescription());
 			preparedStatement.setDate(5, coupon.getStartDate());
@@ -72,7 +72,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	public void deleteCoupon(int couponID) throws SQLException {
-		String sqlQuery = "DELETE FROM coupons WHERE `ID` = ?";
+		String sqlQuery = "DELETE FROM coupons WHERE id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, couponID);
@@ -94,7 +94,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	public Coupon getCoupon(int couponID) throws SQLException, CategoryNotFoundException {
-		String sqlQuery = "SELECT * FROM coupons WHERE `ID` = ?";
+		String sqlQuery = "SELECT * FROM coupons WHERE id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, couponID);
@@ -112,7 +112,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	@Override
 	public ArrayList<Coupon> getCompanyCoupons(int companyId) throws SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
-		String sqlQuery = "SELECT * FROM coupons WHERE `COMPANY_ID` = ?";
+		String sqlQuery = "SELECT * FROM coupons WHERE company_id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, companyId);
@@ -128,11 +128,11 @@ public class CouponDAOImpl implements CouponsDAO {
 	@Override
 	public ArrayList<Coupon> getCompanyCoupons(@NotNull Company company, @NotNull Category CATEGORY) throws SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
-		String sqlQuery = "SELECT * FROM coupons WHERE `COMPANY_ID` = ? AND `CATEGORY` = ?";
+		String sqlQuery = "SELECT * FROM coupons WHERE company_id = ? AND category_id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, company.getId());
-			preparedStatement.setString(2, CATEGORY.name());
+			preparedStatement.setInt(2, CATEGORY.getId());
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
 					list.add(mapResultSetToCoupon(resultSet));
@@ -145,7 +145,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	@Override
 	public ArrayList<Coupon> getCompanyCoupons(@NotNull Company company, double maxPrice) throws SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
-		String sqlQuery = "SELECT * FROM coupons WHERE `COMPANY_ID` = ? AND `PRICE` BETWEEN 0 AND ?";
+		String sqlQuery = "SELECT * FROM coupons WHERE company_id = ? AND price BETWEEN 0 AND ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, company.getId());
@@ -160,7 +160,7 @@ public class CouponDAOImpl implements CouponsDAO {
 	}
 
 	public boolean customerCouponPurchaseExists(int customerId, int couponId) throws SQLException {
-		String sqlQuery = "SELECT * FROM customers_vs_coupons WHERE `CUSTOMER_ID` = ? AND `COUPON_ID` = ?";
+		String sqlQuery = "SELECT * FROM customers_vs_coupons WHERE customer_id = ? AND coupon_id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, customerId);
@@ -173,7 +173,7 @@ public class CouponDAOImpl implements CouponsDAO {
 
 	public void addCouponPurchase(int customerId, int couponId) throws SQLException {
 		String insertQuery = "INSERT INTO customers_vs_coupons VALUES (?, ?)";
-		String updateQuery = "UPDATE coupons SET AMOUNT = AMOUNT - 1 WHERE ID = ?";
+		String updateQuery = "UPDATE coupons SET amount = amount - 1 WHERE id = ?";
 
 		try (Connection connection = dataSource.getConnection()) {
 			// Insert purchase record
@@ -194,13 +194,13 @@ public class CouponDAOImpl implements CouponsDAO {
 	@Override
 	public ArrayList<Coupon> getCustomerCoupons(@NotNull Customer customer) throws SQLException, CategoryNotFoundException {
 		ArrayList<Coupon> list = new ArrayList<>();
-		String sqlQuery = "SELECT `COUPON_ID` FROM customers_vs_coupons WHERE `CUSTOMER_ID` = ?";
+		String sqlQuery = "SELECT coupon_id FROM customers_vs_coupons WHERE customer_id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, customer.getId());
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				while (resultSet.next()) {
-					list.add(getCoupon(resultSet.getInt("COUPON_ID")));
+					list.add(getCoupon(resultSet.getInt("coupon_id")));
 				}
 			}
 		}
@@ -223,19 +223,19 @@ public class CouponDAOImpl implements CouponsDAO {
 	 * @param resultSet the ResultSet positioned at a valid row
 	 * @return a Coupon object populated from the current ResultSet row
 	 * @throws SQLException if a database access error occurs or column is not found
-	 * @throws CategoryNotFoundException if the category name is invalid
+	 * @throws CategoryNotFoundException if the category ID is invalid
 	 */
 	private Coupon mapResultSetToCoupon(ResultSet resultSet) throws SQLException, CategoryNotFoundException {
 		return new Coupon(
-				resultSet.getInt("ID"),
-				resultSet.getInt("COMPANY_ID"),
-				Category.valueOf(resultSet.getString("CATEGORY")),
-				resultSet.getString("TITLE"),
-				resultSet.getString("DESCRIPTION"),
-				resultSet.getDate("START_DATE"),
-				resultSet.getDate("END_DATE"),
-				resultSet.getInt("AMOUNT"),
-				resultSet.getDouble("PRICE"),
-				resultSet.getString("IMAGE"));
+				resultSet.getInt("id"),
+				resultSet.getInt("company_id"),
+				Category.getCategory(resultSet.getInt("category_id")),
+				resultSet.getString("title"),
+				resultSet.getString("description"),
+				resultSet.getDate("start_date"),
+				resultSet.getDate("end_date"),
+				resultSet.getInt("amount"),
+				resultSet.getDouble("price"),
+				resultSet.getString("image"));
 	}
 }

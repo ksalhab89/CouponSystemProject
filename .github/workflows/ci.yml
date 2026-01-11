@@ -10,13 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DB_URL: jdbc:mysql://localhost:3306/couponsystem?serverTimezone=UTC
+      DB_URL: jdbc:postgresql://localhost:5432/couponsystem
       DB_USER: testuser
       DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-      MYSQL_ROOT_PASSWORD: ${{ secrets.TEST_MYSQL_ROOT_PASSWORD }}
+      POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
       ADMIN_EMAIL: admin@admin.com
       # bcrypt hash of "admin" from GitHub Secrets
       ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD_HASH }}
+      JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
 
     steps:
     - uses: actions/checkout@v4
@@ -28,12 +29,12 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
-    - name: Start MySQL with docker-compose
+    - name: Start PostgreSQL with docker-compose
       run: |
-        docker compose up -d mysql
-        echo "Waiting for MySQL to be healthy..."
-        timeout 60 bash -c 'until docker compose ps mysql | grep -q "healthy"; do sleep 2; done'
-        echo "MySQL is ready!"
+        docker compose up -d postgres
+        echo "Waiting for PostgreSQL to be healthy..."
+        timeout 60 bash -c 'until docker compose ps postgres | grep -q "healthy"; do sleep 2; done'
+        echo "PostgreSQL is ready!"
 
     - name: Build with Maven (skip tests)
       run: mvn -B package -DskipTests --file pom.xml

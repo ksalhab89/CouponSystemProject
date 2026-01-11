@@ -29,3 +29,4 @@ dependency-check-data/
 
 # Docker test results (temporary)
 docker-test-results.txt
+certs/

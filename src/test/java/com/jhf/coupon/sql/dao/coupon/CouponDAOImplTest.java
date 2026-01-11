@@ -44,8 +44,8 @@ class CouponDAOImplTest {
             1, "TestCompany", "test@company.com", hashedPassword);
 
         // Insert test coupon
-        jdbcTemplate.update("INSERT INTO coupons (COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, Category.SKYING.name(), "Test Coupon", "Description", Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
+        jdbcTemplate.update("INSERT INTO coupons (COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, Category.SKYING.getId(), "Test Coupon", "Description", Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         // Create coupon bean and test
         Coupon testCoupon = new Coupon(0, 1, Category.SKYING, "Test Coupon", "Description",
@@ -102,8 +102,8 @@ class CouponDAOImplTest {
             2, "TestCompany2", "test2@company.com", hashedPassword);
 
         // Insert initial coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Original Coupon", "Original Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Original Coupon", "Original Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "original.jpg");
 
         // Update the coupon
@@ -130,8 +130,8 @@ class CouponDAOImplTest {
             1, "TestCompany", "test@company.com", hashedPassword);
 
         // Insert coupon to delete
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Test Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         couponsDAO.deleteCoupon(1);
@@ -150,8 +150,8 @@ class CouponDAOImplTest {
             1, "TestCompany", "test@company.com", hashedPassword);
 
         // Insert test coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Test Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         Coupon result = couponsDAO.getCoupon(1);
@@ -189,11 +189,11 @@ class CouponDAOImplTest {
             2, "TestCompany2", "test2@company.com", hashedPassword);
 
         // Insert test coupons
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Coupon1", "Desc1",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Coupon1", "Desc1",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image1.jpg");
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            2, 2, Category.SKY_DIVING.name(), "Coupon2", "Desc2",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 2, Category.SKY_DIVING.getId(), "Coupon2", "Desc2",
             Date.valueOf("2025-02-01"), Date.valueOf("2025-11-30"), 20, 149.99, "image2.jpg");
 
         var coupons = couponsDAO.getAllCoupons();
@@ -218,8 +218,8 @@ class CouponDAOImplTest {
             1, "TestCompany", "test@company.com", hashedPassword);
 
         // Insert test coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Company Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Company Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         var coupons = couponsDAO.getCompanyCoupons(1);
@@ -237,8 +237,8 @@ class CouponDAOImplTest {
             2, "TestCompany", "test@mail.com", hashedPassword);
 
         // Insert test coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 2, Category.SKYING.name(), "Company Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 2, Category.SKYING.getId(), "Company Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         Company company = new Company(2, "TestCompany", "test@mail.com", "password");
@@ -256,8 +256,8 @@ class CouponDAOImplTest {
             1, "TestCompany", "test@mail.com", hashedPassword);
 
         // Insert test coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKY_DIVING.name(), "Sky Diving Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKY_DIVING.getId(), "Sky Diving Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 199.99, "skydiving.jpg");
 
         Company company = new Company(1, "TestCompany", "test@mail.com", "password");
@@ -275,8 +275,8 @@ class CouponDAOImplTest {
             1, "TestCompany", "test@mail.com", hashedPassword);
 
         // Insert test coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Cheap Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Cheap Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 49.99, "cheap.jpg");
 
         Company company = new Company(1, "TestCompany", "test@mail.com", "password");
@@ -338,9 +338,9 @@ class CouponDAOImplTest {
         couponsDAO.addCoupon(testCoupon1);
 
         // Verify coupon was added with correct category
-        String categoryName = jdbcTemplate.queryForObject(
-            "SELECT CATEGORY FROM coupons WHERE TITLE = ?", String.class, "Skydiving");
-        assertEquals(Category.SKY_DIVING.name(), categoryName);
+        Integer categoryId = jdbcTemplate.queryForObject(
+            "SELECT category_id FROM coupons WHERE TITLE = ?", Integer.class, "Skydiving");
+        assertEquals(Category.SKY_DIVING.getId(), categoryId.intValue());
     }
 
     @Test
@@ -351,8 +351,8 @@ class CouponDAOImplTest {
             2, "TestCompany", "test@company.com", hashedPassword);
 
         // Insert initial coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 2, Category.SKYING.name(), "Original", "Original",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 2, Category.SKYING.getId(), "Original", "Original",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "original.jpg");
 
         Coupon testCoupon = new Coupon(1, 2, Category.FANCY_RESTAURANT, "Restaurant", "Fine Dining",
@@ -361,9 +361,9 @@ class CouponDAOImplTest {
         couponsDAO.updateCoupon(testCoupon);
 
         // Verify category was updated
-        String categoryName = jdbcTemplate.queryForObject(
-            "SELECT CATEGORY FROM coupons WHERE ID = ?", String.class, 1);
-        assertEquals(Category.FANCY_RESTAURANT.name(), categoryName);
+        Integer categoryId = jdbcTemplate.queryForObject(
+            "SELECT category_id FROM coupons WHERE ID = ?", Integer.class, 1);
+        assertEquals(Category.FANCY_RESTAURANT.getId(), categoryId.intValue());
     }
 
     @Test
@@ -374,8 +374,8 @@ class CouponDAOImplTest {
             1, "TestCompany", "test@company.com", hashedPassword);
 
         // Insert test coupon with SKY_DIVING category
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKY_DIVING.name(), "Sky Diving", "Adventure",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKY_DIVING.getId(), "Sky Diving", "Adventure",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 299.99, "adventure.jpg");
 
         Coupon result = couponsDAO.getCoupon(1);
@@ -396,14 +396,14 @@ class CouponDAOImplTest {
             3, "TestCompany3", "test3@company.com", hashedPassword);
 
         // Insert coupons with different categories
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Skiing", "Winter",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Skiing", "Winter",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 199.99, "ski.jpg");
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            2, 2, Category.SKY_DIVING.name(), "Skydiving", "Summer",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 2, Category.SKY_DIVING.getId(), "Skydiving", "Summer",
             Date.valueOf("2025-02-01"), Date.valueOf("2025-11-30"), 5, 299.99, "sky.jpg");
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            3, 3, Category.FANCY_RESTAURANT.name(), "Restaurant", "Food",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            3, 3, Category.FANCY_RESTAURANT.getId(), "Restaurant", "Food",
             Date.valueOf("2025-03-01"), Date.valueOf("2025-10-31"), 20, 89.99, "food.jpg");
 
         var coupons = couponsDAO.getAllCoupons();
@@ -426,8 +426,8 @@ class CouponDAOImplTest {
             1, "John", "Doe", "john@customer.com", hashedPassword);
 
         // Insert coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Test Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         // Insert customer coupon purchase
@@ -458,8 +458,8 @@ class CouponDAOImplTest {
             1, "John", "Doe", "john@customer.com", hashedPassword);
 
         // Insert coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Test Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         couponsDAO.addCouponPurchase(1, 1);
@@ -483,11 +483,11 @@ class CouponDAOImplTest {
             1, "John", "Doe", "john@customer.com", hashedPassword);
 
         // Insert coupons
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Coupon1", "Description1",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Coupon1", "Description1",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image1.jpg");
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            2, 1, Category.SKY_DIVING.name(), "Coupon2", "Description2",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 1, Category.SKY_DIVING.getId(), "Coupon2", "Description2",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 5, 199.99, "image2.jpg");
 
         // Insert customer coupon purchases
@@ -522,8 +522,8 @@ class CouponDAOImplTest {
             1, "John", "Doe", "john@customer.com", hashedPassword);
 
         // Insert coupon
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, Category.SKYING.name(), "Test Coupon", "Description",
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, Category.SKYING.getId(), "Test Coupon", "Description",
             Date.valueOf("2025-01-01"), Date.valueOf("2025-12-31"), 10, 99.99, "image.jpg");
 
         // Insert customer coupon purchase

@@ -262,8 +262,8 @@ class AdminFacadeTest {
 
         // Manually insert a coupon for this company
         jdbcTemplate.update(
-            "INSERT INTO coupons (company_id, category, title, description, start_date, end_date, amount, price, image) " +
-            "VALUES (?, 'SKYING', 'Test Coupon', 'Description', '2026-01-01', '2026-12-31', 10, 99.99, 'image.jpg')",
+            "INSERT INTO coupons (company_id, category_id, title, description, start_date, end_date, amount, price, image) " +
+            "VALUES (?, 10, 'Test Coupon', 'Description', '2026-01-01', '2026-12-31', 10, 99.99, 'image.jpg')",
             addedCompany.getId()
         );
 

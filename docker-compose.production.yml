@@ -1,0 +1,145 @@
+# =============================================================================
+# PRODUCTION Docker Compose Configuration with SSL/TLS
+# =============================================================================
+# This configuration adds Traefik reverse proxy with automatic Let's Encrypt SSL
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+#
+# Prerequisites:
+#   1. Domain name pointed to your server's IP
+#   2. Ports 80 and 443 open on firewall
+#   3. Update DOMAIN_NAME environment variable below
+# =============================================================================
+
+services:
+  # Traefik - Reverse Proxy with automatic SSL/TLS
+  traefik:
+    image: traefik:v3.0
+    container_name: coupon-system-traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "80:80"      # HTTP (redirects to HTTPS)
+      - "443:443"    # HTTPS
+      - "8080:8080"  # Traefik dashboard (restrict in production!)
+    environment:
+      - TZ=UTC
+    command:
+      # Enable Docker provider
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      # Entry points
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+
+      # Redirect HTTP to HTTPS
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+
+      # Let's Encrypt configuration
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=admin@yourdomain.com  # CHANGE THIS!
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+
+      # Enable dashboard (secure it in production!)
+      - --api.dashboard=true
+      - --api.insecure=true  # DISABLE IN PRODUCTION! Use auth middleware instead
+
+      # Logging
+      - --log.level=INFO
+      - --accesslog=true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - backend
+      - traefik-public
+    labels:
+      # Dashboard (protect with basicauth in production!)
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.yourdomain.com`)"  # CHANGE THIS!
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+
+  # PostgreSQL - Remove port exposure in production
+  postgres:
+    ports: []  # Override to remove external port exposure
+
+  # Backend - Add Traefik labels for SSL
+  app:
+    labels:
+      - "traefik.enable=true"
+      # API routes
+      - "traefik.http.routers.api.rule=Host(`api.yourdomain.com`)"  # CHANGE THIS!
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.api.service=api"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      # Security headers
+      - "traefik.http.middlewares.security-headers.headers.frameDeny=true"
+      - "traefik.http.middlewares.security-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
+      - "traefik.http.routers.api.middlewares=security-headers"
+    ports: []  # Remove direct port exposure, access via Traefik only
+    networks:
+      - backend
+      - traefik-public
+    environment:
+      # Update CORS for production domain
+      CORS_ALLOWED_ORIGINS: https://yourdomain.com,https://www.yourdomain.com  # CHANGE THIS!
+
+  # Frontend - Add Traefik labels for SSL
+  frontend:
+    labels:
+      - "traefik.enable=true"
+      # Main website
+      - "traefik.http.routers.frontend.rule=Host(`yourdomain.com`) || Host(`www.yourdomain.com`)"  # CHANGE THIS!
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.service=frontend"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+      # Security headers
+      - "traefik.http.middlewares.security-headers-frontend.headers.frameDeny=true"
+      - "traefik.http.middlewares.security-headers-frontend.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.security-headers-frontend.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.security-headers-frontend.headers.customResponseHeaders.X-Robots-Tag=noindex,nofollow,noarchive,nosnippet"
+      - "traefik.http.middlewares.security-headers-frontend.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.security-headers-frontend.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.security-headers-frontend.headers.stsPreload=true"
+      - "traefik.http.routers.frontend.middlewares=security-headers-frontend"
+    ports: []  # Remove direct port exposure, access via Traefik only
+    networks:
+      - backend
+      - traefik-public
+    environment:
+      # Frontend should call API via reverse proxy
+      REACT_APP_API_URL: https://api.yourdomain.com/api/v1  # CHANGE THIS!
+
+volumes:
+  traefik_letsencrypt:
+    driver: local
+
+networks:
+  traefik-public:
+    driver: bridge
+    name: traefik-public
+
+# =============================================================================
+# PRODUCTION DEPLOYMENT CHECKLIST
+# =============================================================================
+# Before deploying:
+# [ ] Update all "yourdomain.com" references with your actual domain
+# [ ] Update admin email for Let's Encrypt: admin@yourdomain.com
+# [ ] Configure DNS A records pointing to your server
+# [ ] Open ports 80 and 443 on firewall
+# [ ] Secure Traefik dashboard or disable it
+# [ ] Test with docker compose config to validate
+# [ ] Review all environment variables in .env
+# =============================================================================

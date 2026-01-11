@@ -20,13 +20,13 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 
 	public boolean isCompanyExists(String companyEmail, String companyPassword) throws SQLException {
 		// Query by email only, then verify password with bcrypt
-		String sqlQuery = "SELECT `PASSWORD` FROM `companies` WHERE `EMAIL` = ?";
+		String sqlQuery = "SELECT password FROM companies WHERE email = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setString(1, companyEmail);
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
-					String storedPasswordHash = resultSet.getString("PASSWORD");
+					String storedPasswordHash = resultSet.getString("password");
 					// Verify password using bcrypt
 					return PasswordHasher.verifyPassword(companyPassword, storedPasswordHash);
 				}
@@ -36,7 +36,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	}
 
 	public boolean isCompanyEmailExists(String companyEmail) throws SQLException {
-		String sqlQuery = "SELECT COUNT(*) FROM `companies` WHERE `EMAIL` = ?";
+		String sqlQuery = "SELECT COUNT(*) FROM companies WHERE email = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setString(1, companyEmail);
@@ -50,7 +50,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	}
 
 	public boolean isCompanyNameExists(String companyName) throws SQLException {
-		String sqlQuery = "SELECT * FROM `companies` WHERE `NAME` = ?";
+		String sqlQuery = "SELECT * FROM companies WHERE name = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setString(1, companyName);
@@ -74,7 +74,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	}
 
 	public void updateCompany(@NotNull Company company) throws SQLException {
-		String sqlQuery = "UPDATE companies SET `NAME` = ?, `EMAIL` = ?, `PASSWORD` = ? WHERE `ID` = ?";
+		String sqlQuery = "UPDATE companies SET name = ?, email = ?, password = ? WHERE id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setString(1, company.getName());
@@ -88,7 +88,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	}
 
 	public void deleteCompany(int companyID) throws SQLException {
-		String sqlQuery = "DELETE FROM companies WHERE `ID` = ?";
+		String sqlQuery = "DELETE FROM companies WHERE id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, companyID);
@@ -110,7 +110,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	}
 
 	public Company getCompany(int companyID) throws SQLException {
-		String sqlQuery = "SELECT * FROM `companies` WHERE `ID` = ?";
+		String sqlQuery = "SELECT * FROM companies WHERE id = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, companyID);
@@ -126,7 +126,7 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	}
 
 	public Company getCompanyByEmail(String email) throws SQLException {
-		String sqlQuery = "SELECT * FROM `companies` WHERE `EMAIL` = ?";
+		String sqlQuery = "SELECT * FROM companies WHERE email = ?";
 		try (Connection connection = dataSource.getConnection();
 		     PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setString(1, email);
@@ -150,19 +150,19 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	 */
 	private Company mapResultSetToCompany(ResultSet resultSet) throws SQLException {
 		return new Company(
-				resultSet.getInt("ID"),
-				resultSet.getString("NAME"),
-				resultSet.getString("EMAIL"),
-				resultSet.getString("PASSWORD"));
+				resultSet.getInt("id"),
+				resultSet.getString("name"),
+				resultSet.getString("email"),
+				resultSet.getString("password"));
 	}
 
 	// Account Lockout Methods Implementation
 
 	@Override
 	public AccountLockoutStatus getAccountLockoutStatus(String email) throws SQLException {
-		String sqlQuery = "SELECT `ACCOUNT_LOCKED`, `FAILED_LOGIN_ATTEMPTS`, " +
-				"`LOCKED_UNTIL`, `LAST_FAILED_LOGIN` " +
-				"FROM `companies` WHERE `EMAIL` = ?";
+		String sqlQuery = "SELECT account_locked, failed_login_attempts, " +
+				"locked_until, last_failed_login " +
+				"FROM companies WHERE email = ?";
 
 		try (Connection connection = dataSource.getConnection();
 			 PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
@@ -171,15 +171,15 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				if (resultSet.next()) {
 					AccountLockoutStatus status = new AccountLockoutStatus();
-					status.setAccountLocked(resultSet.getBoolean("ACCOUNT_LOCKED"));
-					status.setFailedLoginAttempts(resultSet.getInt("FAILED_LOGIN_ATTEMPTS"));
+					status.setAccountLocked(resultSet.getBoolean("account_locked"));
+					status.setFailedLoginAttempts(resultSet.getInt("failed_login_attempts"));
 
 					// Handle TIMESTAMP to LocalDateTime conversion
-					Timestamp lockedUntilTs = resultSet.getTimestamp("LOCKED_UNTIL");
+					Timestamp lockedUntilTs = resultSet.getTimestamp("locked_until");
 					status.setLockedUntil(lockedUntilTs != null ?
 							lockedUntilTs.toLocalDateTime() : null);
 
-					Timestamp lastFailedTs = resultSet.getTimestamp("LAST_FAILED_LOGIN");
+					Timestamp lastFailedTs = resultSet.getTimestamp("last_failed_login");
 					status.setLastFailedLogin(lastFailedTs != null ?
 							lastFailedTs.toLocalDateTime() : null);
 
@@ -193,20 +193,33 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 	@Override
 	public void incrementFailedLoginAttempts(String email, int maxAttempts, int lockoutDurationMinutes)
 			throws SQLException {
-		String sqlQuery = "UPDATE `companies` SET " +
-				"`FAILED_LOGIN_ATTEMPTS` = `FAILED_LOGIN_ATTEMPTS` + 1, " +
-				"`LAST_FAILED_LOGIN` = NOW(), " +
-				"`ACCOUNT_LOCKED` = CASE WHEN `FAILED_LOGIN_ATTEMPTS` + 1 >= ? THEN TRUE ELSE FALSE END, " +
-				"`LOCKED_UNTIL` = CASE WHEN `FAILED_LOGIN_ATTEMPTS` + 1 >= ? THEN " +
-				"DATEADD('MINUTE', ?, NOW()) ELSE `LOCKED_UNTIL` END " +
-				"WHERE `EMAIL` = ?";
+		// Calculate lockout timestamp in Java for database compatibility (H2 and PostgreSQL)
+		java.sql.Timestamp lockoutTimestamp = null;
+		if (lockoutDurationMinutes > 0) {
+			long lockoutMillis = System.currentTimeMillis() + (lockoutDurationMinutes * 60L * 1000L);
+			lockoutTimestamp = new java.sql.Timestamp(lockoutMillis);
+		}
+
+		String sqlQuery = "UPDATE companies SET " +
+				"failed_login_attempts = failed_login_attempts + 1, " +
+				"last_failed_login = CURRENT_TIMESTAMP, " +
+				"account_locked = CASE WHEN failed_login_attempts + 1 >= ? THEN TRUE ELSE FALSE END, " +
+				"locked_until = CASE " +
+				"  WHEN failed_login_attempts + 1 >= ? AND ? > 0 THEN ? " +
+				"  WHEN failed_login_attempts + 1 >= ? AND ? = 0 THEN NULL " +
+				"  ELSE locked_until " +
+				"END " +
+				"WHERE email = ?";
 
 		try (Connection connection = dataSource.getConnection();
 			 PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {
 			preparedStatement.setInt(1, maxAttempts);
 			preparedStatement.setInt(2, maxAttempts);
 			preparedStatement.setInt(3, lockoutDurationMinutes);
-			preparedStatement.setString(4, email);
+			preparedStatement.setTimestamp(4, lockoutTimestamp);
+			preparedStatement.setInt(5, maxAttempts);
+			preparedStatement.setInt(6, lockoutDurationMinutes);
+			preparedStatement.setString(7, email);
 
 			preparedStatement.executeUpdate();
 		}
@@ -214,11 +227,11 @@ public class CompaniesDAOImpl implements CompaniesDAO {
 
 	@Override
 	public void resetFailedLoginAttempts(String email) throws SQLException {
-		String sqlQuery = "UPDATE `companies` SET " +
-				"`FAILED_LOGIN_ATTEMPTS` = 0, " +
-				"`ACCOUNT_LOCKED` = FALSE, " +
-				"`LOCKED_UNTIL` = NULL " +
-				"WHERE `EMAIL` = ?";
+		String sqlQuery = "UPDATE companies SET " +
+				"failed_login_attempts = 0, " +
+				"account_locked = FALSE, " +
+				"locked_until = NULL " +
+				"WHERE email = ?";
 
 		try (Connection connection = dataSource.getConnection();
 			 PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery)) {

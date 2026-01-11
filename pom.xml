@@ -30,14 +30,6 @@
     <!-- Dependency Management - Override transitive dependency versions for CVE fixes -->
     <dependencyManagement>
         <dependencies>
-            <!-- Protobuf - Override vulnerable transitive dependency from MySQL connector -->
-            <!-- Fixes CVE-2024-7254 (CVSS 8.7) -->
-            <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-java</artifactId>
-                <version>4.33.2</version>
-            </dependency>
-
             <!-- Apache Commons Lang3 - Override vulnerable transitive dependency from swagger-core -->
             <!-- Fixes CVE-2025-48924 (CVSS 5.3) - Uncontrolled Recursion vulnerability -->
             <dependency>
@@ -247,11 +239,11 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- MySQL Connector - Updated to latest version with new artifact ID -->
+        <!-- PostgreSQL JDBC Driver -->
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>8.4.0</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.4</version>
         </dependency>
 
         <!-- Transitive dependency versions (protobuf, commons-lang3) overridden in <dependencyManagement> -->

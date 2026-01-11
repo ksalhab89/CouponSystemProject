@@ -50,20 +50,20 @@ class CouponExpirationDailyJobTest {
         // Insert expired coupon 1
         Date yesterday = Date.valueOf(LocalDate.now().minusDays(1));
         Date tenDaysAgo = Date.valueOf(LocalDate.now().minusDays(10));
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, "SKYING", "Expired Coupon 1", "Test", tenDaysAgo, yesterday, 10, 50.0, "");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, 10, "Expired Coupon 1", "Test", tenDaysAgo, yesterday, 10, 50.0, "");
 
         // Insert valid coupon
         Date today = Date.valueOf(LocalDate.now());
         Date tomorrow = Date.valueOf(LocalDate.now().plusDays(1));
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            2, 1, "SKY_DIVING", "Valid Coupon", "Test", today, tomorrow, 10, 50.0, "");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            2, 1, 20, "Valid Coupon", "Test", today, tomorrow, 10, 50.0, "");
 
         // Insert expired coupon 2
         Date twentyDaysAgo = Date.valueOf(LocalDate.now().minusDays(20));
         Date fiveDaysAgo = Date.valueOf(LocalDate.now().minusDays(5));
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            3, 1, "FANCY_RESTAURANT", "Expired Coupon 2", "Test", twentyDaysAgo, fiveDaysAgo, 10, 50.0, "");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            3, 1, 30, "Expired Coupon 2", "Test", twentyDaysAgo, fiveDaysAgo, 10, 50.0, "");
 
         // Execute job
         job.executeJob();
@@ -86,8 +86,8 @@ class CouponExpirationDailyJobTest {
         // Insert valid coupon
         Date today = Date.valueOf(LocalDate.now());
         Date tomorrow = Date.valueOf(LocalDate.now().plusDays(1));
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, "SKYING", "Valid Coupon", "Test", today, tomorrow, 10, 50.0, "");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, 10, "Valid Coupon", "Test", today, tomorrow, 10, 50.0, "");
 
         // Execute job
         job.executeJob();
@@ -120,8 +120,8 @@ class CouponExpirationDailyJobTest {
         // Insert coupon that expires today (not before today)
         Date yesterday = Date.valueOf(LocalDate.now().minusDays(1));
         Date today = Date.valueOf(LocalDate.now());
-        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, CATEGORY, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            1, 1, "ALL_INCLUSIVE_VACATION", "Expires Today", "Test", yesterday, today, 10, 50.0, "");
+        jdbcTemplate.update("INSERT INTO coupons (ID, COMPANY_ID, category_id, TITLE, DESCRIPTION, START_DATE, END_DATE, AMOUNT, PRICE, IMAGE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            1, 1, 40, "Expires Today", "Test", yesterday, today, 10, 50.0, "");
 
         // Execute job
         job.executeJob();
