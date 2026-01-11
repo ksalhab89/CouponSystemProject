@@ -125,7 +125,7 @@ cd CouponSystemProject
 
 ```bash
 # Run the automated secrets setup script
-./setup-secrets.sh
+./scripts/setu./scripts/setup/setup-secrets.sh
 
 # Save the admin password shown in the output!
 ```
@@ -138,6 +138,8 @@ cd CouponSystemProject
   - `JWT_SECRET` (32-char base64, 256-bit)
   - `ADMIN_PASSWORD` (24-char base64)
 - Creates backup `.env.backup`
+
+💡 **Tip**: See [scripts/README.md](scripts/README.md) for details on all available scripts
 
 ### 3. Start the Application
 ```bash
@@ -171,22 +173,350 @@ docker compose logs -f app
 
 **Demo Users** (optional - load sample data):
 ```bash
-# Load sample companies and customers
-docker exec -i coupon-system-postgres psql -U appuser -d couponsystem < populate-sample-data-postgres.sql
+# Load sample companies and customers (for development/testing only)
+cat scripts/db/populate-sample-data-postgres.sql | docker exec -i coupon-system-postgres psql -U appuser -d couponsystem
 
 # Demo login credentials:
 # Email: john.smith@email.com
 # Password: password123
 ```
 
+⚠️ **Warning**: Sample data is for development only. Do NOT use in production!
+
 ---
+
+---
+
+## 🚀 Deployment Guide
+
+### 📦 Choose Your Deployment Method
+
+<table>
+<tr>
+<td width="50%">
+
+#### 🏠 Local Development
+**Best for**: Development, testing, learning
+
+**Features**:
+- Quick setup (~5 minutes)
+- Hot reload for code changes
+- Sample data available
+- Access on localhost
+
+**[Jump to Local Setup →](#local-development-setup)**
+
+</td>
+<td width="50%">
+
+#### 🌐 Production Deployment
+**Best for**: Live applications, staging environments
+
+**Features**:
+- SSL/TLS encryption (Let's Encrypt)
+- Domain-based access
+- Production-hardened security
+- Traefik reverse proxy
+
+**[Jump to Production Setup →](#production-deployment-setup)**
+
+</td>
+</tr>
+</table>
+
+---
+
+### 🏠 Local Development Setup
+
+Perfect for development and testing on your local machine.
+
+#### Step 1: Prerequisites Check
+```bash
+# Verify installations
+docker --version          # Should be 20.10+
+docker compose version    # Should be 2.0+
+java --version           # Should be 21+
+mvn --version            # Should be 3.8+
+node --version           # Should be 18+ (for frontend development)
+```
+
+#### Step 2: Clone and Setup
+```bash
+# Clone repository
+git clone https://github.com/yourusername/CouponSystemProject.git
+cd CouponSystemProject
+
+# Generate secure secrets
+./scripts/setu./scripts/setup/setup-secrets.sh
+# ⚠️ Save the displayed admin password!
+
+# (Optional) Setup local SSL for HTTPS
+./scripts/setup/setup-local-ssl.sh
+```
+
+#### Step 3: Start Services
+```bash
+# Start all containers
+docker compose up -d
+
+# Wait for services to be healthy (~30 seconds)
+docker compose ps
+```
+
+#### Step 4: Load Sample Data (Optional)
+```bash
+# Populate database with demo data
+cat scripts/db/populate-sample-data-postgres.sql | \
+  docker exec -i coupon-system-postgres psql -U appuser -d couponsystem
+
+# Test login:
+# Email: john.smith@email.com
+# Password: password123
+```
+
+#### Step 5: Access Applications
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080/api/v1
+- **Swagger Docs**: http://localhost:8080/swagger-ui.html
+- **Prometheus**: http://localhost:9090/metrics/prometheus
+
+#### Development Workflow
+```bash
+# Backend development (Spring Boot auto-reloads)
+mvn spring-boot:run
+
+# Frontend development (React hot reload)
+cd coupon-system-frontend
+npm start
+
+# Run tests before committing
+./scripts/test/test-local.sh
+
+# Run Docker tests
+./scripts/test/test-docker.sh
+```
+
+---
+
+### 🌐 Production Deployment Setup
+
+Deploy to a production server with SSL/TLS and domain name.
+
+#### Prerequisites
+- ✅ Domain name (e.g., `myapp.com`) with DNS A record pointing to server
+- ✅ Server with public IP (Ubuntu 22.04 LTS recommended)
+- ✅ Ports 80 and 443 open in firewall
+- ✅ Docker and Docker Compose installed
+- ✅ Email address for Let's Encrypt notifications
+
+#### Step 1: Server Preparation
+```bash
+# SSH into production server
+ssh user@your-server-ip
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+newgrp docker
+
+# Verify installation
+docker --version
+docker compose version
+```
+
+#### Step 2: Deploy Application
+```bash
+# Clone repository
+git clone https://github.com/yourusername/CouponSystemProject.git
+cd CouponSystemProject
+
+# Generate production secrets
+./scripts/setu./scripts/setup/setup-secrets.sh
+
+# Configure environment
+cp .env.example .env
+nano .env
+
+# Required changes in .env:
+# - ADMIN_EMAIL=admin@yourdomain.com
+# - CORS_ALLOWED_ORIGINS=https://yourdomain.com
+```
+
+#### Step 3: Configure SSL/TLS
+```bash
+# Edit production compose file
+nano docker-compose.production.yml
+
+# Replace these values:
+# - yourdomain.com → your actual domain
+# - admin@yourdomain.com → your email for Let's Encrypt
+```
+
+#### Step 4: Start Production Services
+```bash
+# Deploy with Traefik for automatic SSL
+docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+
+# Monitor startup
+docker compose logs -f
+
+# Wait for Let's Encrypt certificate (~1-2 minutes)
+```
+
+#### Step 5: Verify Deployment
+```bash
+# Test HTTPS access
+curl https://yourdomain.com
+curl https://api.yourdomain.com/api/v1/public/coupons
+
+# Check certificate
+openssl s_client -connect yourdomain.com:443 -servername yourdomain.com
+```
+
+#### Step 6: Post-Deployment
+```bash
+# Secure Traefik dashboard (edit docker-compose.production.yml)
+# Remove or secure the Traefik dashboard port 8080
+
+# Setup monitoring
+# Setup backup for PostgreSQL data volume
+# Configure firewall to allow only ports 80, 443, and SSH
+```
+
+---
+
+### 🔄 Updating Deployed Application
+
+#### Local Development
+```bash
+git pull origin main
+docker compose down
+docker compose up -d --build
+```
+
+#### Production
+```bash
+cd CouponSystemProject
+git pull origin main
+docker compose -f docker-compose.yml -f docker-compose.production.yml down
+docker compose -f docker-compose.yml -f docker-compose.production.yml up -d --build
+
+# Verify
+curl https://api.yourdomain.com/metrics/health
+```
+
+---
+
+### 🧪 Testing Your Deployment
+
+```bash
+# Run comprehensive test suite
+./scripts/test/test-docker.sh
+
+# Performance benchmarks
+./scripts/test/performance-test.sh
+
+# Manual API tests
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john.smith@email.com","password":"password123","clientType":"CUSTOMER"}'
+```
+
+---
+
+### 📁 Project Structure
+
+```
+CouponSystemProject/
+├── scripts/                    # Utility scripts (organized)
+│   ├── setup/                 # Setup scripts
+│   │   ├── setup-secrets.sh  # Generate secure secrets
+│   │   └── setup-local-ssl.sh # Local SSL certificates
+│   ├── test/                  # Testing scripts
+│   │   ├── test-local.sh     # Local test runner
+│   │   ├── test-docker.sh    # Docker deployment tests
+│   │   └── performance-test.sh # Performance benchmarks
+│   ├── db/                    # Database scripts
+│   │   └── populate-sample-data-postgres.sql
+│   └── README.md              # Scripts documentation
+├── src/                       # Java backend source
+├── coupon-system-frontend/    # React frontend
+├── docs/                      # Documentation
+├── .github/workflows/         # CI/CD pipelines
+├── docker-compose.yml         # Local development
+├── docker-compose.production.yml # Production with SSL
+├── Dockerfile                 # Backend container
+├── .env.example              # Environment template
+└── README.md                 # This file
+```
+
+---
+
+### 💡 Common Issues and Solutions
+
+#### Issue: Containers not starting
+```bash
+# Check logs
+docker compose logs
+
+# Check system resources
+docker system df
+docker system prune  # If disk space is low
+```
+
+#### Issue: Database connection errors
+```bash
+# Verify PostgreSQL is healthy
+docker compose ps postgres
+
+# Check database credentials in .env
+cat .env | grep -E "DB_USER|DB_PASSWORD|POSTGRES_PASSWORD"
+
+# Restart PostgreSQL
+docker compose restart postgres
+```
+
+#### Issue: Frontend not loading
+```bash
+# Check nginx logs
+docker compose logs frontend
+
+# Verify API connectivity
+curl http://localhost:8080/api/v1/public/coupons
+
+# Rebuild frontend
+docker compose up -d --build frontend
+```
+
+#### Issue: SSL certificate not generated
+```bash
+# Check Traefik logs
+docker compose logs traefik
+
+# Verify DNS A record
+dig yourdomain.com
+
+# Check ports 80 and 443 are accessible
+nc -zv yourdomain.com 80
+nc -zv yourdomain.com 443
+```
+
+For more help, see:
+- [scripts/README.md](scripts/README.md) - Detailed script documentation
+- [docs/](docs/) - Additional guides and documentation
+- [GitHub Issues](https://github.com/yourusername/CouponSystemProject/issues) - Report bugs
+
 
 ## 🔐 Security
 
 ### Pre-Deployment Security Checklist
 
 #### ✅ P0 - Critical (COMPLETED)
-- [x] Generated unique secrets with `./setup-secrets.sh`
+- [x] Generated unique secrets with `./scripts/setup/setup-secrets.sh`
 - [x] PostgreSQL port bound to localhost only (`127.0.0.1:5432:5432`)
 - [x] Actuator endpoints restricted (`when-authorized`)
 - [x] Logging levels set to production values (`INFO/WARN`)
@@ -214,8 +544,8 @@ docker exec -i coupon-system-postgres psql -U appuser -d couponsystem < populate
 
 #### Secrets Management
 ```bash
-# Development: Use ./setup-secrets.sh
-./setup-secrets.sh
+# Development: Use ./scripts/setup/setup-secrets.sh
+./scripts/setup/setup-secrets.sh
 
 # Production: Use a secrets manager
 # - AWS Secrets Manager
@@ -455,7 +785,7 @@ done
 ### Development Deployment
 ```bash
 # 1. Generate secrets
-./setup-secrets.sh
+./scripts/setup/setup-secrets.sh
 
 # 2. Start services
 docker compose up -d
@@ -484,7 +814,7 @@ cd CouponSystemProject
 
 # 2. Configure production settings
 cp .env.example .env
-./setup-secrets.sh  # Generate production secrets
+./scripts/setu./scripts/setup/setup-secrets.sh  # Generate production secrets
 
 # Edit .env with production values
 vim .env

@@ -30,3 +30,14 @@ dependency-check-data/
 # Docker test results (temporary)
 docker-test-results.txt
 certs/
+
+# Temporary and backup files
+*.backup
+*.bak
+*.tmp
+*.log.gz
+
+# Python temporary files
+__pycache__/
+*.pyc
+*.pyo

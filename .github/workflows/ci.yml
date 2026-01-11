@@ -33,8 +33,18 @@ jobs:
       run: |
         docker compose up -d postgres
         echo "Waiting for PostgreSQL to be healthy..."
-        timeout 60 bash -c 'until docker compose ps postgres | grep -q "healthy"; do sleep 2; done'
-        echo "PostgreSQL is ready!"
+        for i in {1..40}; do
+          if docker compose ps postgres | grep -q "healthy"; then
+            echo "PostgreSQL is ready!"
+            docker compose ps postgres
+            exit 0
+          fi
+          echo "Waiting... ($i/40)"
+          sleep 3
+        done
+        echo "Timeout waiting for PostgreSQL"
+        docker compose logs postgres
+        exit 1
 
     - name: Build with Maven (skip tests)
       run: mvn -B package -DskipTests --file pom.xml
