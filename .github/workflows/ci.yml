@@ -17,7 +17,7 @@ jobs:
       POSTGRES_PASSWORD: test_postgres_password_ci_123
       ADMIN_EMAIL: admin@admin.com
       # BCrypt hash of "admin" with 14 rounds for testing
-      ADMIN_PASSWORD: $2a$14$ZKx3Ln/HV6EMf4/4w0K9Ue8TbdqCZY8kbW3z1g9FqJ5QJJ/xM3y5m
+      ADMIN_PASSWORD: $2b$14$8sxQJWhyKIFiSbgX75YBqexuY8oz17Q.nDSqgA3YDTTEddj/icEAO
       # Test JWT secret (256-bit minimum for HS256)
       JWT_SECRET: test_jwt_secret_key_for_ci_environments_only_do_not_use_in_production
 
