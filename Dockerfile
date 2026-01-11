@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM maven:3-eclipse-temurin-21 AS build
+FROM maven:3-eclipse-temurin-25 AS build
 WORKDIR /app
 
 # Copy dependency files first (for better caching)
@@ -14,7 +14,7 @@ RUN mvn clean package -DskipTests
 RUN java -Djarmode=layertools -jar target/CouponSystemProject-1.0-SNAPSHOT.jar extract
 
 # Stage 2: Runtime with minimal alpine JRE (optimized with layers)
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 # Install curl for healthchecks (adds ~1MB)
 RUN apk add --no-cache curl
