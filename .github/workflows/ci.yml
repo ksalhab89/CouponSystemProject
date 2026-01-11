@@ -12,12 +12,14 @@ jobs:
     env:
       DB_URL: jdbc:postgresql://localhost:5432/couponsystem
       DB_USER: testuser
-      DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-      POSTGRES_PASSWORD: ${{ secrets.TEST_POSTGRES_PASSWORD }}
+      # Hardcoded test passwords for CI (ephemeral environments only)
+      DB_PASSWORD: test_db_password_ci_123
+      POSTGRES_PASSWORD: test_postgres_password_ci_123
       ADMIN_EMAIL: admin@admin.com
-      # bcrypt hash of "admin" from GitHub Secrets
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD_HASH }}
-      JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+      # BCrypt hash of "admin" with 14 rounds for testing
+      ADMIN_PASSWORD: $2a$14$ZKx3Ln/HV6EMf4/4w0K9Ue8TbdqCZY8kbW3z1g9FqJ5QJJ/xM3y5m
+      # Test JWT secret (256-bit minimum for HS256)
+      JWT_SECRET: test_jwt_secret_key_for_ci_environments_only_do_not_use_in_production
 
     steps:
     - uses: actions/checkout@v4
