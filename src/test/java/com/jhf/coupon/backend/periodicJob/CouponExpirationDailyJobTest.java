@@ -29,6 +29,8 @@ class CouponExpirationDailyJobTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    // SpyBean is deprecated but still functional. Will migrate when Spring Boot provides official replacement.
+    @SuppressWarnings("deprecation")
     @SpyBean
     private CouponsDAO couponsDAO;
 

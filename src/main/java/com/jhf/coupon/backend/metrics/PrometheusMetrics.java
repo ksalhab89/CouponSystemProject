@@ -5,6 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Centralized Prometheus metrics for the Coupon System using Micrometer.
  * Provides application-specific metrics and integrates with Spring Boot Actuator.
@@ -35,6 +38,9 @@ public class PrometheusMetrics {
     private final Counter.Builder loginAttemptsBuilder;
     private final Counter.Builder accountLockoutsBuilder;
 
+    // Track locked accounts count per client type (for gauges)
+    private final ConcurrentHashMap<String, AtomicInteger> lockedAccountsCount;
+
     // ========== Coupon Metrics ==========
     private final Counter.Builder couponPurchasesBuilder;
     private final Counter.Builder couponsCreatedBuilder;
@@ -52,6 +58,19 @@ public class PrometheusMetrics {
 
     public PrometheusMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
+
+        // Initialize locked accounts tracking map
+        this.lockedAccountsCount = new ConcurrentHashMap<>();
+        this.lockedAccountsCount.put("company", new AtomicInteger(0));
+        this.lockedAccountsCount.put("customer", new AtomicInteger(0));
+
+        // Register gauges for locked accounts (register once, update the AtomicInteger values)
+        meterRegistry.gauge("coupon_system_locked_accounts_current",
+                Tags.of("client_type", "company", "application", "coupon-system"),
+                lockedAccountsCount.get("company"));
+        meterRegistry.gauge("coupon_system_locked_accounts_current",
+                Tags.of("client_type", "customer", "application", "coupon-system"),
+                lockedAccountsCount.get("customer"));
 
         // Initialize counter builders (actual counters created with labels on first use)
         this.loginAttemptsBuilder = Counter.builder("coupon_system_login_attempts_total")
@@ -123,10 +142,9 @@ public class PrometheusMetrics {
                 .register(meterRegistry)
                 .increment();
 
-        // Update gauge for locked accounts
-        meterRegistry.gauge("coupon_system_locked_accounts_current",
-                Tags.of("client_type", clientType, "application", "coupon-system"),
-                1);
+        // Update gauge for locked accounts (increment the tracked count)
+        lockedAccountsCount.computeIfAbsent(clientType, k -> new AtomicInteger(0))
+                .incrementAndGet();
     }
 
     /**
@@ -135,10 +153,9 @@ public class PrometheusMetrics {
      * @param clientType "company" or "customer"
      */
     public void recordAccountUnlock(String clientType) {
-        // Update gauge for locked accounts (decrement by setting to 0 or actual count)
-        meterRegistry.gauge("coupon_system_locked_accounts_current",
-                Tags.of("client_type", clientType, "application", "coupon-system"),
-                0);
+        // Update gauge for locked accounts (decrement the tracked count, min 0)
+        lockedAccountsCount.computeIfAbsent(clientType, k -> new AtomicInteger(0))
+                .updateAndGet(current -> Math.max(0, current - 1));
     }
 
     /**
