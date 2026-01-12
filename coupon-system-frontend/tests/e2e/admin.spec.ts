@@ -109,11 +109,12 @@ test.describe('Admin Portal', () => {
       await expect(page.getByLabel(/password/i)).toBeVisible();
     });
 
-    test.fixme('should validate company form fields', async ({ page }) => {
-      // TODO: Implement CompanyForm component with validation
+    test('should validate company form fields', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
-      await page.getByRole('button', { name: /add|new company/i }).click();
+      await page.getByRole('button', { name: /add|new company/i }).first().click();
+      await page.waitForTimeout(300); // Wait for dialog to open
 
       // Submit empty form
       await page.getByRole('button', { name: /submit|create/i }).click();
@@ -122,11 +123,12 @@ test.describe('Admin Portal', () => {
       await expect(page.getByText(/required/i).first()).toBeVisible();
     });
 
-    test.fixme('should create a new company', async ({ page }) => {
-      // TODO: Implement create company functionality
+    test('should create a new company', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
-      await page.getByRole('button', { name: /add|new company/i }).click();
+      await page.getByRole('button', { name: /add|new company/i }).first().click();
+      await page.waitForTimeout(300); // Wait for dialog to open
 
       // Fill form
       await page.getByLabel(/name/i).fill('Test Company');
@@ -136,16 +138,20 @@ test.describe('Admin Portal', () => {
       // Submit
       await page.getByRole('button', { name: /submit|create/i }).click();
 
+      // Wait for dialog to disappear before checking for success message
+      await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 3000 });
+
       // Should show success message
       await expect(page.getByText(/success|created/i)).toBeVisible({ timeout: 5000 });
     });
 
-    test.fixme('should open edit company dialog', async ({ page }) => {
-      // TODO: Implement edit company dialog/modal
+    test('should open edit company dialog', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
       // Wait for table to load
       await page.waitForSelector('table tbody tr');
+      await page.waitForTimeout(300);
 
       // Click edit on first company
       await page.locator('table tbody tr').first().getByRole('button', { name: /edit/i }).click();
@@ -156,12 +162,13 @@ test.describe('Admin Portal', () => {
       await expect(nameInput).not.toHaveValue('');
     });
 
-    test.fixme('should update company details', async ({ page }) => {
-      // TODO: Implement update company functionality
+    test('should update company details', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
       // Wait for table
       await page.waitForSelector('table tbody tr');
+      await page.waitForTimeout(300);
 
       // Edit first company
       await page.locator('table tbody tr').first().getByRole('button', { name: /edit/i }).click();
@@ -174,16 +181,20 @@ test.describe('Admin Portal', () => {
       // Submit
       await page.getByRole('button', { name: /update|save/i }).click();
 
+      // Wait for dialog to disappear before checking for success message
+      await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 3000 });
+
       // Should show success message
       await expect(page.getByText(/success|updated/i)).toBeVisible({ timeout: 5000 });
     });
 
-    test.fixme('should show delete confirmation dialog', async ({ page }) => {
-      // TODO: Implement delete confirmation dialog
+    test('should show delete confirmation dialog', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
       // Wait for table
       await page.waitForSelector('table tbody tr');
+      await page.waitForTimeout(300);
 
       // Click delete
       await page.locator('table tbody tr').first().getByRole('button', { name: /delete/i }).click();
@@ -192,12 +203,13 @@ test.describe('Admin Portal', () => {
       await expect(page.getByText(/confirm|are you sure/i)).toBeVisible();
     });
 
-    test.fixme('should delete company when confirmed', async ({ page }) => {
-      // TODO: Implement delete company functionality
+    test('should delete company when confirmed', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
       // Wait for table
       await page.waitForSelector('table tbody tr');
+      await page.waitForTimeout(300);
 
       // Get initial count
       const initialCount = await page.locator('table tbody tr').count();
@@ -207,6 +219,9 @@ test.describe('Admin Portal', () => {
 
       // Confirm
       await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
+
+      // Wait for dialog to disappear before checking for success message
+      await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 3000 });
 
       // Should show success message
       await expect(page.getByText(/success|deleted/i)).toBeVisible({ timeout: 5000 });
@@ -247,12 +262,13 @@ test.describe('Admin Portal', () => {
       await expect(page.getByRole('button', { name: 'Add New Customer' })).toBeVisible();
     });
 
-    test.fixme('should show edit, delete, and unlock actions', async ({ page }) => {
-      // TODO: Implement ManageCustomers page with action buttons
+    test('should show edit, delete, and unlock actions', async ({ page }) => {
       await page.goto('/admin/customers');
+      await page.waitForLoadState('networkidle');
 
       // Wait for table
       await page.waitForSelector('table tbody tr', { timeout: 5000 });
+      await page.waitForTimeout(300);
 
       // Should have action buttons
       const firstRow = page.locator('table tbody tr').first();
@@ -262,11 +278,12 @@ test.describe('Admin Portal', () => {
       // Unlock button may or may not be visible depending on account status
     });
 
-    test.fixme('should create a new customer', async ({ page }) => {
-      // TODO: Implement create customer functionality
+    test('should create a new customer', async ({ page }) => {
       await page.goto('/admin/customers');
+      await page.waitForLoadState('networkidle');
 
       await page.getByRole('button', { name: /add|new customer/i }).click();
+      await page.waitForTimeout(300);
 
       // Fill form
       await page.getByLabel(/first name/i).fill('Test');
@@ -277,16 +294,20 @@ test.describe('Admin Portal', () => {
       // Submit
       await page.getByRole('button', { name: /submit|create/i }).click();
 
+      // Wait for dialog to disappear before checking for success message
+      await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 3000 });
+
       // Should show success message
       await expect(page.getByText(/success|created/i)).toBeVisible({ timeout: 5000 });
     });
 
-    test.fixme('should update customer details', async ({ page }) => {
-      // TODO: Implement update customer functionality
+    test('should update customer details', async ({ page }) => {
       await page.goto('/admin/customers');
+      await page.waitForLoadState('networkidle');
 
       // Wait for table
       await page.waitForSelector('table tbody tr');
+      await page.waitForTimeout(300);
 
       // Edit first customer
       await page.locator('table tbody tr').first().getByRole('button', { name: /edit/i }).click();
@@ -299,16 +320,20 @@ test.describe('Admin Portal', () => {
       // Submit
       await page.getByRole('button', { name: /update|save/i }).click();
 
+      // Wait for dialog to disappear before checking for success message
+      await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 3000 });
+
       // Should show success message
       await expect(page.getByText(/success|updated/i)).toBeVisible({ timeout: 5000 });
     });
 
-    test.fixme('should delete customer when confirmed', async ({ page }) => {
-      // TODO: Implement delete customer functionality
+    test('should delete customer when confirmed', async ({ page }) => {
       await page.goto('/admin/customers');
+      await page.waitForLoadState('networkidle');
 
       // Wait for table
       await page.waitForSelector('table tbody tr');
+      await page.waitForTimeout(300);
 
       // Get initial count
       const initialCount = await page.locator('table tbody tr').count();
@@ -319,6 +344,9 @@ test.describe('Admin Portal', () => {
       // Confirm
       await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
 
+      // Wait for dialog to disappear before checking for success message
+      await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 3000 });
+
       // Should show success message
       await expect(page.getByText(/success|deleted/i)).toBeVisible({ timeout: 5000 });
 
@@ -328,16 +356,19 @@ test.describe('Admin Portal', () => {
       expect(newCount).toBeLessThan(initialCount);
     });
 
-    test.fixme('should unlock a locked customer account', async ({ page }) => {
-      // TODO: Implement unlock account functionality
-      // This test requires a locked customer account in test data
+    test('should unlock a locked customer account', async ({ page }) => {
       await page.goto('/admin/customers');
+      await page.waitForLoadState('networkidle');
 
       // Find locked account (has unlock button)
       const unlockButton = page.getByRole('button', { name: /unlock/i }).first();
+      await page.waitForTimeout(300);
 
       if (await unlockButton.isVisible()) {
         await unlockButton.click();
+
+        // Wait for dialog to disappear before checking for success message
+        await page.getByRole('dialog').waitFor({ state: 'hidden', timeout: 3000 });
 
         // Should show success message
         await expect(page.getByText(/success|unlocked/i)).toBeVisible({ timeout: 5000 });
@@ -352,9 +383,9 @@ test.describe('Admin Portal', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test.fixme('should search companies by name', async ({ page }) => {
-      // TODO: Implement search functionality in ManageCompanies page
+    test('should search companies by name', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
       // Should have search field
       const searchInput = page.getByPlaceholder(/search/i);
@@ -366,9 +397,9 @@ test.describe('Admin Portal', () => {
       }
     });
 
-    test.fixme('should search customers by name or email', async ({ page }) => {
-      // TODO: Implement search functionality in ManageCustomers page
+    test('should search customers by name or email', async ({ page }) => {
       await page.goto('/admin/customers');
+      await page.waitForLoadState('networkidle');
 
       // Should have search field
       const searchInput = page.getByPlaceholder(/search/i);
