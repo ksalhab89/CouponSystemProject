@@ -16,8 +16,9 @@ test.describe('Admin Portal', () => {
     await page.getByPlaceholder(/enter your password/i).fill('password123');
     await page.getByRole('button', { name: /^login$/i }).click();
 
-    // Wait for navigation to dashboard
-    await page.waitForURL(/\/admin/, { timeout: 10000 });
+    // Wait for navigation and page to be fully loaded
+    await page.waitForURL(/\/admin/, { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
   };
 
   test.describe('Admin Dashboard', () => {
@@ -50,23 +51,29 @@ test.describe('Admin Portal', () => {
       await loginAsAdmin(page);
     });
 
-    test.fixme('should navigate to companies page', async ({ page }) => {
-      // TODO: Implement ManageCompanies page at /admin/companies
-      await page.getByRole('link', { name: /companies/i }).click();
+    test('should navigate to companies page', async ({ page }) => {
+      // Click the "Manage Companies" button in the dashboard (not navbar)
+      await page.getByRole('button', { name: /manage companies/i }).click();
       await expect(page).toHaveURL(/\/admin\/companies/);
     });
 
-    test.fixme('should display companies table', async ({ page }) => {
-      // TODO: Implement ManageCompanies page with CompanyTable component
+    test('should display companies table', async ({ page }) => {
       await page.goto('/admin/companies');
+
+      // Wait for page to load
+      await page.waitForLoadState('networkidle');
+
+      // Wait for either the table or loading to finish
+      await page.waitForSelector('table, [role="progressbar"]', { timeout: 10000 }).catch(() => {});
+      await page.waitForLoadState('networkidle');
 
       // Should show table or list of companies
-      await expect(page.getByRole('table')).toBeVisible();
+      await expect(page.getByRole('table')).toBeVisible({ timeout: 10000 });
     });
 
-    test.fixme('should show add company button', async ({ page }) => {
-      // TODO: Implement ManageCompanies page with add button
+    test('should show add company button', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
       await expect(page.getByRole('button', { name: /add|new company/i })).toBeVisible();
     });

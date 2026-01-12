@@ -7,6 +7,7 @@ import {
   Stack,
   Alert,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import BusinessIcon from '@mui/icons-material/Business';
 import PeopleIcon from '@mui/icons-material/People';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
@@ -21,6 +22,7 @@ import { useAuth } from '../../hooks/useAuth';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [companiesCount, setCompaniesCount] = useState<number>(0);
   const [customersCount, setCustomersCount] = useState<number>(0);
   const [couponsCount, setCouponsCount] = useState<number>(0);
@@ -75,7 +77,7 @@ const AdminDashboard: React.FC = () => {
       <Navbar title="Admin Dashboard" />
 
       {/* Main Content */}
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container maxWidth="lg" component="main" sx={{ py: 4, flex: 1 }}>
         {/* Error Alert */}
         <ErrorAlert
           message={error}
@@ -187,6 +189,7 @@ const AdminDashboard: React.FC = () => {
                   variant="contained"
                   color="primary"
                   size="large"
+                  onClick={() => navigate('/admin/companies')}
                   sx={{
                     px: 3,
                     py: 1.5,
@@ -201,6 +204,7 @@ const AdminDashboard: React.FC = () => {
                   variant="contained"
                   color="success"
                   size="large"
+                  onClick={() => navigate('/admin/customers')}
                   sx={{
                     px: 3,
                     py: 1.5,

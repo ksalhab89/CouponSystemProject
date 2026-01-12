@@ -13,6 +13,13 @@ import CouponBrowsePage from './pages/public/CouponBrowsePage';
 import CustomerDashboard from './pages/customer/CustomerDashboard';
 import CompanyDashboard from './pages/company/CompanyDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ManageCompanies from './pages/admin/ManageCompanies';
+import ManageCustomers from './pages/admin/ManageCustomers';
+import MyCoupons from './pages/company/MyCoupons';
+import CreateCoupon from './pages/company/CreateCoupon';
+import EditCoupon from './pages/company/EditCoupon';
+import BrowseCoupons from './pages/customer/BrowseCoupons';
+import PurchasedCoupons from './pages/customer/PurchasedCoupons';
 
 function App() {
   return (
@@ -29,30 +36,86 @@ function App() {
 
             {/* Customer routes */}
             <Route
-              path="/customer/*"
+              path="/customer"
               element={
                 <ProtectedRoute allowedRoles={['customer']}>
                   <CustomerDashboard />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/customer/browse"
+              element={
+                <ProtectedRoute allowedRoles={['customer']}>
+                  <BrowseCoupons />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customer/purchased"
+              element={
+                <ProtectedRoute allowedRoles={['customer']}>
+                  <PurchasedCoupons />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Company routes */}
             <Route
-              path="/company/*"
+              path="/company"
               element={
                 <ProtectedRoute allowedRoles={['company']}>
                   <CompanyDashboard />
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/company/coupons"
+              element={
+                <ProtectedRoute allowedRoles={['company']}>
+                  <MyCoupons />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/company/create"
+              element={
+                <ProtectedRoute allowedRoles={['company']}>
+                  <CreateCoupon />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/company/edit/:id"
+              element={
+                <ProtectedRoute allowedRoles={['company']}>
+                  <EditCoupon />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Admin routes */}
             <Route
-              path="/admin/*"
+              path="/admin"
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/companies"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ManageCompanies />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/customers"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ManageCustomers />
                 </ProtectedRoute>
               }
             />
