@@ -10,14 +10,24 @@ import { test, expect } from '@playwright/test';
 test.describe('Company Portal', () => {
   // Helper function to login as company
   const loginAsCompany = async (page: any) => {
+    // Add delay to avoid rate limiting
+    await page.waitForTimeout(3000);
+
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
     await page.getByRole('button', { name: /company/i }).click();
+    await page.waitForTimeout(300);
+
     await page.getByPlaceholder(/enter your email/i).fill('contact@skyadventures.com');
     await page.getByPlaceholder(/enter your password/i).fill('password123');
+
     await page.getByRole('button', { name: /^login$/i }).click();
 
     // Wait for navigation to dashboard
-    await page.waitForURL(/\/company/, { timeout: 10000 });
+    await page.waitForURL(/\/company/, { timeout: 30000 });
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000);
   };
 
   test.describe('Company Dashboard', () => {
@@ -32,17 +42,19 @@ test.describe('Company Portal', () => {
     test('should show navigation menu', async ({ page }) => {
       await loginAsCompany(page);
 
-      // Should have navigation buttons to different sections
-      await expect(page.getByRole('button', { name: /my coupons|coupons/i })).toBeVisible();
-      await expect(page.getByRole('button', { name: /create|new coupon/i })).toBeVisible();
+      // Should have navigation buttons in navbar (use exact names)
+      await expect(page.getByRole('button', { name: 'My Coupons', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Create Coupon', exact: true })).toBeVisible();
     });
 
     test('should show company statistics', async ({ page }) => {
       await loginAsCompany(page);
 
-      // Should display some stats (total coupons, active, etc.)
-      // Exact assertions depend on dashboard implementation
-      await expect(page.getByRole('main')).toBeVisible();
+      // Wait for page to fully load
+      await page.waitForLoadState('networkidle');
+
+      // Should display the dashboard heading
+      await expect(page.getByRole('heading', { name: /dashboard|company/i })).toBeVisible({ timeout: 10000 });
     });
   });
 
@@ -313,8 +325,12 @@ test.describe('Company Portal', () => {
     test('should logout and redirect to home', async ({ page }) => {
       await loginAsCompany(page);
 
-      // Open user profile menu
-      await page.click('[aria-label*="profile"], [aria-label*="account"], button:has-text("Sky Adventures"), button:has-text("SA")');
+      // Wait for page to fully load
+      await page.waitForLoadState('networkidle');
+
+      // Open user profile menu by clicking on email
+      await page.locator('text=contact@skyadventures.com').click();
+      await page.waitForTimeout(500);
 
       // Click logout from menu
       await page.getByRole('menuitem', { name: /logout/i }).click();
