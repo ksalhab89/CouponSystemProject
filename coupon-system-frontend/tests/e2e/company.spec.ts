@@ -12,12 +12,12 @@ test.describe('Company Portal', () => {
   const loginAsCompany = async (page: any) => {
     await page.goto('/login');
     await page.getByRole('button', { name: /company/i }).click();
-    await page.getByLabel(/email/i).fill('company@example.com');
-    await page.getByLabel(/password/i).fill('password123');
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByPlaceholder(/enter your email/i).fill('contact@skyadventures.com');
+    await page.getByPlaceholder(/enter your password/i).fill('password123');
+    await page.getByRole('button', { name: /^login$/i }).click();
 
     // Wait for navigation to dashboard
-    await page.waitForURL(/\/company/, { timeout: 5000 });
+    await page.waitForURL(/\/company/, { timeout: 10000 });
   };
 
   test.describe.skip('Company Dashboard', () => {

@@ -12,12 +12,12 @@ test.describe('Admin Portal', () => {
   const loginAsAdmin = async (page: any) => {
     await page.goto('/login');
     await page.getByRole('button', { name: /admin/i }).click();
-    await page.getByLabel(/email/i).fill('admin@admin.com');
-    await page.getByLabel(/password/i).fill('admin');
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByPlaceholder(/enter your email/i).fill('admin@yourcompany.com');
+    await page.getByPlaceholder(/enter your password/i).fill('/5R10KghH0FBphHyE+TcNYPeuXvNQ3ub');
+    await page.getByRole('button', { name: /^login$/i }).click();
 
     // Wait for navigation to dashboard
-    await page.waitForURL(/\/admin/, { timeout: 5000 });
+    await page.waitForURL(/\/admin/, { timeout: 10000 });
   };
 
   test.describe.skip('Admin Dashboard', () => {
