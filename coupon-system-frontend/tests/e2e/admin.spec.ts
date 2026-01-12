@@ -10,15 +10,33 @@ import { test, expect } from '@playwright/test';
 test.describe('Admin Portal', () => {
   // Helper function to login as admin
   const loginAsAdmin = async (page: any) => {
+    // Add delay to avoid rate limiting (wait 3s between logins)
+    await page.waitForTimeout(3000);
+
+    // Navigate to login page
     await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    // Select admin role
     await page.getByRole('button', { name: /admin/i }).click();
+    await page.waitForTimeout(500);
+
+    // Fill in credentials
     await page.getByPlaceholder(/enter your email/i).fill('admin@yourcompany.com');
     await page.getByPlaceholder(/enter your password/i).fill('password123');
+
+    // Wait a bit before clicking login (ensure form is ready)
+    await page.waitForTimeout(500);
+
+    // Click login button and wait for navigation
     await page.getByRole('button', { name: /^login$/i }).click();
 
-    // Wait for navigation and page to be fully loaded
-    await page.waitForURL(/\/admin/, { timeout: 15000 });
+    // Wait for successful navigation to admin dashboard
+    await page.waitForURL(/\/admin/, { timeout: 30000 });
     await page.waitForLoadState('networkidle');
+
+    // Give extra time for dashboard to render
+    await page.waitForTimeout(1500);
   };
 
   test.describe('Admin Dashboard', () => {
@@ -33,9 +51,10 @@ test.describe('Admin Portal', () => {
     test('should show navigation menu', async ({ page }) => {
       await loginAsAdmin(page);
 
-      // Should have navigation buttons to different sections
-      await expect(page.getByRole('button', { name: /companies/i })).toBeVisible();
-      await expect(page.getByRole('button', { name: /customers/i })).toBeVisible();
+      // Should have navigation links in the navbar (not the dashboard action buttons)
+      // Look for the exact navbar button text
+      await expect(page.getByRole('button', { name: 'Companies', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Customers', exact: true })).toBeVisible();
     });
 
     test('should display statistics cards', async ({ page }) => {
@@ -75,27 +94,32 @@ test.describe('Admin Portal', () => {
       await page.goto('/admin/companies');
       await page.waitForLoadState('networkidle');
 
-      await expect(page.getByRole('button', { name: /add|new company/i })).toBeVisible();
+      // Use more specific selector for the main "Add New Company" button
+      await expect(page.getByRole('button', { name: 'Add New Company' })).toBeVisible();
     });
 
-    test.fixme('should show edit and delete actions for each company', async ({ page }) => {
-      // TODO: Implement ManageCompanies page with action buttons
+    test('should show edit and delete actions for each company', async ({ page }) => {
       await page.goto('/admin/companies');
 
       // Wait for table to load
-      await page.waitForSelector('table tbody tr', { timeout: 5000 });
+      await page.waitForLoadState('networkidle');
+      await page.waitForSelector('table tbody tr', { timeout: 10000 });
 
-      // Should have action buttons
+      // Should have action buttons in the first row
       const firstRow = page.locator('table tbody tr').first();
       await expect(firstRow.getByRole('button', { name: /edit/i })).toBeVisible();
       await expect(firstRow.getByRole('button', { name: /delete/i })).toBeVisible();
     });
 
-    test.fixme('should open add company dialog', async ({ page }) => {
-      // TODO: Implement add company dialog/modal
+    test('should open add company dialog', async ({ page }) => {
       await page.goto('/admin/companies');
+      await page.waitForLoadState('networkidle');
 
-      await page.getByRole('button', { name: /add|new company/i }).click();
+      // Click "Add New Company" button
+      await page.getByRole('button', { name: 'Add New Company' }).click();
+
+      // Wait for dialog to appear
+      await page.waitForTimeout(500);
 
       // Should show form dialog
       await expect(page.getByRole('dialog')).toBeVisible();
@@ -375,8 +399,15 @@ test.describe('Admin Portal', () => {
     test('should logout and redirect to home', async ({ page }) => {
       await loginAsAdmin(page);
 
-      // Open user profile menu
-      await page.click('[aria-label*="profile"], [aria-label*="account"], button:has-text("Administrator"), button:has-text("admin")');
+      // Wait for page to be fully loaded
+      await page.waitForLoadState('networkidle');
+
+      // Open user profile menu by clicking on the user email in navbar
+      // The email should be visible in the user info section
+      await page.locator('text=admin@yourcompany.com').click();
+
+      // Wait for menu to open
+      await page.waitForTimeout(500);
 
       // Click logout from menu
       await page.getByRole('menuitem', { name: /logout/i }).click();
