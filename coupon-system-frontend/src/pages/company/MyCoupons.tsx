@@ -107,8 +107,7 @@ const MyCoupons: React.FC = () => {
   };
 
   const handleEditClick = (coupon: Coupon) => {
-    setSelectedCoupon(coupon);
-    setEditDialogOpen(true);
+    navigate(`/company/edit/${coupon.id}`);
   };
 
   const handleDeleteClick = (coupon: Coupon) => {

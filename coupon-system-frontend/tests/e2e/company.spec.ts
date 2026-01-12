@@ -102,7 +102,8 @@ test.describe('Company Portal', () => {
     });
 
     test('should navigate to create coupon page', async ({ page }) => {
-      await page.getByRole('link', { name: /create|new coupon/i }).first().click();
+      // Click "Create Coupon" button in navbar
+      await page.getByRole('banner').getByRole('button', { name: 'Create Coupon' }).click();
       await page.waitForLoadState('networkidle');
       await expect(page).toHaveURL(/\/company\/create/);
     });
