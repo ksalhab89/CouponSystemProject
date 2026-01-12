@@ -53,11 +53,11 @@ const CustomerDashboard: React.FC = () => {
   const recentPurchases = purchasedCoupons.slice(0, 4);
 
   const handleBrowseCoupons = () => {
-    navigate('/customer/coupons');
+    navigate('/customer/browse');
   };
 
   const handleViewAllPurchases = () => {
-    navigate('/customer/purchases');
+    navigate('/customer/purchased');
   };
 
   if (loading) {

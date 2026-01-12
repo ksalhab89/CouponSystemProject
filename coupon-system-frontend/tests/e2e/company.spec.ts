@@ -26,9 +26,9 @@ test.describe('Company Portal', () => {
       await page.goto('/company');
       await page.waitForLoadState('networkidle');
 
-      // Should have navigation buttons in navbar (use exact names)
-      await expect(page.getByRole('button', { name: 'My Coupons', exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Create Coupon', exact: true })).toBeVisible();
+      // Should have navigation buttons in navbar (use banner role to target navbar specifically)
+      await expect(page.getByRole('banner').getByRole('button', { name: 'My Coupons' })).toBeVisible();
+      await expect(page.getByRole('banner').getByRole('button', { name: 'Create Coupon' })).toBeVisible();
     });
 
     test('should show company statistics', async ({ page }) => {
@@ -319,8 +319,8 @@ test.describe('Company Portal', () => {
       // Wait for page to fully load
       await page.waitForLoadState('networkidle');
 
-      // Open user profile menu by clicking on email
-      await page.locator('text=contact@skyadventures.com').click();
+      // Open user profile menu by clicking on email in navbar (use banner to target navbar specifically)
+      await page.getByRole('banner').getByText('contact@skyadventures.com').click();
       await page.waitForTimeout(500);
 
       // Click logout from menu

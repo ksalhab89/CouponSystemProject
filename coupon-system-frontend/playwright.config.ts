@@ -52,9 +52,11 @@ export default defineConfig({
 
     // Cleanup project - manually run with: npx playwright test --project=cleanup
     // Only needed when you want fresh auth state
+    // grep: 'MANUAL_CLEANUP' prevents this from running automatically
     {
       name: 'cleanup',
       testMatch: /auth\.cleanup\.ts/,
+      grep: /MANUAL_CLEANUP/, // This pattern won't match any test, preventing auto-run
     },
 
     // Auth tests - test the login functionality itself (no pre-auth needed)

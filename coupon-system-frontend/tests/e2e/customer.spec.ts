@@ -4,25 +4,18 @@ import { test, expect } from '@playwright/test';
  * Customer Portal E2E Tests
  * Tests customer-specific functionality (purchase, view purchases)
  *
- * Note: These tests require backend to be running and authenticated session
+ * Note: These tests use authenticated storage state from auth.setup.ts
+ * No login needed - the session is already established!
  */
 
 test.describe('Customer Portal', () => {
-  // Helper function to login as customer
-  const loginAsCustomer = async (page: any) => {
-    await page.goto('/login');
-    await page.getByRole('button', { name: /customer/i }).click();
-    await page.getByPlaceholder(/enter your email/i).fill('john.smith@email.com');
-    await page.getByPlaceholder(/enter your password/i).fill('password123');
-    await page.getByRole('button', { name: /^login$/i }).click();
-
-    // Wait for navigation to dashboard
-    await page.waitForURL(/\/customer/, { timeout: 10000 });
-  };
+  // No login helper needed! Tests will use the pre-authenticated state from playwright/.auth/customer.json
 
   test.describe('Customer Dashboard', () => {
     test('should display customer dashboard after login', async ({ page }) => {
-      await loginAsCustomer(page);
+      // Navigate directly - already authenticated via storage state!
+      await page.goto('/customer');
+      await page.waitForLoadState('networkidle');
 
       // Should be on customer dashboard
       await expect(page).toHaveURL(/\/customer/);
@@ -30,18 +23,22 @@ test.describe('Customer Portal', () => {
     });
 
     test('should show navigation menu', async ({ page }) => {
-      await loginAsCustomer(page);
+      await page.goto('/customer');
+      await page.waitForLoadState('networkidle');
 
       // Should have navigation buttons to different sections
-      await expect(page.getByRole('button', { name: /browse|shop/i })).toBeVisible();
-      await expect(page.getByRole('button', { name: /purchased|my coupons/i })).toBeVisible();
+      // Use exact match to avoid matching "Browse More Coupons" in dashboard
+      await expect(page.getByRole('button', { name: 'Browse Coupons', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'My Purchases', exact: true })).toBeVisible();
     });
 
     test('should show logout button', async ({ page }) => {
-      await loginAsCustomer(page);
+      await page.goto('/customer');
+      await page.waitForLoadState('networkidle');
 
-      // Open user profile menu
-      await page.click('[aria-label*="profile"], [aria-label*="account"], button:has-text("John Smith"), button:has-text("JS")');
+      // Open user profile menu by clicking on email
+      await page.locator('text=john.smith@email.com').click();
+      await page.waitForTimeout(500);
 
       // Logout should be visible in the menu
       await expect(page.getByRole('menuitem', { name: /logout/i })).toBeVisible();
@@ -50,12 +47,16 @@ test.describe('Customer Portal', () => {
 
   test.describe('Browse and Purchase', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsCustomer(page);
+      // Navigate to customer dashboard - no login needed!
+      await page.goto('/customer');
+      await page.waitForLoadState('networkidle');
     });
 
     test.fixme('should navigate to browse coupons page', async ({ page }) => {
-      // TODO: Implement BrowseCoupons page at /customer/browse
-      await page.getByRole('link', { name: /browse|shop/i }).click();
+      // NOTE: Navbar routing has been fixed but webServer cache needs clearing
+      // Click "Browse Coupons" button in navbar
+      await page.getByRole('banner').getByRole('button', { name: 'Browse Coupons' }).click();
+      await page.waitForLoadState('networkidle');
       await expect(page).toHaveURL(/\/customer\/browse/);
     });
 
@@ -157,12 +158,16 @@ test.describe('Customer Portal', () => {
 
   test.describe('Purchased Coupons', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsCustomer(page);
+      // Navigate to customer dashboard - no login needed!
+      await page.goto('/customer');
+      await page.waitForLoadState('networkidle');
     });
 
     test.fixme('should navigate to purchased coupons page', async ({ page }) => {
-      // TODO: Implement PurchasedCoupons page at /customer/purchased
-      await page.getByRole('link', { name: /purchased|my coupons/i }).click();
+      // NOTE: Navbar routing has been fixed but webServer cache needs clearing
+      // Click "My Purchases" button in navbar
+      await page.getByRole('banner').getByRole('button', { name: 'My Purchases' }).click();
+      await page.waitForLoadState('networkidle');
       await expect(page).toHaveURL(/\/customer\/purchased/);
     });
 
@@ -202,10 +207,13 @@ test.describe('Customer Portal', () => {
 
   test.describe('Logout', () => {
     test('should logout and redirect to home', async ({ page }) => {
-      await loginAsCustomer(page);
+      // Navigate to customer dashboard - already authenticated!
+      await page.goto('/customer');
+      await page.waitForLoadState('networkidle');
 
-      // Open user profile menu
-      await page.click('[aria-label*="profile"], [aria-label*="account"], button:has-text("John Smith"), button:has-text("JS")');
+      // Open user profile menu by clicking on email
+      await page.locator('text=john.smith@email.com').click();
+      await page.waitForTimeout(500);
 
       // Click logout from menu
       await page.getByRole('menuitem', { name: /logout/i }).click();
@@ -215,10 +223,13 @@ test.describe('Customer Portal', () => {
     });
 
     test('should not access customer pages after logout', async ({ page }) => {
-      await loginAsCustomer(page);
+      // Navigate to customer dashboard - already authenticated!
+      await page.goto('/customer');
+      await page.waitForLoadState('networkidle');
 
-      // Open user profile menu
-      await page.click('[aria-label*="profile"], [aria-label*="account"], button:has-text("John Smith"), button:has-text("JS")');
+      // Open user profile menu by clicking on email
+      await page.locator('text=john.smith@email.com').click();
+      await page.waitForTimeout(500);
 
       // Logout from menu
       await page.getByRole('menuitem', { name: /logout/i }).click();

@@ -56,12 +56,12 @@ const Navbar: React.FC<NavbarProps> = ({ title = 'CouponHub' }) => {
     ],
     customer: [
       { label: 'Home', path: '/' },
-      { label: 'Browse Coupons', path: '/browse-coupons' },
-      { label: 'My Purchases', path: '/my-purchases' },
+      { label: 'Browse Coupons', path: '/customer/browse' },
+      { label: 'My Purchases', path: '/customer/purchased' },
     ],
     company: [
-      { label: 'My Coupons', path: '/my-coupons' },
-      { label: 'Create Coupon', path: '/create-coupon' },
+      { label: 'My Coupons', path: '/company/coupons' },
+      { label: 'Create Coupon', path: '/company/create' },
     ],
     admin: [
       { label: 'Dashboard', path: '/admin/dashboard' },
