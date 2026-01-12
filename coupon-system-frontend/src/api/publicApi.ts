@@ -42,7 +42,7 @@ export const publicApi = {
 
   // Health check (actuator endpoint is not under /api/v1)
   getHealthStatus: async (): Promise<HealthStatus> => {
-    const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1';
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
     const actuatorUrl = baseUrl.replace('/api/v1', '/actuator/health');
     const { data } = await axiosInstance.get(actuatorUrl, {
       baseURL: '' // Override base URL for this request

@@ -114,12 +114,13 @@ services:
     build:
       context: ./coupon-system-frontend
       dockerfile: Dockerfile
+      args:
+        # Build-time environment variable for Vite
+        # Uses /api/v1 by default - nginx proxies /api to backend (line 19-25 in nginx.conf)
+        VITE_API_URL: /api/v1
     container_name: coupon-system-frontend
     ports:
       - "3000:80"
-    environment:
-      # Use relative URL - nginx proxies /api to backend (line 19-25 in nginx.conf)
-      - REACT_APP_API_URL=/api/v1
     depends_on:
       app:
         condition: service_healthy
