@@ -4,35 +4,18 @@ import { test, expect } from '@playwright/test';
  * Company Portal E2E Tests
  * Tests company-specific functionality (create, edit, delete coupons)
  *
- * Note: These tests require backend to be running and authenticated session
+ * Note: These tests use authenticated storage state from auth.setup.ts
+ * No login needed - the session is already established!
  */
 
 test.describe('Company Portal', () => {
-  // Helper function to login as company
-  const loginAsCompany = async (page: any) => {
-    // Add delay to avoid rate limiting
-    await page.waitForTimeout(3000);
-
-    await page.goto('/login');
-    await page.waitForLoadState('networkidle');
-
-    await page.getByRole('button', { name: /company/i }).click();
-    await page.waitForTimeout(300);
-
-    await page.getByPlaceholder(/enter your email/i).fill('contact@skyadventures.com');
-    await page.getByPlaceholder(/enter your password/i).fill('password123');
-
-    await page.getByRole('button', { name: /^login$/i }).click();
-
-    // Wait for navigation to dashboard
-    await page.waitForURL(/\/company/, { timeout: 30000 });
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-  };
+  // No login helper needed! Tests will use the pre-authenticated state from playwright/.auth/company.json
 
   test.describe('Company Dashboard', () => {
     test('should display company dashboard after login', async ({ page }) => {
-      await loginAsCompany(page);
+      // Navigate directly - already authenticated via storage state!
+      await page.goto('/company');
+      await page.waitForLoadState('networkidle');
 
       // Should be on company dashboard
       await expect(page).toHaveURL(/\/company/);
@@ -40,7 +23,8 @@ test.describe('Company Portal', () => {
     });
 
     test('should show navigation menu', async ({ page }) => {
-      await loginAsCompany(page);
+      await page.goto('/company');
+      await page.waitForLoadState('networkidle');
 
       // Should have navigation buttons in navbar (use exact names)
       await expect(page.getByRole('button', { name: 'My Coupons', exact: true })).toBeVisible();
@@ -48,9 +32,7 @@ test.describe('Company Portal', () => {
     });
 
     test('should show company statistics', async ({ page }) => {
-      await loginAsCompany(page);
-
-      // Wait for page to fully load
+      await page.goto('/company');
       await page.waitForLoadState('networkidle');
 
       // Should display the dashboard heading
@@ -60,7 +42,9 @@ test.describe('Company Portal', () => {
 
   test.describe('Manage Coupons', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsCompany(page);
+      // Navigate to company dashboard - no login needed!
+      await page.goto('/company');
+      await page.waitForLoadState('networkidle');
     });
 
     test.fixme('should navigate to my coupons page', async ({ page }) => {
@@ -111,7 +95,9 @@ test.describe('Company Portal', () => {
 
   test.describe('Create Coupon', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsCompany(page);
+      // Navigate to company dashboard - no login needed!
+      await page.goto('/company');
+      await page.waitForLoadState('networkidle');
     });
 
     test.fixme('should navigate to create coupon page', async ({ page }) => {
@@ -208,7 +194,9 @@ test.describe('Company Portal', () => {
 
   test.describe('Edit Coupon', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsCompany(page);
+      // Navigate to company dashboard - no login needed!
+      await page.goto('/company');
+      await page.waitForLoadState('networkidle');
     });
 
     test.fixme('should navigate to edit page when edit button clicked', async ({ page }) => {
@@ -254,7 +242,9 @@ test.describe('Company Portal', () => {
 
   test.describe('Delete Coupon', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsCompany(page);
+      // Navigate to company dashboard - no login needed!
+      await page.goto('/company');
+      await page.waitForLoadState('networkidle');
     });
 
     test.fixme('should show confirmation dialog when delete clicked', async ({ page }) => {
@@ -323,7 +313,8 @@ test.describe('Company Portal', () => {
 
   test.describe('Logout', () => {
     test('should logout and redirect to home', async ({ page }) => {
-      await loginAsCompany(page);
+      // Navigate to company dashboard - already authenticated!
+      await page.goto('/company');
 
       // Wait for page to fully load
       await page.waitForLoadState('networkidle');

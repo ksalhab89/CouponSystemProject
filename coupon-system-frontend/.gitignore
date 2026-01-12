@@ -23,3 +23,5 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+# Playwright authentication states (contain session tokens - should not be committed)
+playwright/.auth/

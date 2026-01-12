@@ -4,45 +4,21 @@ import { test, expect } from '@playwright/test';
  * Admin Portal E2E Tests
  * Tests admin-specific functionality (manage companies, customers, unlock accounts)
  *
- * Note: These tests require backend to be running and authenticated session
+ * Note: These tests use authenticated storage state from auth.setup.ts
+ * No login needed - the session is already established!
+ *
+ * This solves the rate limiting issue: instead of 25+ logins, we do 0 logins in these tests.
+ * Authentication happened once in the setup project.
  */
 
 test.describe('Admin Portal', () => {
-  // Helper function to login as admin
-  const loginAsAdmin = async (page: any) => {
-    // Add delay to avoid rate limiting (wait 5s between logins)
-    // Backend appears to rate limit after 10 logins within a short window
-    await page.waitForTimeout(5000);
-
-    // Navigate to login page
-    await page.goto('/login');
-    await page.waitForLoadState('networkidle');
-
-    // Select admin role
-    await page.getByRole('button', { name: /admin/i }).click();
-    await page.waitForTimeout(500);
-
-    // Fill in credentials
-    await page.getByPlaceholder(/enter your email/i).fill('admin@yourcompany.com');
-    await page.getByPlaceholder(/enter your password/i).fill('password123');
-
-    // Wait a bit before clicking login (ensure form is ready)
-    await page.waitForTimeout(500);
-
-    // Click login button and wait for navigation
-    await page.getByRole('button', { name: /^login$/i }).click();
-
-    // Wait for successful navigation to admin dashboard
-    await page.waitForURL(/\/admin/, { timeout: 30000 });
-    await page.waitForLoadState('networkidle');
-
-    // Give extra time for dashboard to render
-    await page.waitForTimeout(1500);
-  };
+  // No login helper needed! Tests will use the pre-authenticated state from playwright/.auth/admin.json
 
   test.describe('Admin Dashboard', () => {
     test('should display admin dashboard after login', async ({ page }) => {
-      await loginAsAdmin(page);
+      // Navigate directly - already authenticated via storage state!
+      await page.goto('/admin');
+      await page.waitForLoadState('networkidle');
 
       // Should be on admin dashboard
       await expect(page).toHaveURL(/\/admin/);
@@ -50,7 +26,8 @@ test.describe('Admin Portal', () => {
     });
 
     test('should show navigation menu', async ({ page }) => {
-      await loginAsAdmin(page);
+      await page.goto('/admin');
+      await page.waitForLoadState('networkidle');
 
       // Should have navigation links in the navbar (not the dashboard action buttons)
       // Look for the exact navbar button text
@@ -59,7 +36,8 @@ test.describe('Admin Portal', () => {
     });
 
     test('should display statistics cards', async ({ page }) => {
-      await loginAsAdmin(page);
+      await page.goto('/admin');
+      await page.waitForLoadState('networkidle');
 
       // Should show stats like total companies, customers, coupons
       await expect(page.getByRole('main')).toBeVisible();
@@ -68,7 +46,9 @@ test.describe('Admin Portal', () => {
 
   test.describe('Manage Companies', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsAdmin(page);
+      // Navigate to admin dashboard - no login needed!
+      await page.goto('/admin');
+      await page.waitForLoadState('networkidle');
     });
 
     test('should navigate to companies page', async ({ page }) => {
@@ -240,7 +220,9 @@ test.describe('Admin Portal', () => {
 
   test.describe('Manage Customers', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsAdmin(page);
+      // Navigate to admin dashboard - no login needed!
+      await page.goto('/admin');
+      await page.waitForLoadState('networkidle');
     });
 
     test('should navigate to customers page', async ({ page }) => {
@@ -365,7 +347,9 @@ test.describe('Admin Portal', () => {
 
   test.describe('Search and Filter', () => {
     test.beforeEach(async ({ page }) => {
-      await loginAsAdmin(page);
+      // Navigate to admin dashboard - no login needed!
+      await page.goto('/admin');
+      await page.waitForLoadState('networkidle');
     });
 
     test.fixme('should search companies by name', async ({ page }) => {
@@ -398,9 +382,10 @@ test.describe('Admin Portal', () => {
   });
 
   test.describe('Logout', () => {
-    // FIXME: Temporarily disabled due to rate limiting - this is the 9th login and fails
-    test.skip('should logout and redirect to home', async ({ page }) => {
-      await loginAsAdmin(page);
+    // Re-enabled! No more rate limiting with storage state approach
+    test('should logout and redirect to home', async ({ page }) => {
+      // Navigate to admin dashboard - already authenticated!
+      await page.goto('/admin');
 
       // Wait for page to be fully loaded
       await page.waitForLoadState('networkidle');

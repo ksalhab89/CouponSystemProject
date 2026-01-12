@@ -1,8 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright E2E Test Configuration
- * See https://playwright.dev/docs/test-configuration
+ * Playwright E2E Test Configuration with Authentication State Reuse
+ *
+ * This configuration solves the rate limiting issue by:
+ * 1. Running a 'setup' project first to authenticate all user roles (3 logins total)
+ * 2. Saving authentication state (cookies, localStorage) to files
+ * 3. Reusing those states across all tests (NO additional logins needed!)
+ *
+ * Previous approach: 25+ logins across all tests → hit rate limit at 10 logins
+ * New approach: 3 logins in setup, then 0 logins in actual tests → no rate limiting!
+ *
+ * See https://playwright.dev/docs/auth
  */
 export default defineConfig({
   testDir: './tests/e2e',
@@ -15,9 +24,6 @@ export default defineConfig({
 
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-
-  /* Opt out of parallel tests on CI */
-  workers: process.env.CI ? 1 : undefined,
 
   /* Reporter to use */
   reporter: 'html',
@@ -34,11 +40,79 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
 
-  /* Configure projects for major browsers */
+  /* Configure projects for different test types */
   projects: [
+    // Setup project - runs FIRST to authenticate all user roles
+    // This is where the 3 logins happen (admin, company, customer)
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: 'setup',
+      testMatch: /auth\.setup\.ts/,
+      // No automatic cleanup - keep auth files for reuse across runs
+    },
+
+    // Cleanup project - manually run with: npx playwright test --project=cleanup
+    // Only needed when you want fresh auth state
+    {
+      name: 'cleanup',
+      testMatch: /auth\.cleanup\.ts/,
+    },
+
+    // Auth tests - test the login functionality itself (no pre-auth needed)
+    {
+      name: 'auth',
+      testMatch: /auth\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        // No storage state - we're testing login itself
+      },
+    },
+
+    // Admin tests - use admin authentication state
+    {
+      name: 'admin',
+      testMatch: /admin\.spec\.ts/,
+      dependencies: ['setup'], // Run after setup completes
+      use: {
+        ...devices['Desktop Chrome'],
+        // Load admin session - NO login needed in tests!
+        storageState: './playwright/.auth/admin.json',
+      },
+    },
+
+    // Company tests - use company authentication state
+    {
+      name: 'company',
+      testMatch: /company\.spec\.ts/,
+      dependencies: ['setup'], // Run after setup completes
+      use: {
+        ...devices['Desktop Chrome'],
+        // Load company session - NO login needed in tests!
+        storageState: './playwright/.auth/company.json',
+      },
+    },
+
+    // Customer tests - use customer authentication state
+    {
+      name: 'customer',
+      testMatch: /customer\.spec\.ts/,
+      dependencies: ['setup'], // Run after setup completes
+      use: {
+        ...devices['Desktop Chrome'],
+        // Load customer session - NO login needed in tests!
+        storageState: './playwright/.auth/customer.json',
+      },
+    },
+
+    // Public tests - no authentication needed
+    {
+      name: 'public',
+      testMatch: /(public|login-redirect)\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        // No storage state - testing public pages
+      },
     },
   ],
 
