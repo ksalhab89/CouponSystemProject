@@ -127,24 +127,38 @@ const CompanyDashboard: React.FC = () => {
 
       {/* Main Content */}
       <Container maxWidth="lg" sx={{ flex: 1, py: 4 }}>
+        {/* Page Title */}
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            mb: 2,
+            color: '#333',
+          }}
+        >
+          Company Dashboard
+        </Typography>
+
         {/* Welcome Message */}
         {company && (
-          <Box sx={{ mb: 4 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{
-                fontWeight: 700,
+          <Alert
+            severity="info"
+            sx={{
+              mb: 3,
+              backgroundColor: '#e3f2fd',
+              '& .MuiAlert-icon': {
                 color: '#1976d2',
-                mb: 1,
-              }}
-            >
-              Welcome, {company.name}
+              },
+            }}
+          >
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              Welcome, {company.name}! 👋
             </Typography>
-            <Typography variant="body1" color="textSecondary">
+            <Typography variant="body2" color="textSecondary">
               Manage your coupons and track performance from this dashboard.
             </Typography>
-          </Box>
+          </Alert>
         )}
 
         {/* Alert Messages */}

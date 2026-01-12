@@ -5,6 +5,7 @@ import {
   Typography,
   Button,
   Stack,
+  Alert,
 } from '@mui/material';
 import BusinessIcon from '@mui/icons-material/Business';
 import PeopleIcon from '@mui/icons-material/People';
@@ -16,8 +17,10 @@ import { StatsCard } from '../../components/admin/StatsCard';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { ErrorAlert } from '../../components/common/ErrorAlert';
 import { adminApi } from '../../api/adminApi';
+import { useAuth } from '../../hooks/useAuth';
 
 const AdminDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [companiesCount, setCompaniesCount] = useState<number>(0);
   const [customersCount, setCustomersCount] = useState<number>(0);
   const [couponsCount, setCouponsCount] = useState<number>(0);
@@ -84,14 +87,34 @@ const AdminDashboard: React.FC = () => {
         {/* Page Title */}
         <Typography
           variant="h4"
+          component="h1"
           sx={{
-            mb: 4,
+            mb: 2,
             fontWeight: 'bold',
             color: '#333',
           }}
         >
           Admin Dashboard
         </Typography>
+
+        {/* Welcome Message */}
+        <Alert
+          severity="success"
+          sx={{
+            mb: 3,
+            backgroundColor: '#e8f5e9',
+            '& .MuiAlert-icon': {
+              color: '#2e7d32',
+            },
+          }}
+        >
+          <Typography variant="body1" sx={{ fontWeight: 500 }}>
+            Welcome, {user?.name || 'Administrator'}! 👋
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Monitor system activity and manage companies, customers, and coupons.
+          </Typography>
+        </Alert>
 
         {/* Loading State */}
         {loading ? (

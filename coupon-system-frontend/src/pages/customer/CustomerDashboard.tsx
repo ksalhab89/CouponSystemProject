@@ -78,23 +78,37 @@ const CustomerDashboard: React.FC = () => {
 
       <Box component="main" sx={{ flex: 1, py: 4, backgroundColor: '#f5f5f5' }}>
         <Container maxWidth="lg">
-          {/* Welcome Section */}
-          <Box sx={{ mb: 4 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              sx={{
-                fontWeight: 700,
-                mb: 1,
+          {/* Page Title */}
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{
+              fontWeight: 700,
+              mb: 2,
+              color: '#333',
+            }}
+          >
+            Customer Dashboard
+          </Typography>
+
+          {/* Welcome Message */}
+          <Alert
+            severity="info"
+            sx={{
+              mb: 3,
+              backgroundColor: '#e3f2fd',
+              '& .MuiAlert-icon': {
                 color: '#1976d2',
-              }}
-            >
-              Welcome, {user?.name}!
+              },
+            }}
+          >
+            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+              Welcome back, {user?.name}! 👋
             </Typography>
-            <Typography variant="body1" color="textSecondary">
+            <Typography variant="body2" color="textSecondary">
               Here's an overview of your coupon purchases and activity.
             </Typography>
-          </Box>
+          </Alert>
 
           {/* Error Alert */}
           {error && (
