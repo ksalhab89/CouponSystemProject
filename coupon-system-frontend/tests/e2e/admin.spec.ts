@@ -123,8 +123,8 @@ test.describe('Admin Portal', () => {
       await expect(page.getByText(/required/i).first()).toBeVisible();
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should create a new company', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should create a new company', async ({ page }) => {
       await page.goto('/admin/companies');
       await page.waitForLoadState('networkidle');
 
@@ -163,8 +163,8 @@ test.describe('Admin Portal', () => {
       await expect(nameInput).not.toHaveValue('');
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should update company details', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should update company details', async ({ page }) => {
       await page.goto('/admin/companies');
       await page.waitForLoadState('networkidle');
 
@@ -205,8 +205,8 @@ test.describe('Admin Portal', () => {
       await expect(page.getByText(/confirm|are you sure/i)).toBeVisible();
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should delete company when confirmed', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should delete company when confirmed', async ({ page }) => {
       await page.goto('/admin/companies');
       await page.waitForLoadState('networkidle');
 
@@ -281,8 +281,8 @@ test.describe('Admin Portal', () => {
       // Unlock button may or may not be visible depending on account status
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should create a new customer', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should create a new customer', async ({ page }) => {
       await page.goto('/admin/customers');
       await page.waitForLoadState('networkidle');
 
@@ -305,8 +305,8 @@ test.describe('Admin Portal', () => {
       await expect(page.getByText(/success|created/i)).toBeVisible({ timeout: 5000 });
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should update customer details', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should update customer details', async ({ page }) => {
       await page.goto('/admin/customers');
       await page.waitForLoadState('networkidle');
 
@@ -332,8 +332,8 @@ test.describe('Admin Portal', () => {
       await expect(page.getByText(/success|updated/i)).toBeVisible({ timeout: 5000 });
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should delete customer when confirmed', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should delete customer when confirmed', async ({ page }) => {
       await page.goto('/admin/customers');
       await page.waitForLoadState('networkidle');
 
@@ -362,8 +362,8 @@ test.describe('Admin Portal', () => {
       expect(newCount).toBeLessThan(initialCount);
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should unlock a locked customer account', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should unlock a locked customer account', async ({ page }) => {
       await page.goto('/admin/customers');
       await page.waitForLoadState('networkidle');
 

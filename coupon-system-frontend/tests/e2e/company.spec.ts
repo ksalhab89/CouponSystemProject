@@ -122,8 +122,8 @@ test.describe('Company Portal', () => {
       await expect(page.getByLabel(/price/i).first()).toBeVisible();
     });
 
-    // FIXME: Form validation not displaying errors on empty submit
-    test.fixme('should show validation errors for empty form', async ({ page }) => {
+    // NOTE: Form validation may not display errors correctly
+    test('should show validation errors for empty form', async ({ page }) => {
       await page.goto('/company/create');
       await page.waitForLoadState('networkidle');
 
@@ -134,8 +134,8 @@ test.describe('Company Portal', () => {
       await expect(page.getByText(/required/i).first()).toBeVisible();
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should create a coupon with valid data', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should create a coupon with valid data', async ({ page }) => {
       await page.goto('/company/create');
       await page.waitForLoadState('networkidle');
 
@@ -179,8 +179,8 @@ test.describe('Company Portal', () => {
       await expect(page.getByText(/positive|greater than/i).first()).toBeVisible();
     });
 
-    // FIXME: Date validation not displaying error messages
-    test.fixme('should validate end date is after start date', async ({ page }) => {
+    // NOTE: Date validation may not display error messages correctly
+    test('should validate end date is after start date', async ({ page }) => {
       await page.goto('/company/create');
       await page.waitForLoadState('networkidle');
 
@@ -218,24 +218,32 @@ test.describe('Company Portal', () => {
       await expect(page).toHaveURL(/\/company\/edit\/\d+/);
     });
 
-    // FIXME: Edit form structure issue - title input not found
-    test.fixme('should display pre-filled form with coupon data', async ({ page }) => {
+    // NOTE: Edit form structure may have issues finding title input
+    test('should display pre-filled form with coupon data', async ({ page }) => {
       // This test requires existing coupon data
       await page.goto('/company/edit/1');
       await page.waitForLoadState('networkidle');
 
-      // Form fields should be pre-filled
-      const titleInput = page.getByLabel(/title/i).first();
+      // Wait for either form or error/loading to appear, then wait for form specifically
+      await page.waitForTimeout(2000); // Give API time to respond
+
+      // Form fields should be visible and pre-filled
+      const titleInput = page.locator('input[name="title"]').first();
+      await expect(titleInput).toBeVisible({ timeout: 10000 });
       await expect(titleInput).not.toHaveValue('');
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should update coupon with new data', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should update coupon with new data', async ({ page }) => {
       await page.goto('/company/edit/1');
       await page.waitForLoadState('networkidle');
 
+      // Wait for form to load
+      await page.waitForTimeout(2000);
+      const titleInput = page.locator('input[name="title"]').first();
+      await expect(titleInput).toBeVisible({ timeout: 10000 });
+
       // Update title
-      const titleInput = page.getByLabel(/title/i).first();
       await titleInput.clear();
       await titleInput.fill('Updated Coupon Title');
 
@@ -271,8 +279,8 @@ test.describe('Company Portal', () => {
       await expect(page.getByText(/confirm|are you sure/i)).toBeVisible();
     });
 
-    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
-    test.fixme('should delete coupon when confirmed', async ({ page }) => {
+    // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
+    test('should delete coupon when confirmed', async ({ page }) => {
       await page.goto('/company/coupons');
       await page.waitForLoadState('networkidle');
 

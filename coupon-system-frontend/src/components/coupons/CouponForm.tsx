@@ -135,7 +135,7 @@ export const CouponForm: React.FC<CouponFormProps> = ({
     if (formData.startDate && formData.endDate) {
       if (!isValidDateRange(formData.startDate, formData.endDate)) {
         newErrors.dateRange =
-          'Start date must be before end date, and end date must be today or later';
+          'End date must be after start date and not in the past';
         isValid = false;
       }
     }
@@ -203,6 +203,8 @@ export const CouponForm: React.FC<CouponFormProps> = ({
     e.preventDefault();
 
     if (!validateForm()) {
+      // Mark all fields as touched to show validation errors
+      setTouched(new Set(Object.keys(formData) as Array<keyof FormState>));
       return;
     }
 
