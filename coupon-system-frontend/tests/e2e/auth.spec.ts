@@ -75,18 +75,15 @@ test.describe('Authentication', () => {
   });
 
   test.describe('Login with credentials', () => {
-    test.skip('should login as admin with valid credentials', async ({ page }) => {
-      // Skipped: Backend authentication needs investigation
-      // Test data populated but login returns 401
+    test('should login as admin with valid credentials', async ({ page }) => {
       await page.getByRole('button', { name: /admin/i }).click();
       await page.getByPlaceholder(/enter your email/i).fill('admin@yourcompany.com');
-      await page.getByPlaceholder(/enter your password/i).fill('/5R10KghH0FBphHyE+TcNYPeuXvNQ3ub');
+      await page.getByPlaceholder(/enter your password/i).fill('password123');
       await page.getByRole('button', { name: /^login$/i }).click();
       await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
     });
 
-    test.skip('should login as company with valid credentials', async ({ page }) => {
-      // Skipped: Backend authentication needs investigation
+    test('should login as company with valid credentials', async ({ page }) => {
       await page.getByRole('button', { name: /company/i }).click();
       await page.getByPlaceholder(/enter your email/i).fill('contact@skyadventures.com');
       await page.getByPlaceholder(/enter your password/i).fill('password123');
@@ -94,8 +91,7 @@ test.describe('Authentication', () => {
       await expect(page).toHaveURL(/\/company/, { timeout: 10000 });
     });
 
-    test.skip('should login as customer with valid credentials', async ({ page }) => {
-      // Skipped: Backend authentication needs investigation
+    test('should login as customer with valid credentials', async ({ page }) => {
       await page.getByRole('button', { name: /customer/i }).click();
       await page.getByPlaceholder(/enter your email/i).fill('john.smith@email.com');
       await page.getByPlaceholder(/enter your password/i).fill('password123');
@@ -103,8 +99,7 @@ test.describe('Authentication', () => {
       await expect(page).toHaveURL(/\/customer/, { timeout: 10000 });
     });
 
-    test.skip('should show error for invalid credentials', async ({ page }) => {
-      // Skipped: Backend authentication needs investigation
+    test('should show error for invalid credentials', async ({ page }) => {
       await page.getByRole('button', { name: /customer/i }).click();
       await page.getByPlaceholder(/enter your email/i).fill('wrong@example.com');
       await page.getByPlaceholder(/enter your password/i).fill('wrongpassword');

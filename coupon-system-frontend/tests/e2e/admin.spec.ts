@@ -13,14 +13,14 @@ test.describe('Admin Portal', () => {
     await page.goto('/login');
     await page.getByRole('button', { name: /admin/i }).click();
     await page.getByPlaceholder(/enter your email/i).fill('admin@yourcompany.com');
-    await page.getByPlaceholder(/enter your password/i).fill('/5R10KghH0FBphHyE+TcNYPeuXvNQ3ub');
+    await page.getByPlaceholder(/enter your password/i).fill('password123');
     await page.getByRole('button', { name: /^login$/i }).click();
 
     // Wait for navigation to dashboard
     await page.waitForURL(/\/admin/, { timeout: 10000 });
   };
 
-  test.describe.skip('Admin Dashboard', () => {
+  test.describe('Admin Dashboard', () => {
     test('should display admin dashboard after login', async ({ page }) => {
       await loginAsAdmin(page);
 
@@ -45,7 +45,7 @@ test.describe('Admin Portal', () => {
     });
   });
 
-  test.describe.skip('Manage Companies', () => {
+  test.describe('Manage Companies', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsAdmin(page);
     });
@@ -195,7 +195,7 @@ test.describe('Admin Portal', () => {
     });
   });
 
-  test.describe.skip('Manage Customers', () => {
+  test.describe('Manage Customers', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsAdmin(page);
     });
@@ -311,7 +311,7 @@ test.describe('Admin Portal', () => {
     });
   });
 
-  test.describe.skip('Search and Filter', () => {
+  test.describe('Search and Filter', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsAdmin(page);
     });
@@ -343,7 +343,7 @@ test.describe('Admin Portal', () => {
     });
   });
 
-  test.describe.skip('Logout', () => {
+  test.describe('Logout', () => {
     test('should logout and redirect to home', async ({ page }) => {
       await loginAsAdmin(page);
 

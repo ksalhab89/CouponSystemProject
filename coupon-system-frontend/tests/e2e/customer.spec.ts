@@ -20,7 +20,7 @@ test.describe('Customer Portal', () => {
     await page.waitForURL(/\/customer/, { timeout: 10000 });
   };
 
-  test.describe.skip('Customer Dashboard', () => {
+  test.describe('Customer Dashboard', () => {
     test('should display customer dashboard after login', async ({ page }) => {
       await loginAsCustomer(page);
 
@@ -44,7 +44,7 @@ test.describe('Customer Portal', () => {
     });
   });
 
-  test.describe.skip('Browse and Purchase', () => {
+  test.describe('Browse and Purchase', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsCustomer(page);
     });
@@ -143,7 +143,7 @@ test.describe('Customer Portal', () => {
     });
   });
 
-  test.describe.skip('Purchased Coupons', () => {
+  test.describe('Purchased Coupons', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsCustomer(page);
     });
@@ -184,7 +184,7 @@ test.describe('Customer Portal', () => {
     });
   });
 
-  test.describe.skip('Logout', () => {
+  test.describe('Logout', () => {
     test('should logout and redirect to home', async ({ page }) => {
       await loginAsCustomer(page);
 

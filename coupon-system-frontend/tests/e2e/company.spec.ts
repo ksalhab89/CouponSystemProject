@@ -20,7 +20,7 @@ test.describe('Company Portal', () => {
     await page.waitForURL(/\/company/, { timeout: 10000 });
   };
 
-  test.describe.skip('Company Dashboard', () => {
+  test.describe('Company Dashboard', () => {
     test('should display company dashboard after login', async ({ page }) => {
       await loginAsCompany(page);
 
@@ -46,7 +46,7 @@ test.describe('Company Portal', () => {
     });
   });
 
-  test.describe.skip('Manage Coupons', () => {
+  test.describe('Manage Coupons', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsCompany(page);
     });
@@ -93,7 +93,7 @@ test.describe('Company Portal', () => {
     });
   });
 
-  test.describe.skip('Create Coupon', () => {
+  test.describe('Create Coupon', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsCompany(page);
     });
@@ -184,7 +184,7 @@ test.describe('Company Portal', () => {
     });
   });
 
-  test.describe.skip('Edit Coupon', () => {
+  test.describe('Edit Coupon', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsCompany(page);
     });
@@ -227,7 +227,7 @@ test.describe('Company Portal', () => {
     });
   });
 
-  test.describe.skip('Delete Coupon', () => {
+  test.describe('Delete Coupon', () => {
     test.beforeEach(async ({ page }) => {
       await loginAsCompany(page);
     });
@@ -293,7 +293,7 @@ test.describe('Company Portal', () => {
     });
   });
 
-  test.describe.skip('Logout', () => {
+  test.describe('Logout', () => {
     test('should logout and redirect to home', async ({ page }) => {
       await loginAsCompany(page);
 
