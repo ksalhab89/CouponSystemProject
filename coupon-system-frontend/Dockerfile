@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
@@ -7,8 +7,15 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code and build
+# Copy source code
 COPY . .
+
+# Accept build-time environment variable for Vite
+# Default to /api/v1 for nginx proxy setup
+ARG VITE_API_URL=/api/v1
+ENV VITE_API_URL=$VITE_API_URL
+
+# Build the application
 RUN npm run build
 
 # Production stage
