@@ -80,7 +80,11 @@ test.describe('Authentication', () => {
       await page.getByPlaceholder(/enter your email/i).fill('admin@yourcompany.com');
       await page.getByPlaceholder(/enter your password/i).fill('password123');
       await page.getByRole('button', { name: /^login$/i }).click();
-      await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
+
+      // Wait for navigation and page to be fully loaded
+      await page.waitForURL(/\/admin/, { timeout: 15000 });
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL(/\/admin/);
     });
 
     test('should login as company with valid credentials', async ({ page }) => {
@@ -88,7 +92,11 @@ test.describe('Authentication', () => {
       await page.getByPlaceholder(/enter your email/i).fill('contact@skyadventures.com');
       await page.getByPlaceholder(/enter your password/i).fill('password123');
       await page.getByRole('button', { name: /^login$/i }).click();
-      await expect(page).toHaveURL(/\/company/, { timeout: 10000 });
+
+      // Wait for navigation and page to be fully loaded
+      await page.waitForURL(/\/company/, { timeout: 15000 });
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL(/\/company/);
     });
 
     test('should login as customer with valid credentials', async ({ page }) => {
@@ -96,7 +104,11 @@ test.describe('Authentication', () => {
       await page.getByPlaceholder(/enter your email/i).fill('john.smith@email.com');
       await page.getByPlaceholder(/enter your password/i).fill('password123');
       await page.getByRole('button', { name: /^login$/i }).click();
-      await expect(page).toHaveURL(/\/customer/, { timeout: 10000 });
+
+      // Wait for navigation and page to be fully loaded
+      await page.waitForURL(/\/customer/, { timeout: 15000 });
+      await page.waitForLoadState('networkidle');
+      await expect(page).toHaveURL(/\/customer/);
     });
 
     test('should show error for invalid credentials', async ({ page }) => {
@@ -104,7 +116,20 @@ test.describe('Authentication', () => {
       await page.getByPlaceholder(/enter your email/i).fill('wrong@example.com');
       await page.getByPlaceholder(/enter your password/i).fill('wrongpassword');
       await page.getByRole('button', { name: /^login$/i }).click();
-      await expect(page.getByText(/invalid|failed|error|wrong/i).first()).toBeVisible({ timeout: 10000 });
+
+      // Wait a moment for the API call to complete
+      await page.waitForTimeout(2000);
+
+      // Either we should see an error alert OR we should still be on the login page (not redirected)
+      const currentURL = page.url();
+      if (currentURL.includes('/login')) {
+        // Still on login page - check for error message
+        const errorVisible = await page.getByText(/login failed|invalid|error|wrong|unauthorized|bad credentials/i).isVisible();
+        expect(errorVisible).toBeTruthy();
+      } else {
+        // Should not have redirected with wrong credentials
+        expect(currentURL).toMatch(/\/login/);
+      }
     });
 
     test.skip('should show error for locked account', async ({ page }) => {

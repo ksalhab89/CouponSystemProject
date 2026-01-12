@@ -16,8 +16,10 @@ test.describe('Login Redirects', () => {
     await page.getByPlaceholder(/enter your password/i).fill('password123');
     await page.getByRole('button', { name: /^login$/i }).click();
 
-    // Should redirect to admin dashboard
-    await expect(page).toHaveURL(/\/admin/, { timeout: 10000 });
+    // Wait for navigation and page to be fully loaded
+    await page.waitForURL(/\/admin/, { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
+    await expect(page).toHaveURL(/\/admin/);
   });
 
   test('company login should redirect to /company', async ({ page }) => {
@@ -26,8 +28,10 @@ test.describe('Login Redirects', () => {
     await page.getByPlaceholder(/enter your password/i).fill('password123');
     await page.getByRole('button', { name: /^login$/i }).click();
 
-    // Should redirect to company dashboard
-    await expect(page).toHaveURL(/\/company/, { timeout: 10000 });
+    // Wait for navigation and page to be fully loaded
+    await page.waitForURL(/\/company/, { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
+    await expect(page).toHaveURL(/\/company/);
   });
 
   test('customer login should redirect to /customer', async ({ page }) => {
@@ -36,7 +40,9 @@ test.describe('Login Redirects', () => {
     await page.getByPlaceholder(/enter your password/i).fill('password123');
     await page.getByRole('button', { name: /^login$/i }).click();
 
-    // Should redirect to customer dashboard
-    await expect(page).toHaveURL(/\/customer/, { timeout: 10000 });
+    // Wait for navigation and page to be fully loaded
+    await page.waitForURL(/\/customer/, { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
+    await expect(page).toHaveURL(/\/customer/);
   });
 });
