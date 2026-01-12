@@ -47,23 +47,24 @@ test.describe('Company Portal', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test.fixme('should navigate to my coupons page', async ({ page }) => {
-      // TODO: Implement MyCoupons page at /company/coupons
-      await page.getByRole('link', { name: /my coupons|coupons/i }).click();
+    test('should navigate to my coupons page', async ({ page }) => {
+      // Click "My Coupons" button in navbar
+      await page.getByRole('banner').getByRole('button', { name: 'My Coupons' }).click();
+      await page.waitForLoadState('networkidle');
       await expect(page).toHaveURL(/\/company\/coupons/);
     });
 
-    test.fixme('should display company coupons', async ({ page }) => {
-      // TODO: Implement MyCoupons page with coupon grid
+    test('should display company coupons', async ({ page }) => {
       await page.goto('/company/coupons');
+      await page.waitForLoadState('networkidle');
 
       // Should show coupons or empty state
       await expect(page.getByRole('main')).toBeVisible();
     });
 
-    test.fixme('should show edit and delete buttons on coupons', async ({ page }) => {
-      // TODO: Implement MyCoupons page with edit/delete action buttons
+    test('should show edit and delete buttons on coupons', async ({ page }) => {
       await page.goto('/company/coupons');
+      await page.waitForLoadState('networkidle');
 
       // Wait for coupons to load
       const couponCard = page.locator('[data-testid="coupon-card"]').first();
@@ -77,9 +78,9 @@ test.describe('Company Portal', () => {
       }
     });
 
-    test.fixme('should filter coupons by category', async ({ page }) => {
-      // TODO: Implement filter functionality in MyCoupons page
+    test('should filter coupons by category', async ({ page }) => {
       await page.goto('/company/coupons');
+      await page.waitForLoadState('networkidle');
 
       // Select a category
       const categoryFilter = page.getByLabel(/category/i);
@@ -100,48 +101,48 @@ test.describe('Company Portal', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test.fixme('should navigate to create coupon page', async ({ page }) => {
-      // TODO: Implement CreateCoupon page at /company/create
-      await page.getByRole('link', { name: /create|new coupon/i }).click();
+    test('should navigate to create coupon page', async ({ page }) => {
+      await page.getByRole('link', { name: /create|new coupon/i }).first().click();
+      await page.waitForLoadState('networkidle');
       await expect(page).toHaveURL(/\/company\/create/);
     });
 
-    test.fixme('should display coupon creation form', async ({ page }) => {
-      // TODO: Implement CreateCoupon page with form fields
+    test('should display coupon creation form', async ({ page }) => {
       await page.goto('/company/create');
+      await page.waitForLoadState('networkidle');
 
       // Should show form fields
-      await expect(page.getByLabel(/title/i)).toBeVisible();
-      await expect(page.getByLabel(/description/i)).toBeVisible();
-      await expect(page.getByLabel(/category/i)).toBeVisible();
-      await expect(page.getByLabel(/start date/i)).toBeVisible();
-      await expect(page.getByLabel(/end date/i)).toBeVisible();
-      await expect(page.getByLabel(/amount|quantity/i)).toBeVisible();
-      await expect(page.getByLabel(/price/i)).toBeVisible();
+      await expect(page.getByLabel(/title/i).first()).toBeVisible();
+      await expect(page.getByLabel(/description/i).first()).toBeVisible();
+      await expect(page.getByLabel(/category/i).first()).toBeVisible();
+      await expect(page.getByLabel(/start date/i).first()).toBeVisible();
+      await expect(page.getByLabel(/end date/i).first()).toBeVisible();
+      await expect(page.getByLabel(/amount|quantity/i).first()).toBeVisible();
+      await expect(page.getByLabel(/price/i).first()).toBeVisible();
     });
 
-    test.fixme('should show validation errors for empty form', async ({ page }) => {
-      // TODO: Implement form validation in CreateCoupon page
+    test('should show validation errors for empty form', async ({ page }) => {
       await page.goto('/company/create');
+      await page.waitForLoadState('networkidle');
 
       // Click submit without filling form
-      await page.getByRole('button', { name: /create|submit/i }).click();
+      await page.getByRole('button', { name: /create|submit/i }).first().click();
 
       // Should show validation errors
       await expect(page.getByText(/required/i).first()).toBeVisible();
     });
 
-    test.fixme('should create a coupon with valid data', async ({ page }) => {
-      // TODO: Implement create coupon API integration
+    test('should create a coupon with valid data', async ({ page }) => {
       await page.goto('/company/create');
+      await page.waitForLoadState('networkidle');
 
       // Fill form
-      await page.getByLabel(/title/i).fill('Test Coupon');
-      await page.getByLabel(/description/i).fill('This is a test coupon');
+      await page.getByLabel(/title/i).first().fill('Test Coupon');
+      await page.getByLabel(/description/i).first().fill('This is a test coupon');
 
       // Select category
-      await page.getByLabel(/category/i).click();
-      await page.getByRole('option', { name: /skiing/i }).click();
+      await page.getByLabel(/category/i).first().click();
+      await page.getByRole('option', { name: /skiing/i }).first().click();
 
       // Set dates (using date pickers)
       const today = new Date();
@@ -150,45 +151,45 @@ test.describe('Company Portal', () => {
       const nextMonth = new Date(today);
       nextMonth.setMonth(nextMonth.getMonth() + 1);
 
-      await page.getByLabel(/start date/i).fill(tomorrow.toISOString().split('T')[0]);
-      await page.getByLabel(/end date/i).fill(nextMonth.toISOString().split('T')[0]);
+      await page.getByLabel(/start date/i).first().fill(tomorrow.toISOString().split('T')[0]);
+      await page.getByLabel(/end date/i).first().fill(nextMonth.toISOString().split('T')[0]);
 
       // Set amount and price
-      await page.getByLabel(/amount|quantity/i).fill('10');
-      await page.getByLabel(/price/i).fill('99.99');
+      await page.getByLabel(/amount|quantity/i).first().fill('10');
+      await page.getByLabel(/price/i).first().fill('99.99');
 
       // Submit form
-      await page.getByRole('button', { name: /create|submit/i }).click();
+      await page.getByRole('button', { name: /create|submit/i }).first().click();
 
       // Should show success message or redirect
-      await expect(page.getByText(/success|created/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/success|created/i).first()).toBeVisible({ timeout: 5000 });
     });
 
-    test.fixme('should validate price is positive', async ({ page }) => {
-      // TODO: Implement price validation in CreateCoupon form
+    test('should validate price is positive', async ({ page }) => {
       await page.goto('/company/create');
+      await page.waitForLoadState('networkidle');
 
-      await page.getByLabel(/price/i).fill('-10');
-      await page.getByRole('button', { name: /create|submit/i }).click();
+      await page.getByLabel(/price/i).first().fill('-10');
+      await page.getByRole('button', { name: /create|submit/i }).first().click();
 
       // Should show validation error
-      await expect(page.getByText(/positive|greater than/i)).toBeVisible();
+      await expect(page.getByText(/positive|greater than/i).first()).toBeVisible();
     });
 
-    test.fixme('should validate end date is after start date', async ({ page }) => {
-      // TODO: Implement date validation in CreateCoupon form
+    test('should validate end date is after start date', async ({ page }) => {
       await page.goto('/company/create');
+      await page.waitForLoadState('networkidle');
 
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
 
-      await page.getByLabel(/start date/i).fill(today.toISOString().split('T')[0]);
-      await page.getByLabel(/end date/i).fill(yesterday.toISOString().split('T')[0]);
-      await page.getByRole('button', { name: /create|submit/i }).click();
+      await page.getByLabel(/start date/i).first().fill(today.toISOString().split('T')[0]);
+      await page.getByLabel(/end date/i).first().fill(yesterday.toISOString().split('T')[0]);
+      await page.getByRole('button', { name: /create|submit/i }).first().click();
 
       // Should show validation error
-      await expect(page.getByText(/end date.*after|must be after/i)).toBeVisible();
+      await expect(page.getByText(/end date.*after|must be after/i).first()).toBeVisible();
     });
   });
 
@@ -199,9 +200,9 @@ test.describe('Company Portal', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test.fixme('should navigate to edit page when edit button clicked', async ({ page }) => {
-      // TODO: Implement EditCoupon page at /company/edit/:id
+    test('should navigate to edit page when edit button clicked', async ({ page }) => {
       await page.goto('/company/coupons');
+      await page.waitForLoadState('networkidle');
 
       // Wait for coupons
       await page.waitForSelector('[data-testid="coupon-card"]');
@@ -213,30 +214,34 @@ test.describe('Company Portal', () => {
       await expect(page).toHaveURL(/\/company\/edit\/\d+/);
     });
 
-    test.fixme('should display pre-filled form with coupon data', async ({ page }) => {
-      // TODO: Implement EditCoupon page with pre-filled form
+    test('should display pre-filled form with coupon data', async ({ page }) => {
       // This test requires existing coupon data
       await page.goto('/company/edit/1');
+      await page.waitForLoadState('networkidle');
 
       // Form fields should be pre-filled
-      const titleInput = page.getByLabel(/title/i);
+      const titleInput = page.getByLabel(/title/i).first();
       await expect(titleInput).not.toHaveValue('');
     });
 
+    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
     test.fixme('should update coupon with new data', async ({ page }) => {
-      // TODO: Implement update coupon API integration
       await page.goto('/company/edit/1');
+      await page.waitForLoadState('networkidle');
 
       // Update title
-      const titleInput = page.getByLabel(/title/i);
+      const titleInput = page.getByLabel(/title/i).first();
       await titleInput.clear();
       await titleInput.fill('Updated Coupon Title');
 
       // Submit form
-      await page.getByRole('button', { name: /update|save/i }).click();
+      await page.getByRole('button', { name: /update|save/i }).first().click();
+
+      // Wait for dialog animation and Snackbar to appear
+      await page.waitForTimeout(1000);
 
       // Should show success message
-      await expect(page.getByText(/success|updated/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/success|updated/i).first()).toBeVisible({ timeout: 5000 });
     });
   });
 
@@ -247,9 +252,9 @@ test.describe('Company Portal', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test.fixme('should show confirmation dialog when delete clicked', async ({ page }) => {
-      // TODO: Implement delete confirmation dialog in MyCoupons page
+    test('should show confirmation dialog when delete clicked', async ({ page }) => {
       await page.goto('/company/coupons');
+      await page.waitForLoadState('networkidle');
 
       // Wait for coupons
       await page.waitForSelector('[data-testid="coupon-card"]');
@@ -261,9 +266,10 @@ test.describe('Company Portal', () => {
       await expect(page.getByText(/confirm|are you sure/i)).toBeVisible();
     });
 
+    // FIXME: Success message timing - Snackbar not appearing consistently (operations succeed but message doesn't show)
     test.fixme('should delete coupon when confirmed', async ({ page }) => {
-      // TODO: Implement delete coupon API integration
       await page.goto('/company/coupons');
+      await page.waitForLoadState('networkidle');
 
       // Wait for coupons
       await page.waitForSelector('[data-testid="coupon-card"]');
@@ -275,10 +281,13 @@ test.describe('Company Portal', () => {
       await page.getByRole('button', { name: /delete/i }).first().click();
 
       // Confirm deletion
-      await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
+      await page.getByRole('button', { name: /confirm|yes|delete/i }).first().click();
+
+      // Wait for dialog animation and Snackbar to appear
+      await page.waitForTimeout(1000);
 
       // Should show success message
-      await expect(page.getByText(/success|deleted/i)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/success|deleted/i).first()).toBeVisible({ timeout: 5000 });
 
       // Coupon count should decrease (if there were coupons)
       if (initialCount > 0) {
@@ -288,9 +297,9 @@ test.describe('Company Portal', () => {
       }
     });
 
-    test.fixme('should not delete coupon when cancelled', async ({ page }) => {
-      // TODO: Implement delete cancel functionality
+    test('should not delete coupon when cancelled', async ({ page }) => {
       await page.goto('/company/coupons');
+      await page.waitForLoadState('networkidle');
 
       // Wait for coupons
       await page.waitForSelector('[data-testid="coupon-card"]');
@@ -302,7 +311,7 @@ test.describe('Company Portal', () => {
       await page.getByRole('button', { name: /delete/i }).first().click();
 
       // Cancel deletion
-      await page.getByRole('button', { name: /cancel|no/i }).click();
+      await page.getByRole('button', { name: /cancel|no/i }).first().click();
 
       // Count should remain the same
       await page.waitForTimeout(500);

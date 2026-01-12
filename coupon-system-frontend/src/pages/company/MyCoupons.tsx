@@ -258,7 +258,7 @@ const MyCoupons: React.FC = () => {
       </AppBar>
 
       {/* Main Content */}
-      <Box sx={{ flex: 1, py: 4 }}>
+      <Box component="main" sx={{ flex: 1, py: 4 }}>
         <Container maxWidth="lg">
           {/* Page Header */}
           <Box sx={{ mb: 4 }}>
