@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { axe } from 'jest-axe';
 import userEvent from '@testing-library/user-event';
 import { CouponGrid } from './CouponGrid';
 import { createMockCoupon } from '../../../tests/mocks/factories';
@@ -408,6 +409,14 @@ describe('CouponGrid', () => {
 
       expect(screen.queryByText(/loading coupons/i)).not.toBeInTheDocument();
       expect(screen.getByText(/no coupons found/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have no accessibility violations', async () => {
+      const { container } = render(<CouponGrid coupons={mockCoupons} loading={false} showActions={false} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 });

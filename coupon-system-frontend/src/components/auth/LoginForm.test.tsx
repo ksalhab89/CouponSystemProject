@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BrowserRouter } from 'react-router-dom';
+import { axe } from 'jest-axe';
 import { LoginForm } from './LoginForm';
 import { AuthProvider } from '../../contexts/AuthContext';
 import { TEST_CREDENTIALS } from '../../../tests/mocks/factories';
@@ -421,6 +422,27 @@ describe('LoginForm', () => {
       await waitFor(() => {
         expect(screen.queryByText(/valid email/i)).not.toBeInTheDocument();
       });
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have no accessibility violations', async () => {
+      const { container } = render(<LoginForm />, { wrapper: Wrapper });
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no violations when showing errors', async () => {
+      const user = userEvent.setup();
+      const { container } = render(<LoginForm />, { wrapper: Wrapper });
+
+      // Trigger validation errors
+      const emailInput = screen.getByLabelText(/email/i);
+      await user.click(emailInput);
+      await user.tab();
+
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 });

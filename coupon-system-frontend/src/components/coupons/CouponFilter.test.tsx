@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { axe } from 'jest-axe';
 import userEvent from '@testing-library/user-event';
 import { CouponFilter } from './CouponFilter';
 import { Category } from '../../types/coupon.types';
@@ -314,4 +315,12 @@ describe('CouponFilter', () => {
       });
     });
   });
-});
+
+  describe('Accessibility', () => {
+    it('should have no accessibility violations', async () => {
+      const { container } = render(<CouponFilter onFilterChange={mockOnFilterChange} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+  });
+}); 

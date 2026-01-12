@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { axe } from 'jest-axe';
 import { CouponCard } from './CouponCard';
 import { Category } from '../../types/coupon.types';
 import { createMockCoupon, SPECIAL_COUPONS } from '../../../tests/mocks/factories';
@@ -356,6 +357,21 @@ describe('CouponCard', () => {
 
       expect(screen.getByText('Test Coupon')).toBeInTheDocument();
       expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have no accessibility violations', async () => {
+      const { container } = render(<CouponCard coupon={mockCoupon} showActions={false} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
+    });
+
+    it('should have no violations with actions', async () => {
+      const onPurchase = vi.fn();
+      const { container} = render(<CouponCard coupon={mockCoupon} onPurchase={onPurchase} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 });

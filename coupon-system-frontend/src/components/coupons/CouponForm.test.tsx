@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { axe } from 'jest-axe';
 import userEvent from '@testing-library/user-event';
 import { CouponForm } from './CouponForm';
 import { Category } from '../../types/coupon.types';
@@ -540,6 +541,14 @@ describe('CouponForm', () => {
       await user.clear(titleInput);
       await user.type(titleInput, 'New Title');
       expect(titleInput.value).toBe('New Title');
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have no accessibility violations', async () => {
+      const { container } = render(<CouponForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
+      const results = await axe(container);
+      expect(results).toHaveNoViolations();
     });
   });
 });

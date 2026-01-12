@@ -2,6 +2,11 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { server } from '../mocks/server';
+import { toHaveNoViolations } from 'jest-axe';
+import { expect } from 'vitest';
+
+// Extend Vitest matchers with jest-axe
+expect.extend(toHaveNoViolations);
 
 // Start MSW server before all tests
 beforeAll(() => {
