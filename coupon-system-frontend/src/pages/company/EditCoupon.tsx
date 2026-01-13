@@ -42,8 +42,15 @@ const EditCoupon: React.FC = () => {
 
       try {
         setLoading(true);
-        const data = await companyApi.getCouponById(parseInt(id));
-        setCoupon(data);
+        // Backend doesn't have GET /company/coupons/{id}, so fetch all and filter
+        const allCoupons = await companyApi.getAllCoupons();
+        const foundCoupon = allCoupons.find(c => c.id === parseInt(id));
+
+        if (!foundCoupon) {
+          throw new Error('Coupon not found');
+        }
+
+        setCoupon(foundCoupon);
       } catch (error: any) {
         const errorMessage = error?.response?.data?.message || 'Failed to load coupon';
         setAlert({
@@ -67,15 +74,16 @@ const EditCoupon: React.FC = () => {
     try {
       setSubmitLoading(true);
       await companyApi.updateCoupon(parseInt(id), data);
+      setSubmitLoading(false);
       setAlert({
         message: 'Coupon updated successfully!',
         severity: 'success',
       });
 
-      // Navigate back after short delay
+      // Navigate back after delay (give time for Snackbar to show)
       setTimeout(() => {
         navigate('/company/coupons');
-      }, 1500);
+      }, 2000);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || 'Failed to update coupon';
       setAlert({
@@ -180,14 +188,12 @@ const EditCoupon: React.FC = () => {
       </Box>
 
       {/* Success/Error Alert */}
-      {alert && (
-        <ErrorAlert
-          message={alert.message}
-          severity={alert.severity}
-          open={!!alert}
-          onClose={() => setAlert(null)}
-        />
-      )}
+      <ErrorAlert
+        message={alert?.message || ''}
+        severity={alert?.severity || 'info'}
+        open={!!alert}
+        onClose={() => setAlert(null)}
+      />
 
       {/* Footer */}
       <Footer />

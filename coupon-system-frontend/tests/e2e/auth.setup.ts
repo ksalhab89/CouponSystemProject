@@ -57,7 +57,7 @@ setup('authenticate as company', async ({ page }) => {
   await page.waitForTimeout(300);
 
   // Fill credentials
-  await page.getByPlaceholder(/enter your email/i).fill('contact@skyadventures.com');
+  await page.getByPlaceholder(/enter your email/i).fill('info@mountainsports.com');
   await page.getByPlaceholder(/enter your password/i).fill('password123');
 
   // Login

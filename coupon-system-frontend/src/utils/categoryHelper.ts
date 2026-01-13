@@ -25,3 +25,14 @@ export const getAllCategories = (): Array<{ id: number; name: string }> => {
 export const isValidCategory = (id: number): boolean => {
   return Object.values(Category).includes(id);
 };
+
+// Convert category ID to backend enum name
+export const getCategoryEnumName = (id: number): string => {
+  const categoryEnumMap: Record<number, string> = {
+    [Category.SKYING]: 'SKYING',
+    [Category.SKY_DIVING]: 'SKY_DIVING',
+    [Category.FANCY_RESTAURANT]: 'FANCY_RESTAURANT',
+    [Category.ALL_INCLUSIVE_VACATION]: 'ALL_INCLUSIVE_VACATION'
+  };
+  return categoryEnumMap[id] || '';
+};

@@ -295,7 +295,7 @@ const BrowseCoupons: React.FC = () => {
               }}
             >
               {filteredCoupons.map((coupon) => (
-                <Box key={coupon.id}>
+                <Box key={coupon.id} data-testid="coupon-card">
                   <Card
                     sx={{
                       height: '100%',

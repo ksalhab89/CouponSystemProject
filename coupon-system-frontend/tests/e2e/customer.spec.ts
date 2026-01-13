@@ -52,7 +52,7 @@ test.describe('Customer Portal', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test.fixme('should navigate to browse coupons page', async ({ page }) => {
+    test('should navigate to browse coupons page', async ({ page }) => {
       // NOTE: Navbar routing has been fixed but webServer cache needs clearing
       // Click "Browse Coupons" button in navbar
       await page.getByRole('banner').getByRole('button', { name: 'Browse Coupons' }).click();
@@ -60,7 +60,7 @@ test.describe('Customer Portal', () => {
       await expect(page).toHaveURL(/\/customer\/browse/);
     });
 
-    test.fixme('should display available coupons', async ({ page }) => {
+    test('should display available coupons', async ({ page }) => {
       // TODO: Implement BrowseCoupons page with coupon grid
       await page.goto('/customer/browse');
 
@@ -72,7 +72,7 @@ test.describe('Customer Portal', () => {
       await expect(couponCards.first()).toBeVisible();
     });
 
-    test.fixme('should show purchase button on coupons', async ({ page }) => {
+    test('should show purchase button on coupons', async ({ page }) => {
       // TODO: Implement purchase button in BrowseCoupons page
       await page.goto('/customer/browse');
 
@@ -84,6 +84,7 @@ test.describe('Customer Portal', () => {
       await expect(purchaseButton).toBeVisible();
     });
 
+    // FIXME: Test times out waiting for category label - selector issue
     test.fixme('should filter coupons by category', async ({ page }) => {
       // TODO: Implement category filter in BrowseCoupons page
       await page.goto('/customer/browse');
@@ -99,7 +100,7 @@ test.describe('Customer Portal', () => {
       await expect(page.getByText(/skiing/i)).toBeVisible();
     });
 
-    test.fixme('should filter coupons by max price', async ({ page }) => {
+    test('should filter coupons by max price', async ({ page }) => {
       // TODO: Implement price filter in BrowseCoupons page
       await page.goto('/customer/browse');
 
@@ -113,22 +114,52 @@ test.describe('Customer Portal', () => {
       // Exact assertion depends on test data
     });
 
+    // FIXME: Purchase count doesn't increase - investigating purchase API or frontend state issue
     test.fixme('should purchase a coupon', async ({ page }) => {
-      // TODO: Implement purchase functionality in BrowseCoupons page
       await page.goto('/customer/browse');
+      await page.waitForLoadState('networkidle');
 
       // Wait for coupons to load
-      await page.waitForSelector('[data-testid="coupon-card"]');
+      const couponCards = page.locator('[data-testid="coupon-card"]');
+      await couponCards.first().waitFor({ state: 'visible', timeout: 10000 });
+
+      // Get initial count of available coupons
+      const initialAvailableCount = await couponCards.count();
+
+      // If no coupons available, skip test
+      if (initialAvailableCount === 0) {
+        console.log('No coupons available to purchase, skipping test');
+        return;
+      }
+
+      // Get initial count of purchased coupons
+      await page.goto('/customer/coupons');
+      await page.waitForLoadState('networkidle');
+      const initialPurchasedCount = await page.locator('[data-testid="coupon-card"]').count();
+
+      // Go back to browse and purchase
+      await page.goto('/customer/browse');
+      await page.waitForLoadState('networkidle');
+      await couponCards.first().waitFor({ state: 'visible', timeout: 5000 });
 
       // Click purchase on first available coupon
       const purchaseButton = page.getByRole('button', { name: /purchase|buy/i }).first();
       await purchaseButton.click();
 
-      // Should show success message
-      await expect(page.getByText(/success|purchased/i)).toBeVisible({ timeout: 5000 });
+      // Wait for purchase to complete
+      await page.waitForTimeout(2000);
+
+      // Navigate to purchased coupons and verify increase
+      await page.goto('/customer/coupons');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(1000);
+
+      // Should have one more purchased coupon
+      const newPurchasedCount = await page.locator('[data-testid="coupon-card"]').count();
+      expect(newPurchasedCount).toBeGreaterThan(initialPurchasedCount);
     });
 
-    test.fixme('should handle purchase error for out-of-stock coupon', async ({ page }) => {
+    test('should handle purchase error for out-of-stock coupon', async ({ page }) => {
       // TODO: Implement error handling for out-of-stock coupons
       await page.goto('/customer/browse');
 
@@ -138,7 +169,7 @@ test.describe('Customer Portal', () => {
       // await expect(page.getByText(/out of stock|not available/i)).toBeVisible();
     });
 
-    test.fixme('should not allow purchasing same coupon twice', async ({ page }) => {
+    test('should not allow purchasing same coupon twice', async ({ page }) => {
       // TODO: Implement duplicate purchase check
       await page.goto('/customer/browse');
 
@@ -163,7 +194,7 @@ test.describe('Customer Portal', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    test.fixme('should navigate to purchased coupons page', async ({ page }) => {
+    test('should navigate to purchased coupons page', async ({ page }) => {
       // NOTE: Navbar routing has been fixed but webServer cache needs clearing
       // Click "My Purchases" button in navbar
       await page.getByRole('banner').getByRole('button', { name: 'My Purchases' }).click();
@@ -171,7 +202,7 @@ test.describe('Customer Portal', () => {
       await expect(page).toHaveURL(/\/customer\/purchased/);
     });
 
-    test.fixme('should display purchased coupons', async ({ page }) => {
+    test('should display purchased coupons', async ({ page }) => {
       // TODO: Implement PurchasedCoupons page with coupon display
       await page.goto('/customer/purchased');
 
@@ -180,7 +211,7 @@ test.describe('Customer Portal', () => {
       await expect(main).toBeVisible();
     });
 
-    test.fixme('should filter purchased coupons by category', async ({ page }) => {
+    test('should filter purchased coupons by category', async ({ page }) => {
       // TODO: Implement category filter in PurchasedCoupons page
       await page.goto('/customer/purchased');
 
@@ -195,7 +226,7 @@ test.describe('Customer Portal', () => {
       }
     });
 
-    test.fixme('should show empty state when no purchases', async ({ page }) => {
+    test('should show empty state when no purchases', async ({ page }) => {
       // TODO: Implement empty state UI in PurchasedCoupons page
       // This test needs a fresh customer account with no purchases
       await page.goto('/customer/purchased');
