@@ -2,7 +2,7 @@
 -- Coupon System - Sample Data Population Script (PostgreSQL)
 -- ============================================================
 -- Password for all users: "password123"
--- BCrypt hash: $2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC
+-- BCrypt hash (CORRECTED): $2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze
 --
 -- Usage:
 --   docker exec -i coupon-system-postgres psql -U appuser -d couponsystem < populate-sample-data-postgres.sql
@@ -19,22 +19,22 @@ TRUNCATE TABLE companies RESTART IDENTITY CASCADE;
 -- ============================================================
 -- Password: password123 (BCrypt strength 12)
 INSERT INTO companies (name, email, password, failed_login_attempts, account_locked, locked_until, last_failed_login) VALUES
-('Sky Adventures Ltd', 'contact@skyadventures.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('Mountain Sports Co', 'info@mountainsports.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('Gourmet Dining Group', 'reservations@gourmetdining.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('Paradise Resorts International', 'bookings@paradiseresorts.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('Extreme Sports Inc', 'extreme@sports.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL);
+('Sky Adventures Ltd', 'contact@skyadventures.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('Mountain Sports Co', 'info@mountainsports.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('Gourmet Dining Group', 'reservations@gourmetdining.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('Paradise Resorts International', 'bookings@paradiseresorts.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('Extreme Sports Inc', 'extreme@sports.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL);
 
 -- ============================================================
 -- CUSTOMERS
 -- ============================================================
 -- Password: password123 (BCrypt strength 12)
 INSERT INTO customers (first_name, last_name, email, password, failed_login_attempts, account_locked, locked_until, last_failed_login) VALUES
-('John', 'Smith', 'john.smith@email.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('Sarah', 'Johnson', 'sarah.j@email.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('Michael', 'Brown', 'mbrown@email.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('Emily', 'Davis', 'emily.davis@email.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL),
-('David', 'Wilson', 'd.wilson@email.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5gyFUHBla4YnC', 0, FALSE, NULL, NULL);
+('John', 'Smith', 'john.smith@email.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('Sarah', 'Johnson', 'sarah.j@email.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('Michael', 'Brown', 'mbrown@email.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('Emily', 'Davis', 'emily.davis@email.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL),
+('David', 'Wilson', 'd.wilson@email.com', '$2b$12$Wm9/VZMUhJoKuCcjMH.PBOyNLkNLMoLgEOpOEYs.j58RwtWOQ2cze', 0, FALSE, NULL, NULL);
 
 -- ============================================================
 -- COUPONS

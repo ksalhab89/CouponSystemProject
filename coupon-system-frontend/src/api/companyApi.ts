@@ -1,6 +1,7 @@
 import { axiosInstance } from './axiosConfig';
 import { Coupon, Company } from '../types/coupon.types';
 import { CouponCreateRequest, CouponUpdateRequest } from '../types/api.types';
+import { getCategoryEnumName } from '../utils/categoryHelper';
 
 export const companyApi = {
   // Company details
@@ -21,12 +22,34 @@ export const companyApi = {
   },
 
   createCoupon: async (coupon: CouponCreateRequest): Promise<Coupon> => {
-    const { data } = await axiosInstance.post('/company/coupons', coupon);
+    // Transform category ID to backend enum name
+    const backendRequest = {
+      category: getCategoryEnumName(coupon.CATEGORY),
+      title: coupon.title,
+      description: coupon.description,
+      startDate: coupon.startDate,
+      endDate: coupon.endDate,
+      amount: coupon.amount,
+      price: coupon.price,
+      image: coupon.image
+    };
+    const { data } = await axiosInstance.post('/company/coupons', backendRequest);
     return data;
   },
 
   updateCoupon: async (id: number, coupon: CouponUpdateRequest): Promise<Coupon> => {
-    const { data } = await axiosInstance.put(`/company/coupons/${id}`, coupon);
+    // Transform category ID to backend enum name
+    const backendRequest = {
+      category: getCategoryEnumName(coupon.CATEGORY),
+      title: coupon.title,
+      description: coupon.description,
+      startDate: coupon.startDate,
+      endDate: coupon.endDate,
+      amount: coupon.amount,
+      price: coupon.price,
+      image: coupon.image
+    };
+    const { data } = await axiosInstance.put(`/company/coupons/${id}`, backendRequest);
     return data;
   },
 

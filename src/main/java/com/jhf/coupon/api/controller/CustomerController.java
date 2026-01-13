@@ -79,6 +79,20 @@ public class CustomerController {
     }
 
     /**
+     * Get all available coupons for purchase
+     *
+     * @return List of all coupons available in the system
+     * @throws SQLException if database error occurs
+     * @throws CategoryNotFoundException if category error occurs
+     */
+    @GetMapping("/coupons/available")
+    public ResponseEntity<ArrayList<Coupon>> getAvailableCoupons()
+            throws SQLException, CategoryNotFoundException {
+        ArrayList<Coupon> allCoupons = couponsDAO.getAllCoupons();
+        return ResponseEntity.ok(allCoupons);
+    }
+
+    /**
      * Get purchased coupons filtered by category
      *
      * @param categoryId Category ID

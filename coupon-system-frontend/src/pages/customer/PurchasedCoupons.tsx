@@ -108,7 +108,7 @@ const PurchasedCoupons: React.FC = () => {
   if (!loading && coupons.length === 0) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Box sx={{ flexGrow: 1, py: 8 }}>
+        <Box component="main" sx={{ flexGrow: 1, py: 8 }}>
           <Container maxWidth="lg">
             <Box
               sx={{
@@ -193,7 +193,7 @@ const PurchasedCoupons: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       {/* Main Content */}
-      <Box sx={{ flexGrow: 1, py: 4 }}>
+      <Box component="main" sx={{ flexGrow: 1, py: 4 }}>
         <Container maxWidth="lg">
           {/* Page Header */}
           <Box sx={{ mb: 4 }}>
@@ -279,6 +279,7 @@ const PurchasedCoupons: React.FC = () => {
               {filteredCoupons.map((coupon) => (
                 <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={coupon.id}>
                   <Box
+                    data-testid="coupon-card"
                     onClick={() => handleCouponClick(coupon)}
                     sx={{ cursor: 'pointer' }}
                   >

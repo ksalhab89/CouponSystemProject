@@ -52,6 +52,7 @@ export const CouponCard: React.FC<CouponCardProps> = ({
 
   return (
     <Card
+      data-testid="coupon-card"
       elevation={elevation}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

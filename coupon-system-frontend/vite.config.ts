@@ -15,4 +15,34 @@ export default defineConfig({
   },
   // Resolve index.html from project root
   root: './',
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: './tests/setup/vitest.setup.ts',
+    css: true,
+    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      reportsDirectory: './coverage',
+      thresholds: {
+        lines: 90,
+        functions: 90,
+        branches: 85,
+        statements: 90,
+      },
+      exclude: [
+        'node_modules/',
+        'tests/',
+        'build/',
+        '**/*.test.{ts,tsx}',
+        '**/*.config.{ts,js}',
+        'src/types/',
+        'src/theme/',
+        'public/',
+        'src/index.tsx',
+        'src/App.tsx',
+      ],
+    },
+  },
 })

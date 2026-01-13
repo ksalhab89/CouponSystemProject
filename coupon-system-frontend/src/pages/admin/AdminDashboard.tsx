@@ -5,7 +5,9 @@ import {
   Typography,
   Button,
   Stack,
+  Alert,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import BusinessIcon from '@mui/icons-material/Business';
 import PeopleIcon from '@mui/icons-material/People';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
@@ -16,8 +18,11 @@ import { StatsCard } from '../../components/admin/StatsCard';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { ErrorAlert } from '../../components/common/ErrorAlert';
 import { adminApi } from '../../api/adminApi';
+import { useAuth } from '../../hooks/useAuth';
 
 const AdminDashboard: React.FC = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [companiesCount, setCompaniesCount] = useState<number>(0);
   const [customersCount, setCustomersCount] = useState<number>(0);
   const [couponsCount, setCouponsCount] = useState<number>(0);
@@ -72,7 +77,7 @@ const AdminDashboard: React.FC = () => {
       <Navbar title="Admin Dashboard" />
 
       {/* Main Content */}
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container maxWidth="lg" component="main" sx={{ py: 4, flex: 1 }}>
         {/* Error Alert */}
         <ErrorAlert
           message={error}
@@ -84,14 +89,34 @@ const AdminDashboard: React.FC = () => {
         {/* Page Title */}
         <Typography
           variant="h4"
+          component="h1"
           sx={{
-            mb: 4,
+            mb: 2,
             fontWeight: 'bold',
             color: '#333',
           }}
         >
           Admin Dashboard
         </Typography>
+
+        {/* Welcome Message */}
+        <Alert
+          severity="success"
+          sx={{
+            mb: 3,
+            backgroundColor: '#e8f5e9',
+            '& .MuiAlert-icon': {
+              color: '#2e7d32',
+            },
+          }}
+        >
+          <Typography variant="body1" sx={{ fontWeight: 500 }}>
+            Welcome, {user?.name || 'Administrator'}! 👋
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Monitor system activity and manage companies, customers, and coupons.
+          </Typography>
+        </Alert>
 
         {/* Loading State */}
         {loading ? (
@@ -164,6 +189,7 @@ const AdminDashboard: React.FC = () => {
                   variant="contained"
                   color="primary"
                   size="large"
+                  onClick={() => navigate('/admin/companies')}
                   sx={{
                     px: 3,
                     py: 1.5,
@@ -178,6 +204,7 @@ const AdminDashboard: React.FC = () => {
                   variant="contained"
                   color="success"
                   size="large"
+                  onClick={() => navigate('/admin/customers')}
                   sx={{
                     px: 3,
                     py: 1.5,
