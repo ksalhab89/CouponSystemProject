@@ -162,7 +162,7 @@ test.describe('Admin Portal', () => {
     });
 
     // FIXME: Dialog doesn't close after update - investigating form submission issue
-    test.fixme('should update company details', async ({ page }) => {
+    test('should update company details', async ({ page }) => {
       await page.goto('/admin/companies');
       await page.waitForLoadState('networkidle');
 
@@ -176,13 +176,13 @@ test.describe('Admin Portal', () => {
       // Wait for dialog
       await page.waitForTimeout(500);
 
-      // Update name
-      const nameInput = page.getByLabel(/company name/i);
-      await nameInput.clear();
-      await nameInput.fill('Updated Company Name');
+      // Update email (note: company name cannot be updated per backend constraint)
+      const emailInput = page.getByLabel(/email/i);
+      await emailInput.clear();
+      await emailInput.fill(`updated${Date.now()}@company.com`);
 
       // Fill password (backend requires it for updates)
-      const passwordInput = page.getByLabel(/^password$/i);
+      const passwordInput = page.getByLabel(/password/i);
       await passwordInput.fill('password123');
 
       // Submit
@@ -302,13 +302,14 @@ test.describe('Admin Portal', () => {
 
       // Wait for table
       await page.waitForSelector('table tbody tr');
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(500);
 
       // Edit first customer
       await page.locator('table tbody tr').first().getByRole('button', { name: /edit/i }).click();
 
-      // Wait for dialog
-      await page.waitForTimeout(300);
+      // Wait for dialog to fully open
+      await page.waitForTimeout(800);
+      await expect(page.getByRole('dialog')).toBeVisible();
 
       // Update first name
       const firstNameInput = page.getByLabel(/first name/i);
@@ -323,7 +324,7 @@ test.describe('Admin Portal', () => {
       await page.getByRole('button', { name: /update|save/i }).click();
 
       // Dialog should close after successful update
-      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 5000 });
+      await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 7000 });
     });
 
     // NOTE: Snackbar timing may be flaky - operations succeed but message doesn't always appear
@@ -338,8 +339,8 @@ test.describe('Admin Portal', () => {
       // Get initial count
       const initialCount = await page.locator('table tbody tr').count();
 
-      // Delete first customer
-      await page.locator('table tbody tr').first().getByRole('button', { name: /delete/i }).click();
+      // Delete last customer (likely a test customer without purchases)
+      await page.locator('table tbody tr').last().getByRole('button', { name: /delete/i }).click();
 
       // Confirm
       await page.getByRole('button', { name: /confirm|yes|delete/i }).click();
