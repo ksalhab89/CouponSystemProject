@@ -441,7 +441,7 @@ describe('CouponForm', () => {
       await user.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/start date must be before end date/i)).toBeInTheDocument();
+        expect(screen.getByText(/end date must be after start date/i)).toBeInTheDocument();
       });
       expect(mockOnSubmit).not.toHaveBeenCalled();
     });
