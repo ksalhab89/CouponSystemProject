@@ -18,6 +18,20 @@ import {
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 /**
+ * Helper: Transform backend category string to frontend CATEGORY number
+ * Backend sends category: "FANCY_RESTAURANT", frontend expects CATEGORY: 30
+ */
+const mapCategoryStringToId = (categoryString: string): number => {
+  const categoryMap: Record<string, number> = {
+    'SKYING': 10,
+    'SKY_DIVING': 20,
+    'FANCY_RESTAURANT': 30,
+    'ALL_INCLUSIVE_VACATION': 40
+  };
+  return categoryMap[categoryString] || 10;
+};
+
+/**
  * MSW Request Handlers
  * Mock all API endpoints for testing
  */
@@ -175,14 +189,18 @@ export const handlers = [
 
   http.post(`${API_BASE_URL}/company/coupons`, async ({ request }) => {
     const body = (await request.json()) as any;
-    const newCoupon = createMockCoupon({ ...body, id: 100 });
+    // Transform category string to CATEGORY number (backend sends "FANCY_RESTAURANT", frontend expects 30)
+    const CATEGORY = body.category ? mapCategoryStringToId(body.category) : 10;
+    const newCoupon = createMockCoupon({ ...body, CATEGORY, id: 100 });
     return HttpResponse.json(newCoupon, { status: 201 });
   }),
 
   http.put(`${API_BASE_URL}/company/coupons/:id`, async ({ params, request }) => {
     const id = Number(params.id);
     const body = (await request.json()) as any;
-    const updatedCoupon = createMockCoupon({ ...body, id });
+    // Transform category string to CATEGORY number (backend sends "FANCY_RESTAURANT", frontend expects 30)
+    const CATEGORY = body.category ? mapCategoryStringToId(body.category) : 10;
+    const updatedCoupon = createMockCoupon({ ...body, CATEGORY, id });
     return HttpResponse.json(updatedCoupon);
   }),
 
